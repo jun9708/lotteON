@@ -1,0 +1,81 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/policyLayout.html}">
+<!--내용 시작-->
+    <section class="buyer" layout:fragment="content">
+        <script>
+            function termsAccordion() {
+                const button = event.target;
+                const termsContent = button.parentNode.nextElementSibling;
+                if (termsContent.style.display === "none") {
+                    termsContent.style.display = "flex";
+                    button.innerText = "접기";
+                }else {
+                    termsContent.style.display = "none";
+                    button.innerText = "펼치기";
+                }
+            }
+
+            window.onload = function () {
+                let currentURL = window.location.href;
+                let splitURL = currentURL.split('?')[1];
+                let storyCate = ""
+                if (splitURL != null){
+                    storyCate = splitURL.split('=')[1];
+                }
+                const termsSelect = document.getElementsByClassName('termsSelect')[0];
+                const aTag = termsSelect.querySelectorAll('img');
+                switch (storyCate) {
+                    case "buyer":
+                        aTag[0].src = "../images/policy/termsiconon1.png";
+                        break;
+                    case 'seller':
+                        aTag[1].src = "../images/policy/termsiconon2.png";
+                        break;
+                    case 'finance':
+                        aTag[2].src = "../images/policy/termsiconon3.png";
+                        break;
+                    case 'location':
+                        aTag[3].src = "../images/policy/termsiconon4.png";
+                        break;
+                    case 'privacy':
+                        aTag[4].src = "../images/policy/termsiconon5.png";
+                        break;
+                }
+            }
+        </script>
+        <article class="termsArticle">
+            <h1>LotteON 서비스 이용약관</h1>
+
+            <div class="termsSelect">
+                <a th:href="@{/policy/terms(cate=buyer)}">
+                    <img th:src="@{/images/policy/termsicon1.png}" style="width: 100px; height: 100px;">
+                </a>
+                <a th:href="@{/policy/terms(cate=seller)}">
+                    <img th:src="@{/images/policy/termsicon2.png}" style="width: 100px; height: 100px;">
+                </a>
+                <a th:href="@{/policy/terms(cate=finance)}">
+                    <img th:src="@{/images/policy/termsicon3.png}" style="width: 100px; height: 100px;">
+                </a>
+                <a th:href="@{/policy/terms(cate=location)}">
+                    <img th:src="@{/images/policy/termsicon4.png}" style="width: 100px; height: 100px;">
+                </a>
+                <a th:href="@{/policy/terms(cate=privacy)}">
+                    <img th:src="@{/images/policy/termsicon5.png}" style="width: 100px; height: 100px;">
+                </a>
+            </div>
+
+            <h2 th:text="${termsList.get(0).termHead}"></h2>
+
+            <div class="termsList" th:each="terms : ${termsList}">
+                <div class="termsTitle">
+                    <p th:text="${terms.termTitle}"></p>
+                    <span onclick="termsAccordion()">접기</span>
+                </div>
+                <div class="termsContent" th:utext="${terms.termContent.replace('\n', '<br>')}" style="white-space: pre-line; font-family: '돋움'"></div>
+            </div>
+
+        </article>
+    </section>
+<!--내용 끝-->
+</html>

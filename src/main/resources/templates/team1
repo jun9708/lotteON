@@ -1,0 +1,24 @@
+# 각 templates의 디렉토리별 layout파일 따로 만들기
+
+# 현재 각 html파일의 js와 css, image의 주소가 정확하지 않음
+
+# 클래스, 메서드, 변수명 선언시 겹치는 이름이 있는지 확인 후 선언하기
+
+# 새로 만든 메서드 위에 주석으로 간략하게 기능 설명
+
+# 사용자가 업로드하는 이미지의 저장 경로 ('/lotteon/prodImg')
+
+# 저장하는 이미지는 상품의 카테고리별로 세부 디렉토리를 나눔 (ex)'/lotteon/prodImg/food')
+
+# 데이터베이스
+    - 이름 : lotteon
+    - 유저 : team1
+    - 비번 : Abcd1234!
+
+
+
+
+
+
+# 작업 후 github에 push하실 때 develop 브렌치로 push 해주세요 (main 브렌치는 push 막아 놓을 예정)
+    - main <- develop <- 개인작업 브런치

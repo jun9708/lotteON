@@ -1,0 +1,50 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/csLayout.html}">
+<!--내용 시작-->
+<section id="cs" layout:fragment="content">
+        <div class="notice">
+          <nav>
+            <div>
+              <p>홈<span>></span>공지사항</p>
+            </div>
+          </nav>
+          <section class="view">
+            <aside>
+              <h2>공지사항</h2>
+              <ul>
+                <li th:class="${view.noticeCate == null ? 'on':''}"><a th:href="@{/cs/notice/list}">전체</a></li>
+                <li th:class="${view.noticeCate == 'service' ? 'on':''}"><a th:href="@{/cs/notice/list(noticeCate='service')}">고객서비스</a></li>
+                <li th:class="${view.noticeCate == 'safe' ? 'on':''}"><a th:href="@{/cs/notice/list(noticeCate='safe')}">안전거래</a></li>
+                <li th:class="${view.noticeCate == 'danger' ? 'on':''}"><a th:href="@{/cs/notice/list(noticeCate='danger')}">위해상품</a></li>
+                <li th:class="${view.noticeCate == 'event' ? 'on':''}"><a th:href="@{/cs/notice/list(noticeCate='event')}">이벤트당첨</a></li>
+
+              </ul>
+            </aside>
+            <article>
+              <nav>
+                <h2 class="title" th:if="${view.noticeType == 'guide'}" th:text="'[안내]' + ' ' + ${view.noticeTitle}"></h2>
+                <h2 class="title" th:if="${view.noticeType == 'announce'}" th:text="'[발표]' + ' ' + ${view.noticeTitle}"></h2>
+                <h2 class="title" th:if="${view.noticeType == 'prodinfo'}" th:text="'[위해상품정보]' + ' ' + ${view.noticeTitle}"></h2>
+                <h2 class="title" th:if="${view.noticeType == 'uservice'}" th:text="'[고객서비스]' + ' ' + ${view.noticeTitle}"></h2>
+                <span class="date">2022.11.20</span>
+              </nav>
+
+              <div class="content">
+                <p th:text="${view.noticeContent}"></p><br>
+                <p>
+                  ※ 피싱 관련 피해신고<br /><br />
+                  ▶ 경찰청 사이버수사국 (국번없이)182 :
+                  http://cyberbureau.police.go.kr<br />
+                  ▶ KISA 인터넷침해대응센터 (국번없이)118 :
+                  http://www.krcert.or.kr<br />
+                  감사합니다.<br />
+                </p>
+              </div>
+              <a th:href="@{/cs/notice/list(noticeCate=${view.noticeCate})}" class="btnList">목록</a>
+            </article>
+          </section>
+        </div>
+      </section>
+<!--내용 끝-->
+</html>

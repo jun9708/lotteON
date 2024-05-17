@@ -1,0 +1,219 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/sellerLayout.html}">
+<!--내용 시작-->
+<section id="admin-product-list" layout:fragment="content">
+    <nav>
+
+        <script>
+            // 상품 문의 답변 등록 함수
+            function insertQnaComment() {
+                let result = confirm("답변을 등록하시겠습니까?");
+                if (result){
+                    const button = event.target;
+                    const responseQna = button.parentNode;
+                    const qnaComment = responseQna.querySelector('.inputComment').value;
+                    const sellerNo = responseQna.querySelector('.prodSeller').value;
+                    const prodQnaNo = [[${prodQnaDTO.prodQnaNo}]];
+                    const jsonData = {
+                        "qnaComment" : qnaComment,
+                        "prodQnaNo" : prodQnaNo,
+                        "sellerNo" : sellerNo
+                    }
+                    fetch("/lotteon/seller/cs/qna/insertQnaNote", {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(jsonData)
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert("댓글이 등록되었습니다.");
+                            createCommentTag(qnaComment, data);
+                        })
+                        .catch(err => console.log(err))
+                }
+            }
+
+            // 등록한 답변 동적 생성 함수
+            function createCommentTag(qnaComment, CQnaNo) {
+                const responseQna = document.getElementsByClassName('responseQna')[0];
+                const currentDate = new Date();
+                const year = currentDate.getFullYear();
+                let month = currentDate.getMonth() + 1;
+                month = month < 10 ? '0' + month : month; // 날짜 두자리수로 표현
+                const day = currentDate.getDate();
+
+                const caretComment = `<div class="resQnaBox">
+                                        <div class="resQnaInfo">
+                                            <p>판매자 답변</p>
+                                            <p>${year}-${month}-${day}</p>
+                                        </div>
+                                        <div class="resQnaComment">
+                                            <input type="text" class="comment" value="${qnaComment}" readonly>
+                                            <input type="hidden" class="CQnaNo" value="${CQnaNo}">
+                                        </div>
+                                        <span onclick="modifyComment()">수정</span>
+                                        <span onclick="deleteComment()">삭제</span>
+                                    </div>`
+                responseQna.insertAdjacentHTML('beforeend', caretComment);
+            }
+
+            // 등록된 답변 수정 함수
+            function modifyComment() {
+                const modButton = event.target;
+                const delButton = modButton.nextElementSibling;
+                const inputTag = modButton.previousElementSibling.querySelector('.comment');
+
+                inputTag.readOnly = false;
+                inputTag.style.border = "1px solid #999999";
+                inputTag.focus();
+                modButton.onclick = saveComment;
+                delButton.onclick = cancelComment;
+                modButton.style.backgroundColor = "#36AE7C";
+                modButton.innerText = "저장";
+                delButton.innerText = "취소";
+
+            }
+
+            // 등록된 답변 삭제 함수
+            function deleteComment() {
+                let result = confirm("답변을 삭제하시겠습니까?");
+                if (result){
+                    const delButton = event.target;
+                    const resQnaInfo = delButton.parentNode;
+                    const CQnaNo = resQnaInfo.querySelector('.CQnaNo').value;
+
+                    fetch(`/lotteon/seller/cs/qna/deleteQnaNote/${CQnaNo}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data > 0) {
+                                resQnaInfo.remove();
+                            }else {
+                                alert("삭제에 실패했습니다.");
+                            }
+                        })
+                        .catch(err => console.log(err));
+                }
+            }
+
+            // 등록된 답변 수정사항 저장 함수
+            function saveComment() {
+                alert("저장");
+                const saveButton = event.target;
+                const cancelButton = saveButton.nextElementSibling;
+                const inputComment = saveButton.parentNode.querySelector('.comment');
+                const inputCQnaNo = saveButton.parentNode.querySelector('.CQnaNo');
+
+                const jsonData = {
+                    "qnaComment" : inputComment.value,
+                    "CQnaNo" : inputCQnaNo.value
+                }
+                fetch("/lotteon/seller/cs/qna/modifyQnaNote", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(jsonData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert("댓글이 수정되었습니다.");
+                        inputComment.readOnly = true;
+                        inputComment.style.border = "0";
+                        saveButton.onclick = modifyComment;
+                        cancelButton.onclick = deleteComment;
+                        saveButton.style.backgroundColor = "#4291e9";
+                        saveButton.innerText = "수정";
+                        cancelButton.innerText = "삭제";
+                    })
+                    .catch(err => console.log(err))
+
+            }
+
+            // 등록된 답변 수정 취소 함수
+            function cancelComment() {
+                const cancelButton = event.target;
+                const saveButton = cancelButton.previousElementSibling;
+                const inputTag = saveButton.previousElementSibling.querySelector('.comment');
+
+                inputTag.readOnly = true;
+                inputTag.style.border = "0";
+                cancelButton.onclick = deleteComment;
+                saveButton.onclick = modifyComment;
+                saveButton.style.backgroundColor = "#4291e9";
+                saveButton.innerText = "수정";
+                cancelButton.innerText = "삭제";
+            }
+        </script>
+
+        <h3>문의하기 보기</h3>
+        <p>
+          HOME > 고객센터 > <strong>문의하기</strong>
+        </p>
+    </nav>
+    <!-- 상품목록 컨텐츠 시작 -->
+        <article id="sellerQnaView">
+
+            <div class="requestQna">
+                <h4>문의 보기</h4>
+                <div class="reqQnaTitle">
+                    <span>제목</span>
+                    <span th:text="${prodQnaDTO.prodQnaTitle}"></span>
+                    <span>상태</span>
+                    <span th:text="${prodQnaDTO.prodQnaStatus}"></span>
+                </div>
+                <div class="reqQnaInfo">
+                    <span>상품명</span>
+                    <span th:text="${prodQnaDTO.prodName}"></span>
+                    <span>작성자</span>
+                    <span th:text="${#strings.substring(prodQnaDTO.userId, 0, 6)} + '****'"></span>
+                    <span>작성일</span>
+                    <span th:text="${#temporals.format(prodQnaDTO.prodQnaDate, 'yyyy-MM-dd')}"></span>
+                </div>
+                <div class="reqQnaContent">
+                    <span>내용</span>
+                    <span th:text="${prodQnaDTO.prodQnaContent}"></span>
+                </div>
+            </div>
+
+            <div class="responseQna">
+                <h4>문의 답변</h4>
+                <div class="resQnaBox" th:each="prodQnaNote : ${prodQnaNoteList}">
+                    <div class="resQnaInfo">
+                        <p>판매자 답변</p>
+                        <p th:text="${#temporals.format(prodQnaNote.CQnaDate, 'yyyy-MM-dd')}">00.00.00</p>
+                    </div>
+                    <div class="resQnaComment">
+                        <input type="text" class="comment" th:value="${prodQnaNote.content}" readonly>
+                        <input type="hidden" class="CQnaNo" th:value="${prodQnaNote.CQnaNo}">
+                    </div>
+                    <span onclick="modifyComment()">수정</span>
+                    <span onclick="deleteComment()">삭제</span>
+                </div>
+            </div>
+
+            <div class="responseQna">
+                <h4>답변 작성</h4>
+                <div class="resQnaBox">
+                    <div class="resQnaInfo">
+                        <p>판매자 답변</p>
+                        <p th:text="${#dates.format(#dates.createNow(), 'HH-mm-ss')}">00.00.00</p>
+                    </div>
+                    <div class="resQnaComment">
+                        <input type="text" class="inputComment" name="inputComment" placeholder="답변을 작성해 주세요.">
+                        <input type="hidden" class="prodSeller" th:value="${session.prodSeller}">
+                    </div>
+                </div>
+                <span onclick="insertQnaComment()">답변 등록</span>
+            </div>
+
+
+            <div style="text-align: right; margin-top: 50px">
+              <a th:href="@{/seller/cs/qna/list(prodSeller=${session.prodSeller})}"><input type="button" value="목록" style="background-color: #4291e9; color: white; border: none; padding: 8px 12px; cursor: pointer;" /></a>
+            </div>
+        </article>
+
+
+
+  <!-- 상품목록 컨텐츠 끝 -->
+</section>
+<!--내용 끝-->
+</html>

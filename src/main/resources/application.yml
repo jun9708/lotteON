@@ -1,0 +1,79 @@
+logging:
+    file:
+        name: logs/lotteon.log
+    level:
+        jdbc:
+            connection: info
+            resultsettable: info
+            sqlonly: info
+            sqltiming: info
+        root: info
+
+mybatis:
+    mapper-locations: classpath:mappers/**/*.xml
+
+server:
+    port: 8080
+    servlet:
+        context-path: /lotteon
+
+spring:
+    application:
+        name: lotteon
+
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        password: Abcd1234!
+        url: jdbc:mysql://3.39.72.175/lotteon
+        username: team1
+
+    devtools:
+        livereload:
+            enabled: true
+        restart:
+            enabled: false
+
+    # 이메일 설정
+    mail:
+        host: smtp.gmail.com
+        port: 587
+        username: skdlawo5985@gmail.com
+        password: rgwi bqmz ybah pkjo
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    timeout: 5000
+                    starttls:
+                        enable: true
+        # JPA 설정
+    jpa:
+        database: mysql
+        hibernate:
+            ddl-auto: none
+            naming:
+                physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        properties:
+            hibernate:
+                format_sql: true
+                show_sql: true
+
+    servlet:
+        multipart:
+            location: uploads/
+            max-file-size: 10MB
+
+    thymeleaf:
+        prefix: classpath:/templates
+
+
+# 파일 업로드 설정
+file:
+    # 개발용
+    upload:
+        path: uploads/
+
+    # 배포용
+    #upload:
+        #path: /home/lotteon/uploads/
+

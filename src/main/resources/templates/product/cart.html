@@ -1,0 +1,671 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>롯데ON::롯데 온라인 쇼핑몰</title>
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{/images/favicon.ico}" />
+    <script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js}"></script>
+    <script th:src="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js}"></script>
+    <script th:src="@{https://kit.fontawesome.com/20962f3e4b.js}" crossorigin="anonymous"></script>
+    <script th:src="@{https://cdn.jsdelivr.net/bxslider/4.2.12/jquery.bxslider.min.js}"></script>
+    <link rel="stylesheet" th:href="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css}"/>
+    <link rel="stylesheet" th:href="@{https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css}"/>
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/bxslider/4.2.12/jquery.bxslider.css}"/>
+    <link rel="stylesheet" th:href="@{/css/common.css}" />
+    <link rel="stylesheet" th:href="@{/css/product/product.css}" />
+    <!--cart 페이지는 카테고리 탭이 없어야하므로 layout처리 안함-->
+
+    <script>
+        window.onload = function (){
+
+            const cartDelete = document.getElementById('cartDelete');
+
+
+            // 딜리트 버튼 클릭시 삭제 로직
+            cartDelete.onclick = function (e){
+                e.preventDefault();
+                var selectedCart = document.getElementsByName('selectedCart');
+                var selectedCartList = [];
+                var rowsToDelete = [];
+
+                selectedCart.forEach(function (checkbox) {
+                    if (checkbox.checked){
+                        var inputField = checkbox.parentNode.querySelector('input[type="hidden"]');
+                        var cartProdNo = inputField.value;
+                        selectedCartList.push(cartProdNo);
+                        var row = checkbox.closest('.productList');
+                        rowsToDelete.push(row);
+                    }
+                });
+                console.log('Selected Cart Product Numbers:', selectedCartList);
+                console.log('Rows to Delete:', rowsToDelete);
+
+                console.log(selectedCartList);
+                var result = confirm("장바구니에서 삭제하시겠습니까?");
+                if (result){
+                    const jsonDate = {
+                        cartProdNo : selectedCartList
+                    };
+                    fetchPut(`/lotteon/cart/delete`, jsonDate)
+                        .then(data => {
+                            console.log(data); // 서버로부터 받은 데이터 출력 또는 처리
+                            alert("삭제되었습니다.");
+
+                            rowsToDelete.forEach(function (row) {
+
+                                row.remove();
+
+                                var org_prices = document.querySelectorAll('.sum_org_price');
+                                var del_prices = document.querySelectorAll('.delivery_price');
+                                var dis_prices = document.querySelectorAll('.discount_price');
+                                var tot_prices = document.querySelectorAll('.total_price');
+
+                                console.log(org_prices.innerHTML + "/" +  del_prices.innerHTML + "/" + dis_prices.innerHTML + "/" + tot_prices.innerHTML);
+                                // 회사별 상품 가격 출력
+                                org_prices.forEach(function (org_price) {
+                                    org_price.textContent = ' 상품 0원';
+                                });
+
+                                del_prices.forEach(function (del_price) {
+                                    del_price.textContent = ' + 배송비 0원';
+                                });
+
+                                dis_prices.forEach(function (dis_price) {
+                                    dis_price.textContent = ' - 할인 0원';
+                                });
+
+                                tot_prices.forEach(function (tot_price) {
+                                    tot_price.textContent = ' = 총 0원';
+                                });
+
+                                const cartOrg = document.getElementById('prodOrgPrice');
+                                const cartCount = document.getElementById('prodCount');
+                                const cartDis = document.getElementById('prodDisPrice');
+                                const cartDel = document.getElementById('prodDelivery');
+                                const cartPoi = document.getElementById('prodPoint');
+                                const cartTotal = document.getElementById('prodTotalPrice');
+
+                                cartOrg.textContent = '0';
+                                cartCount.textContent = '0';
+                                cartDis.textContent = '0';
+                                cartDel.textContent = '- 0';
+                                cartPoi.textContent = '0';
+                                cartTotal.textContent = '0';
+
+                            });
+
+                            // productList가 모두 삭제되었을 때 listForCompany 클래스의 상태 확인
+                            var listForCompanyList = document.querySelectorAll('.listForCompany');
+                            listForCompanyList.forEach(function (listForCompany) {
+                                var productList = listForCompany.querySelectorAll('.productList');
+                                if (productList.length === 0) {
+                                    // productList가 없으면 부모 요소인 listForCompany도 삭제
+                                    listForCompany.remove();
+                                }
+                            });
+
+
+                        })
+                        .catch(error => {
+                            console.error(error); // 오류 처리
+                        });
+                }
+            }
+
+            const orderBtn = document.getElementById('btnOrder');
+
+            orderBtn.onclick = function (e){
+                e.preventDefault();
+                if (document.getElementById('prodCount').innerText === "0"){
+                    alert('주문상품을 선택해주세요.');
+                }else {
+                    if (confirm('상품을 결제 하시겠습니까?')){
+                        var selectedCart = document.getElementsByName('selectedCart');
+                        const userId = document.getElementById('userForDirect').value;
+                        var selectedCartList = [];
+                        var selectedCountList = [];
+
+                        selectedCart.forEach(function (checkbox) {
+                            if (checkbox.checked){
+                                var inputField = checkbox.parentNode.querySelector('input[type="hidden"]');
+                                var cartProdNo = inputField.value;
+                                selectedCartList.push(cartProdNo);
+                                var inputCount = checkbox.parentNode.querySelector('.prodCount');
+                                var countValue = inputCount.value;
+                                selectedCountList.push(countValue);
+                            }
+                        });
+
+                        console.log(selectedCartList);
+                        console.log(selectedCountList);
+
+                        const jsonDate = {
+                            cartProdNo : selectedCartList,
+                            count : selectedCountList
+                        };
+
+                        fetchPut(`/lotteon/cart/update`, jsonDate)
+                            .then(data => {
+                                console.log(data); // 서버로부터 받은 데이터 출력 또는 처리
+
+                                var selectedProdInput = document.getElementById('selectedProd');
+                                selectedProdInput.value = selectedCartList.join(',');
+                                const form = document.getElementById('buyForm');
+                                form.submit();
+
+                            })
+                            .catch(error => {
+                                console.error(error); // 오류 처리
+                            });
+                    }
+                }
+            }
+        }
+
+        /* 3일후 계산하여 배송예정일에 출력 */
+        document.addEventListener('DOMContentLoaded', function () {
+            // 오늘 날짜 구하기
+            var today = new Date();
+
+            // 3일 후의 날짜 계산
+            var deliveryDate = new Date(today);
+            deliveryDate.setDate(today.getDate() + 3); // 오늘 날짜에 3일을 더함
+
+            // 도착 예정 날짜 형식 지정
+            var dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            var dayOfWeek = dayNames[deliveryDate.getDay()]; // 요일
+            var month = deliveryDate.getMonth() + 1; // 월 (0부터 시작하므로 +1 필요)
+            var dayOfMonth = deliveryDate.getDate(); // 일
+
+            // 도착 예정 날짜 문자열 생성 (예: "7/8(금) 이내 도착확률 86%")
+            var arrivalDateString = `${month}/${dayOfMonth}(${dayOfWeek})이내 도착확률 86%`;
+
+            // 도착 예정 날짜 출력
+            var productListElements = document.querySelectorAll('.productList');
+            productListElements.forEach(function (element){
+                var arrivalElement = element.querySelector('#arrivalDate');
+                arrivalElement.textContent = arrivalDateString;
+            });
+
+        });
+
+        // x버튼
+        function cartProdDelete(){
+            var inputField = event.target.parentNode.nextElementSibling.querySelector('input[type="hidden"]');
+            var cartProdNoList = [];
+            var cartProdNo = inputField.value;
+            cartProdNoList.push(cartProdNo);
+            var row = event.target.closest('.productList');
+            console.log("1 :" + row);
+
+
+            var result = confirm("장바구니에서 삭제하시겠습니까?");
+            if (result){
+                const jsonDate = {
+                    cartProdNo : cartProdNoList
+                };
+                fetchPut(`/lotteon/cart/delete`, jsonDate)
+                    .then(data => {
+                        console.log(data); // 서버로부터 받은 데이터 출력 또는 처리
+                        alert("삭제되었습니다.");
+                        row.remove();
+
+                        // productList가 모두 삭제되었을 때 listForCompany 클래스의 상태 확인
+                        var listForCompanyList = document.querySelectorAll('.listForCompany');
+                        listForCompanyList.forEach(function (listForCompany) {
+                            var productList = listForCompany.querySelectorAll('.productList');
+                            if (productList.length === 0) {
+                                // productList가 없으면 부모 요소인 listForCompany도 삭제
+                                listForCompany.remove();
+                            }
+                        });
+
+
+
+                    })
+                    .catch(error => {
+                        console.error(error); // 오류 처리
+                    });
+            }
+        }
+
+        /* +, - 버튼 눌렀을 때 동작하며 할인 금액 계산하여 총 액에나타나게함 */
+        function changeNum(change) {
+            var numInput = event.target.parentNode.querySelector('input');
+            var productInfo = event.target.closest('.productInfo');
+            // 할인 전,후 가격 요소 선택
+            var orgPriceElement = productInfo.querySelector('.org_price span');
+            var inputOrgPrice = productInfo.querySelector('.org_price input.price');
+            var disPriceElement = productInfo.querySelector('.dis_price');
+            var discount = productInfo.querySelector('.dis_prod').value;
+            //var inputOrgElement = orgPriceElement.querySelector('input');
+            //console.log(inputOrgPrice);
+            //console.log("discount:"+discount);
+
+            var orgPriceValue = inputOrgPrice.value;
+            //console.log("org :" + orgPriceValue);
+
+            var currentValue = parseInt(numInput.value) + change;
+            // 최소값은 1, 최대값은 99로 제한
+            if (currentValue < 1) {
+                currentValue = 1;
+            } else if (currentValue > 99) {
+                currentValue = 99;
+            }
+
+            numInput.value = currentValue; // 변경된 값 적용
+            //console.log("갯수"+currentValue);
+
+            var orgTotalPrice = orgPriceValue * currentValue;
+            var disTotalPrice = orgPriceValue *(100 - discount) * currentValue * 0.01;
+            //console.log("원금"+orgTotalPrice);
+            //console.log("할인"+disTotalPrice);
+            if (!isNaN(orgTotalPrice)) {
+                // 금액 콤마 표시를 위해 포멧팅
+                var fOrgTotalPrive = new Intl.NumberFormat('ko-KR').format(orgTotalPrice)+'원';
+                orgPriceElement.innerHTML = fOrgTotalPrive;
+
+            }
+            if (!isNaN(disTotalPrice)){
+                var fDisTotalPrive = new Intl.NumberFormat('ko-KR').format(disTotalPrice)+'원';
+                disPriceElement.innerHTML = fDisTotalPrive;
+            }
+
+            // 수량 조절한 상품의 체크박스가 체크 되었는지 확인
+
+            // 체크 되었으면 합산 가격 조정
+            var aa = event.target.parentNode.parentNode.parentNode.parentNode.parentNode;
+            calculateTotalPrice(aa);
+            // 체크 안되면 끝
+
+        }
+
+        // 체크 된 상품 금액 계산
+        function calculateTotalPrice(aa){
+
+            //console.log("calculateTotalPrice...1 : " + this);
+            // 회사별로 가격 출력
+            let sumOrgPrice = 0;
+            let discountPrice = 0;
+            let sumTotalPrice = 0;
+            let deliveryFeeList = [];
+            let maxDeliveryFee = 0;
+            let listForCompany = aa;
+
+
+            //console.log("listForCompany : " + listForCompany);
+
+            if (aa === undefined) {
+                //console.log("2" + listForCompany);
+                listForCompany = event.target.parentNode.parentNode.parentNode;
+            }
+            //console.log("3" + listForCompany);
+            // 선택된 체크박스 갯수카운트를 위한 문서객체
+            var selectedCheckboxes = document.querySelectorAll('input[name="selectedCart"]:checked');
+            var checkedCount = selectedCheckboxes.length;
+            //console.log("선택된 상품 개수: " + checkedCount);
+            const prodCount = document.getElementById('prodCount');
+            prodCount.textContent = checkedCount.toLocaleString();
+            const listForCompanyChecks = listForCompany.querySelectorAll('input[name="selectedCart"]');
+
+            listForCompanyChecks.forEach(function (checkbox){
+
+                //const listForCompany = checkbox.closest('.listForCompany');
+                //console.log("calculateTotalPrice...2 : " + listForCompany);
+
+                const orgPrice = listForCompany.querySelector('.sum_org_price');
+                const disPrice = listForCompany.querySelector('.discount_price');
+                const deliveryPrice = listForCompany.querySelector('.delivery_price');
+                const totalPrice = listForCompany.querySelector('.total_price');
+
+                //console.log("원금 :" + orgPrice + "할인" + disPrice + "합 :" + totalPrice);
+
+                if (checkbox.checked){
+
+                    //console.log("calculateTotalPrice...3");
+                    const cartItem = checkbox.closest('.productInfo');
+                    const priceOrgElement = cartItem.querySelector('.org_price_value');
+                    const priceDisElement = cartItem.querySelector('.dis_price');
+                    const deliveryPrice = cartItem.querySelector('.delivery_fee');
+                    // console.log(deliveryPrice);
+
+                    if (deliveryPrice.value){
+                        deliveryFeeList.push(deliveryPrice.value);
+                    }
+
+                    maxDeliveryFee = Math.max(...deliveryFeeList);
+                    console.log("최대 배송비 : " + maxDeliveryFee);
+
+                    //console.log(cartItem.innerHTML);
+                    console.log("orgin: " + priceOrgElement.innerHTML + ", dis :" + priceDisElement.innerHTML);
+
+                    const orgPriceText = priceOrgElement.innerText; // 체크된 상품의 가격
+                    const disPriceText = priceDisElement.innerText; // 체크된 상품의 가격
+                    console.log("할인가텍스트 :" + disPriceText);
+                    var orgParsePrice = parseFloat(orgPriceText.replace(/,/g, ''));
+                    var disParsePrice = parseFloat(disPriceText.replace(/,/g, ''));
+                    console.log("단순계산 : 원금 :" + orgParsePrice + ", dis :" + disParsePrice + ", fee :" + maxDeliveryFee);
+
+                    sumOrgPrice += orgParsePrice;
+                    discountPrice += orgParsePrice - disParsePrice;
+                    sumTotalPrice = sumOrgPrice - discountPrice; // 최종 가격
+                    if (sumTotalPrice >= 50000) {
+                        maxDeliveryFee = 0;
+                        sumTotalPrice = sumOrgPrice - discountPrice + maxDeliveryFee; // 조정된 최종 가격 다시 계산
+                    }else {
+                        sumTotalPrice = sumOrgPrice - discountPrice + maxDeliveryFee;
+                    }
+
+                }
+                // 회사별 상품 가격 출력
+                orgPrice.textContent = ' 상품 ' + sumOrgPrice.toLocaleString() + '원';
+                deliveryPrice.textContent = ' + 배송비' + maxDeliveryFee.toLocaleString() + '원';
+                disPrice.textContent = ' - 할인 ' + discountPrice.toLocaleString() + '원';
+                totalPrice.textContent = ' = 총 ' + sumTotalPrice.toLocaleString() + '원';
+                console.log("회사별가격: "+orgPrice.innerHTML + " : " + disPrice.innerHTML + " : " + totalPrice.innerHTML);
+            });
+            cartPrice();
+        }
+
+        // 전체 체크 선택 시 금액 계산
+        function allCheckedBoxTotalPrice() {
+            const cartList = event.target.parentNode.parentNode;
+            const list = document.querySelectorAll('.listForCompany');
+            const allCheckbox = document.querySelector('input[name="all"]');
+            const selectedCartCheckboxes = document.querySelectorAll('input[name="selectedCart"]');
+            selectedCartCheckboxes.forEach(function (checkbox){
+                checkbox.checked = allCheckbox.checked;
+            });
+            Array.from(list).forEach(function (eachList) {
+                calculateTotalPrice(eachList);
+
+            });
+        }
+
+        // 판매 회사 별 금액 계산
+        function cartPrice(){
+            const allSelectedPrice = document.querySelectorAll('.company_price');
+            //console.log(allSelectedPrice);
+
+            // 전체합계
+            let cartOrgPrice = 0;
+            let cartDisPrice = 0;
+            let cartDeliveryPrice = 0;
+            let cartPoint = 0;
+            let cartTotalPrice = 0;
+
+            allSelectedPrice.forEach(function (priceElement){
+                const orgPrice = priceElement.querySelector('.sum_org_price');
+                const disPrice = priceElement.querySelector('.discount_price');
+                const deliveryPrice = priceElement.querySelector('.delivery_price');
+                const totalPrice = priceElement.querySelector('.total_price');
+
+                // 각 요소에서 텍스트 내용 가져오기
+                const orgPriceText = orgPrice.textContent.trim();
+                const disPriceText = disPrice.textContent.trim();
+                const deliveryPriceText = deliveryPrice.textContent.trim();
+                const totalPriceText = totalPrice.textContent.trim();
+
+                // 각 텍스트에서 숫자 값 추출
+                const orgPriceValue = parseFloat(orgPriceText.replace(/[^\d.-]/g, '')); // 숫자로 변환
+                const disPriceValue = parseFloat(disPriceText.replace(/[^\d.-]/g, '')); // 숫자로 변환
+                const deliveryPriceValue = parseFloat(deliveryPriceText.replace(/[^\d.-]/g, '')); // 숫자로 변환
+                const totalPriceValue = parseFloat(totalPriceText.replace(/[^\d.-]/g, '')); // 숫자로 변환
+
+                //console.log(orgPriceValue + "/" + disPriceValue + "/" + deliveryPriceValue + "/" + totalPriceValue);
+
+                cartOrgPrice += orgPriceValue;
+                cartDisPrice += disPriceValue;
+                cartDeliveryPrice += deliveryPriceValue;
+                cartTotalPrice += totalPriceValue;
+                cartPoint = Math.floor(cartTotalPrice * 0.01);
+
+                //console.log(cartOrgPrice + "/" + cartDisPrice + "/" + cartDeliveryPrice + "/" + cartTotalPrice);
+            });
+
+            const cartOrg = document.getElementById('prodOrgPrice');
+            const cartDis = document.getElementById('prodDisPrice');
+            const cartDel = document.getElementById('prodDelivery');
+            const cartPoi = document.getElementById('prodPoint');
+            const cartTotal = document.getElementById('prodTotalPrice');
+
+            cartOrg.textContent = cartOrgPrice.toLocaleString();
+            cartDis.textContent = cartDisPrice.toLocaleString();
+            cartDel.textContent = cartDeliveryPrice.toLocaleString();
+            cartPoi.textContent = cartPoint.toLocaleString();
+            cartTotal.textContent = cartTotalPrice.toLocaleString();
+        }
+
+        function accordion() {
+            const button = event.target;
+            const listForCompany = button.parentNode;
+            const productListAll = listForCompany.querySelectorAll('.productList');
+            const company_price = listForCompany.querySelector('.company_price');
+            Array.from(productListAll).forEach(function (productList) {
+                if (productList.style.display === "none") {
+                    productList.style.display = "flex";
+                    //company_price.style.display = "flex";
+                    button.innerText = "∧";
+                }else {
+                    productList.style.display = "none";
+                    //company_price.style.display = "none";
+                    button.innerText = "∨";
+                }
+            })
+        }
+
+        // top 버튼
+        function movingTop() {
+            window.scrollTo(0, 0);
+        }
+
+    </script>
+
+</head>
+<body>
+<div id="wrapper">
+    <header>
+        <div class="top">
+            <div th:if="${!#authorization.expression('isAuthenticated()')}">
+                <a th:href="@{/member/login}">로그인</a>
+                <a th:href="@{/member/join}">회원가입</a>
+            </div>
+            <div th:if="${#authorization.expression('isAuthenticated()')}">
+                <a th:href="@{/member/join}">[[${#authentication.principal.user.userName}]]님</a>
+                <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}">마이페이지</a>
+                <a th:href="@{/product/cart(userId=${#authentication.principal.user.userId})}">
+                    <i class="fa fa-shopping-cart" aria-hidden="true"></i>&nbsp;장바구니
+                </a>
+                <a th:href="@{/member/logout}">로그아웃</a>
+            </div>
+        </div>
+        <div class="logo">
+            <div>
+                <a th:href="@{/}"><img th:src="@{/images/header_logo.png}" alt="로고" /></a>
+                <form action="#">
+                    <input type="text" name="search"/>
+                    <button><i class="fa fa-search"></i></button>
+                </form>
+            </div>
+
+        </div>
+        <div class="menu">
+            <div>
+                <ul>
+                    <li><a th:href="@{'/product/list?cateCode='+'&sort=prodHit'}">히트상품</a></li>
+                    <li><a th:href="@{'/product/list?cateCode='+'&sort=prodScore'}">추천상품</a></li>
+                    <li><a th:href="@{'/product/list?cateCode='+'&sort=prodRdate'}">최신상품</a></li>
+                    <li><a th:href="@{'/product/list?cateCode='+'&sort=prodSold'}">인기상품</a></li>
+                    <li><a th:href="@{'/product/list?cateCode='+'&sort=prodDiscount'}">할인상품</a></li>
+                </ul>
+                <ul>
+                    <li><a href="#">쿠폰존</a></li>
+                    <li><a href="#">사용후기</a></li>
+                    <li><a href="#">개인결제</a></li>
+                    <li><a th:href="@{/cs/index}">고객센터</a></li>
+                    <li><a th:href="@{/cs/faq/list(faqCate='user')}">FAQ</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+    <main id="product">
+
+        <!-- 장바구니 페이지 시작 -->
+        <section class="cart">
+
+            <!-- 제목, 페이지 네비게이션 -->
+            <nav>
+                <script th:src="@{/js/util.js}"></script>
+                <h1>장바구니</h1>
+                <p>
+                    HOME > <span>패션·의류·뷰티</span> > <strong>장바구니</strong>
+                </p>
+            </nav>
+            <div th:if="${cartProducts.size()==0}" id="cartList" >
+                <div style="justify-content: center; align-items: center;  padding: 20px 0">
+                    <p style="font-size: 16px; font-weight: bold;">🛒 장바구니가 비어있습니다. 🛒</p>
+                </div>
+            </div>
+            <div th:if="${cartProducts.size()!=0}" id="cartList">
+                <!-- 장바구니 목록 -->
+                <div>
+                    <label for="">
+                        <input type="checkbox" name="all" onclick="allCheckedBoxTotalPrice()">
+                        <span>전체선택</span>
+                    </label>
+                    <a href="" id="cartDelete">선택삭제</a>
+                </div>
+                <div class="listForCompany" th:each="map : ${cartProducts}" style="position: relative">
+                    <p style="padding: 15px; border-top : 1px solid #d3d3d3; font-size: 18px; font-weight: bold; background-color: #f2f2f2 "  class="cartProdCompany" th:text="${map.key}">회사명</p>
+                    <p style="font-size: 30px; cursor: pointer; position: absolute; top: 4px; right: 20px" onclick="accordion()">∧</p>
+
+                    <div th:each="cartProduct, index:${map.value}" class="productList">
+                        <!--productList를 반복 시키면 됨!!-->
+                        <div class="productSelect">
+                            <span onclick="cartProdDelete()">x</span>
+                        </div>
+                        <div class="productInfo">
+                            <input type="checkbox" name="selectedCart" onclick="calculateTotalPrice()">
+                            <input type="hidden" th:value="${cartProduct.cartProdNo}">
+                            <a href="#"><img th:src="@{/uploads/__${cartProduct.thumb190}__}" alt="" style="width:80px"></a><!--80*80 사이즈로 변경-->
+                            <div>
+                                <p><a href="#">[[${cartProduct.prodName}]]</a></p>
+                                <p>[[${cartProduct.prodInfo}]]</p>
+                                <p id="prodOpt" th:if="${cartProduct.optValue1 != null}">
+                                    <span th:text="'옵션: ' + ${cartProduct.optValue1}"></span>
+                                    <span th:if="${cartProduct.optValue2 != null}">
+                                        <span th:text="' ) ' + ${cartProduct.optValue2}"></span>
+                                        <span th:if="${cartProduct.optValue3 != null}">
+                                        <span th:text="' / ' + ${cartProduct.optValue3}"></span>
+                                    </span>
+                                </span>
+                                </p>
+                                <p id="arrivalDate">4/17(수) 이내 도착확률 86%</p>
+                            </div>
+                            <div>
+                                <label for="">
+                                    <button class="decrease" onclick="changeNum(-1)">-</button>
+                                    <input class="prodCount" name="num" type="text" oninput="changeNum(0)" th:value="${cartProduct.count}">
+                                    <button class="increase" onclick="changeNum(1)">+</button>
+                                </label>
+                            </div>
+                            <div>
+                                <!--할인 전 가격 출력 옵션 있는경우/ 없는경우-->
+                                <p class="org_price" th:if="${cartProduct.optValue1}!= null">
+                                    <span class="org_price_value" style="text-decoration: line-through; color: #7f7f7f" th:text="${#numbers.formatInteger(cartProduct.optPrice * cartProduct.count, 3, 'COMMA')}"></span>
+                                    <span style="color: #ed2f2f; font-weight: bold" th:text="'↓' + ${cartProduct.prodDiscount} + '%'"></span>
+                                    <input class="price" type="hidden" th:value="${cartProduct.optPrice}">
+                                </p>
+                                <p class="org_price" th:if="${cartProduct.optValue1}== null">
+                                    <span class="org_price_value" style="text-decoration: line-through; color: #7f7f7f" th:text="${#numbers.formatInteger(cartProduct.prodPrice * cartProduct.count , 3, 'COMMA')}"></span>
+                                    <span style="color: #ed2f2f; font-weight: bold" th:text="'↓' + ${cartProduct.prodDiscount} + '%'"></span>
+                                    <input class="price" type="hidden" th:value="${cartProduct.prodPrice}">
+                                </p>
+
+                                <!--할인 후 가격 출력 옵션 있는경우/ 없는경우-->
+                                <p class="dis_price" th:if="${cartProduct.optValue1} == null" th:text="${#numbers.formatInteger((cartProduct.prodPrice * (100 - cartProduct.prodDiscount) * cartProduct.count * 0.01), 3, 'COMMA')+'원'}"></p>
+                                <p class="dis_price" th:if="${cartProduct.optValue1} != null" th:text="${#numbers.formatInteger((cartProduct.optPrice * (100 - cartProduct.prodDiscount) * cartProduct.count * 0.01), 3, 'COMMA')+'원'}"></p>
+                                <input class="dis_prod" type="hidden" th:value="${cartProduct.prodDiscount}">
+                                <input class="delivery_fee" type="hidden" th:value="${cartProduct.prodDeliveryFee}">
+                                <a href="">혜택변경</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="border-top: 1px #d3d3d3 solid; padding: 10px;margin: 10px; font-size: 14px" class="company_price">
+                        <span class="sum_org_price">상품 0원</span>
+                        <span class="delivery_price"> + 배송비 0원</span>
+                        <span class="discount_price"> - 할인 0원</span>
+                        <span class="total_price"> = 총 0원</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 장바구니 전체합계 -->
+            <div class="total">
+                <h2>전체합계</h2>
+                <table border="0">
+                    <tr>
+                        <td>상품수</td>
+                        <td id="prodCount">0</td>
+                    </tr>
+                    <tr>
+                        <td>상품금액</td>
+                        <td id="prodOrgPrice">0</td>
+                    </tr>
+                    <tr>
+                        <td>할인금액</td>
+                        <td id="prodDisPrice">- 0</td>
+                    </tr>
+                    <tr>
+                        <td>배송비</td>
+                        <td id="prodDelivery">0</td>
+                    </tr>
+                    <tr>
+                        <td>포인트</td>
+                        <td id="prodPoint">0</td>
+                    </tr>
+                    <tr>
+                        <td>전체주문금액</td>
+                        <td id="prodTotalPrice">0</td>
+                    </tr>
+                </table>
+                <form id="buyForm" th:action="@{/product/order}" method="POST">
+                    <input type="submit" id="btnOrder" value="주문하기">
+                    <input type="hidden"  name="user" id="userForDirect" th:value="${#authentication.principal.user.userId}">
+                    <input type="hidden" name="cartProdNo" id="selectedProd">
+                </form>
+            </div>
+
+        </section>
+        <!-- 장바구니 페이지 끝 -->
+    </main>
+    <footer>
+        <ul>
+            <li><a th:href="@{/company/index}">회사소개</a></li>
+            <li><a th:href="@{/policy/buyer}">서비스이용약관</a></li>
+            <li><a th:href="@{/policy/privacy}">개인정보처리방침</a></li>
+            <li><a th:href="@{/policy/finance}">전자금융거래약관</a></li>
+        </ul>
+        <div>
+            <p><img src="../images/footer_logo.png" alt="로고" /></p>
+            <p>
+                <strong>(주)롯데ON</strong><br />
+                서울특별시 송파구 올림픽로 300 롯데월드타워 26층 (역삼동 강남파이낸스센터)<br />
+                대표이사 : 김사무엘상현, 정준호, 강성현<br />
+                사업자등록번호 : 529-85-00774(롯데쇼핑(주) e커머스사업부)<br />
+                통신판매업 신고 : 서울송파 제0158호<br>
+                호스팅 서비스사업자 : 롯데쇼핑(주) e커머스사업부
+            </p>
+            <p>
+                <strong>고객센터</strong><br />
+                Tel : 1899-7000(유료) (평일 09:00~18:00)<br />
+                Fax : 051-123-4567 | E-mail : lotteon@lotte.net<br />
+            </p>
+        </div>
+    </footer>
+    <button type="button" id="top" onclick="movingTop()">상단이동</button>
+</div>
+</body>
+</html>
+
+
+-->

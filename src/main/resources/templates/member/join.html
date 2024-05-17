@@ -1,0 +1,35 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/memberLayout.html}">
+<!--내용 시작-->
+    <main id="member" layout:fragment="content">
+        <div class="join">
+            <h1 class="welcome"><strong>롯데ON</strong>에 오신것을 환영합니다.</h1>
+            <div class="type">
+                <div class="normal">
+
+                    <div class="register_text">
+                        <div class="user_text">
+                            <p>개인 구매회원(외국인포함)</p>
+                            <p>만14세 이상 가능</p>
+                        </div>
+                        <div class="seller_text">
+                            <p>사업자 판매회원</p>
+                            <p>사업자등록증을 보유한 사업자판매회원(구매도 가능)</p>
+                        </div>
+                    </div>
+
+
+                    <div class="register_container">
+                        <a th:href="@{/member/signup(userRole='USER')}" class="user_register">일반 회원가입</a>
+                        <a th:href="@{/member/signup(userRole='SELLER')}" class="seller_register">판매회원 가입/전환</a>
+                    </div>
+
+                </div>
+            </div>
+            <img th:src="@{/images/member/member_join_banner1.jpg}" class="banner" alt="신규회원을 위한 기분 좋은 혜택">
+            <img th:src="@{/images/member/member_join_banner2.jpg}" class="banner" alt="사업자회원을 위한 기분 좋은 혜택">
+        </div>
+    </main>
+<!--내용 끝-->
+</html>

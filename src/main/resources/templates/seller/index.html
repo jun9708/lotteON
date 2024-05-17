@@ -1,0 +1,228 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/sellerLayout.html}">
+<!--내용 시작-->
+    <section id="admin-index" layout:fragment="content">
+
+        <script th:inline="javascript">
+            window.onload = function (){
+                const monthCount = [[${monthCount}]];  // 최근 한달 일자별 주문 건수
+                const monthPrice = [[${monthPrice}]];  // 최근 한달 일자별 주문 금액
+                const dateArray = [];
+                const countArray = [];
+                const priceArray = [];
+
+                const countKeys = Object.keys(monthCount);
+                for (let i = countKeys.length - 1; i >= 0; i--) {
+                    const key = countKeys[i];
+                    const value = monthCount[key];
+                    dateArray.push(key);
+                    countArray.push(value);
+                }
+                const priceKeys = Object.keys(monthPrice);
+                for (let i = priceKeys.length - 1; i >= 0; i--) {
+                    const key = priceKeys[i];
+                    const value = monthPrice[key];
+                    priceArray.push(value);
+                }
+
+                const ctx = document.getElementById('line-chart1');
+                const ctx2 = document.getElementById('line-chart2');
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dateArray,
+                        datasets: [{
+                            label: '',
+                            data: countArray,
+                            borderWidth: 1,
+                            backgroundColor: '#36AE7C',
+                            borderColor: '#36AE7C'
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        title: {
+                            display: true,
+                            text: '최근 한달 주문 건수',
+                            fontSize: 20,
+                            color: '#111',
+                        },
+                        plugins: {
+                            legend: {
+                                display: false // 라벨 숨기기
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    stepSize: 1 // 눈금의 간격
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: dateArray,
+                        datasets: [{
+                            data: priceArray,
+                            borderWidth: 1,
+                            backgroundColor: '#187498',
+                            borderColor: '#187498'
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        title: {
+                            display: true,
+                            text: '최근 한달 주문 금액',
+                            fontSize: 20,
+                            color: '#111',
+                        },
+                        plugins: {
+                            legend: {
+                                display: false // 라벨 숨기기
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    stepSize: 100000 // 눈금의 간격
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            function viewCountGraph() {
+                const countGraph = document.getElementsByClassName('countGraph')[0];
+                const priceGraph = document.getElementsByClassName('priceGraph')[0];
+                countGraph.style.display = "flex";
+                priceGraph.style.display = "none";
+            }
+            function viewPriceGraph() {
+                const countGraph = document.getElementsByClassName('countGraph')[0];
+                const priceGraph = document.getElementsByClassName('priceGraph')[0];
+                countGraph.style.display = "none";
+                priceGraph.style.display = "flex";
+            }
+
+        </script>
+
+        <nav>
+            <h3>판매자 메인</h3>
+            <p>
+                HOME > <strong>메인</strong>
+            </p>
+        </nav>
+
+        <h4>쇼핑몰 운영현황</h4>
+        <article>
+            <div class="shopInfo">
+                <div class="shopAverage">
+                    <div class="shopGroup">
+                        <div>주문 건수</div>
+                        <div>
+                            <div>
+                                <p>전체 주문<span th:text="${sellerInfoDTO.allCount} + '건'"></span></p>
+                                <p>신규 주문<span th:text="${sellerInfoDTO.oneDayCount} + '건'"></span></p>
+                                <p>주간 주문<span th:text="${sellerInfoDTO.oneWeekCount} + '건'"></span></p>
+                                <p>월간 주문<span th:text="${sellerInfoDTO.oneMonthsCount} + '건'"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shopGroup">
+                        <div>주문 금액</div>
+                        <div>
+                            <div>
+                                <p th:if="${sellerInfoDTO.allPrice} > 999">전체 주문<span th:text="${#numbers.formatInteger(sellerInfoDTO.allPrice,3,'COMMA')} + '원'"></span></p>
+                                <p th:if="${sellerInfoDTO.allPrice} < 999">전체 주문<span th:text="${sellerInfoDTO.allPrice} + '원'"></span></p>
+
+                                <p th:if="${sellerInfoDTO.oneDayPrice} > 999">신규 주문<span th:text="${#numbers.formatInteger(sellerInfoDTO.oneDayPrice,3,'COMMA')} + '원'"></span></p>
+                                <p th:if="${sellerInfoDTO.oneDayPrice} < 999">신규 주문<span th:text="${sellerInfoDTO.oneDayPrice} + '원'"></span></p>
+
+                                <p th:if="${sellerInfoDTO.oneWeekPrice} > 999">주간 주문<span th:text="${#numbers.formatInteger(sellerInfoDTO.oneWeekPrice,3,'COMMA')} + '원'"></span></p>
+                                <p th:if="${sellerInfoDTO.oneWeekPrice} < 999">주간 주문<span th:text="${sellerInfoDTO.oneWeekPrice} + '원'"></span></p>
+
+                                <p th:if="${sellerInfoDTO.oneMonthsPrice} > 999">월간 주문<span th:text="${#numbers.formatInteger(sellerInfoDTO.oneMonthsPrice,3,'COMMA')} + '원'"></span></p>
+                                <p th:if="${sellerInfoDTO.oneMonthsPrice} < 999">월간 주문<span th:text="${sellerInfoDTO.oneMonthsPrice} + '원'"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shopGroup">
+                        <div>배송 관리</div>
+                        <div>
+                            <div>
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('입금대기') != null}">입금대기<span th:text="${sellerInfoDTO.statusCountMap.get('입금대기')} + '건'"></span></p>
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('입금대기') == null}">입금대기<span>0건</span></p>
+
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('배송준비') != null}" style="margin: 16px 0">배송준비<span th:text="${sellerInfoDTO.statusCountMap.get('배송준비')} + '건'"></span></p>
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('배송준비') == null}" style="margin: 16px 0">배송준비<span>0건</span></p>
+
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('배송중') != null}">배송중<span th:text="${sellerInfoDTO.statusCountMap.get('배송중')} + '건'"></span></p>
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('배송중') == null}">배송중<span>0건</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shopGroup">
+                        <div>주문 관리</div>
+                        <div>
+                            <div>
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('취소요청') != null}">취소요청<span th:text="${sellerInfoDTO.statusCountMap.get('취소요청')} + '건'"></span></p>
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('취소요청') == null}">취소요청<span>0건</span></p>
+
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('교환요청') != null}" style="margin: 16px 0">교환요청<span th:text="${sellerInfoDTO.statusCountMap.get('교환요청')} + '건'"></span></p>
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('교환요청') == null}" style="margin: 16px 0">교환요청<span>0건</span></p>
+
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('환불요청') != null}">환불요청<span th:text="${sellerInfoDTO.statusCountMap.get('환불요청')} + '건'"></span></p>
+                                <p th:if="${sellerInfoDTO.statusCountMap.get('환불요청') == null}">환불요청<span>0건</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="shopGraph">
+                    <div class="graphTitle">
+                        <div class="graphBtn" onclick="viewCountGraph()">매출 건수</div>
+                        <div class="graphBtn" onclick="viewPriceGraph()">매출 금액</div>
+                    </div>
+                    <div class="graphContent countGraph">
+                        <canvas id="line-chart1" width="1000" height="250"></canvas>
+                    </div>
+                    <div class="graphContent priceGraph" style="display: none">
+                        <canvas id="line-chart2" width="1000" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <div>
+            <div style="display: inline-block; margin-right: 52px">
+                <h4>공지사항</h4>
+                <article class="articleBox">
+                    <p th:each="notice : ${noticeDTO}">
+                        <a th:href="@{/seller/cs/notice/view(noticeNo=${notice.noticeNo})}" th:text="'[공지] ' + ${notice.noticeTitle}"></a>
+                        <span th:text="${#temporals.format(notice.noticeDate, 'yyyy-MM-dd hh:mm')}"></span>
+                    </p>
+                </article>
+            </div>
+
+            <div style="display: inline-block">
+                <h4>고객문의</h4>
+                <article class="articleBox">
+                    <p th:each="qna : ${prodQnaDTO}">
+                        <a th:href="@{/seller/cs/qna/view(qnaNo=${qna.prodQnaNo})}" th:text="'[문의] ' + ${qna.prodQnaTitle}"></a>
+                        <span th:text="${#temporals.format(qna.prodQnaDate, 'yyyy-MM-dd hh:mm')}"></span>
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+<!--내용 끝-->
+</html>

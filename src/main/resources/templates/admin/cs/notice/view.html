@@ -1,0 +1,57 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/adminLayout.html}">
+<!--내용 시작-->
+<section id="admin-product-list" layout:fragment="content">
+  <script>
+    function deleteNotice(event) {
+      const chk = confirm("정말 삭제하시겠습니까?");
+      if (!chk) {
+        event.preventDefault();
+      }
+    }
+      function goBack(){
+      window.history.back();
+    }
+  </script>
+  <nav>
+    <h3>공지사항 보기</h3>
+    <p>
+      HOME > 고객센터 > <strong>공지사항</strong>
+    </p>
+  </nav>
+  <!-- 상품목록 컨텐츠 시작 -->
+  <article class="sectionBox">
+        <table>
+          <tbody>
+          <input type="hidden" name="noticeHit" th:value="${view.noticeHit}"/>
+          <tr>
+            <td>유형</td>
+            <td th:if="${view.noticeCate == 'service'}" style="text-align: left">고객서비스</td>
+            <td th:if="${view.noticeCate == 'event'}" style="text-align: left">이벤트당첨</td>
+            <td th:if="${view.noticeCate == 'safe'}" style="text-align: left">안전거래</td>
+            <td th:if="${view.noticeCate == 'danger'}" style="text-align: left">위해상품</td>
+          </tr>
+          <tr>
+            <td>제목</td>
+            <td th:text="${view.noticeTitle}" style="text-align: left"></td>
+          </tr>
+          <tr>
+            <td>내용</td>
+            <td class="contentStyle" th:text="${view.noticeContent}"></td>
+          </tr>
+          </tbody>
+        </table>
+        <div style="text-align: right; margin-top: 50px">
+          <a class="btn" onclick="deleteNotice(event);" th:href="@{/admin/cs/notice/delete(noticeNo=${view.noticeNo})}"  style="background-color: #D04848">삭제</a>
+          <a class="btn" th:href="@{/admin/cs/notice/modify(noticeNo=${view.noticeNo})}" style="background-color: #6895D2">수정</a>
+          <a class="btn" href="#" onclick="goBack();">목록</a>
+        </div>
+    </article>
+
+
+
+  <!-- 상품목록 컨텐츠 끝 -->
+</section>
+<!--내용 끝-->
+</html>

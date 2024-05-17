@@ -1,0 +1,237 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/myLayout.html}">
+<!--내용 시작-->
+<div id="my" layout:fragment="content">
+    <!---->
+    <script th:src="@{/js/my/myScript.js}"></script>
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script>
+        window.onload = function (){
+            highlight();
+        }
+        function checkUserPw() {
+            const checkUserPwBox = document.getElementById('checkUserPwBox');
+            const userInfoBox = document.getElementById('userInfoBox');
+            const sellerInfoBox = document.getElementById('sellerInfoBox');
+            const checkUSerPw = document.getElementById('checkUSerPw');
+            const checkUSerId = document.getElementById('checkUSerId');
+            const checkUSerRole = document.getElementById('checkUSerRole');
+            const btnWithdraw = document.getElementById('btnWithdraw');
+
+            const userPw = checkUSerPw.value;
+            const userId = checkUSerId.value;
+            const userRole = checkUSerRole.value;
+
+            fetch(`/lotteon/my/info/checkUserPw/${userPw}/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    if (data.result > 0) {
+                        userInfoBox.style.display = "flex";
+                        btnWithdraw.style.display = "flex";
+                        checkUserPwBox.style.display = "none";
+                        if (userRole === "SELLER") {
+                            sellerInfoBox.style.display = "flex";
+                        }
+                    }else {
+                        alert("비밀번호가 일치하지 않습니다.")
+                    }
+                })
+                .catch(err => console.log(err))
+
+        }
+    </script>
+    <!--마이페이지 상단 회원 정보-->
+    <nav>
+        <div>
+            <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}"><img th:src="@{/images/my/my_logo.jpg}" alt="나의쇼핑정보"></a>
+
+            <div class="UserInfo">
+                <p th:text="${#authentication.principal.user.userName}"></p>
+                <p th:text="${#authentication.principal.user.userGrade}"></p>
+            </div>
+            <ol>
+                <li><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">주문·배송<span class="delivery" th:text="${session.countOrder}"></span></a></li>
+                <li><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">할인쿠폰<span class="coupon" th:text="${session.couponCount}"></span></a></li>
+                <li><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트<span class="point" th:text="${#numbers.formatInteger(session.pointBalance,3,'COMMA')}"></span></a></li>
+                <li><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의내역<span class="qna" th:text="${session.myQnaCount}"></span></a></li>
+            </ol>
+        </div>
+    </nav>
+
+    <div class="info">
+        <!--마이페이지 사이드바-->
+        <ul class="myCate">
+            <span class="menu_else"></span>
+            <li class=""><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">전체주문내역</a></li>
+            <li class=""><a th:href="@{/my/wish(userId=${#authentication.principal.user.userId})}">관심상품</a></li>
+            <li class=""><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트내역</a></li>
+            <li class=""><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">쿠폰</a></li>
+            <li class=""><a th:href="@{/my/review(userId=${#authentication.principal.user.userId})}">나의리뷰</a></li>
+            <li class=""><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의하기</a></li>
+            <li class=""><a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}">나의설정</a></li>
+        </ul>
+
+        <section>
+            <th:block th:each="banner : ${banMyOrderList}" >
+                <a th:href="@{http://__${banner.banLink}__}"><img th:src="@{/uploads/__${banner.banImgName}__}" alt="패션, 타운 하나로 끝" class="banner"></a>
+            </th:block>
+
+            <!--인증-->
+            <div class="myTableStyle" id="checkUserPwBox">
+                <p class="myTableHead" style="padding: 10px 0; font-size: 16px;">비밀번호를 입력해주세요.</p>
+                <div style="display: flex; margin: 10px 0; height: 30px; justify-content: center;">
+                    <input type="password" id="checkUSerPw" style="height: 30px; margin-right: 10px;"/>
+                    <input type="hidden" id="checkUSerId" th:value="${#authentication.principal.user.userId}"/>
+                    <input type="hidden" id="checkUSerRole" th:value="${userDTO.userRole}"/>
+                    <span onclick="checkUserPw()" style="display: inline-block; width: 60px; height: 28px; border: 1px solid #aaa; text-align: center; line-height: 28px; cursor: pointer">확인</span>
+                </div>
+            </div>
+
+            <article class="myTableStyle" id="userInfoBox" style="display:none;">
+                <h3 class="myTableHead" style="padding: 10px 0">회원정보 설정</h3>
+                <table border="0" style="margin: 0; border-top: 1px solid #aaa">
+                    <tr>
+                        <td>사용자 ID</td>
+                        <td id="userId" th:text="${#strings.substring(userDTO.userId, 0, 6)} + '****'" th:class="${userDTO.userId}"></td>
+                        <td id="userRole" hidden th:text="${userDTO.userRole}"></td>
+                    </tr>
+                    <tr>
+                        <td>비밀번호</td>
+                        <td>
+                            <input type="password" name="userPw" id="changePw" style="display: none">
+                            <button class="change" id="btnChangePass" onclick="changeUserPw()">비밀번호 수정</button>
+                            <span id="resultPw" class="resultText"></span>
+                            <p class="resultPw"></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>이름</td>
+                        <td th:text="${#strings.substring(userDTO.userName, 0, 1)} + '*' + ${#strings.substring(userDTO.userName, 2)}"></td>
+                    </tr>
+                    <tr>
+                        <td>생년월일</td>
+                        <td th:text="${#temporals.format(userDTO.userBirth,'yyyy-MM-dd')}"></td>
+                    </tr>
+                    <tr>
+                        <td>E-mail</td>
+                        <td>
+                            <input type="text" name="email1" th:value="${#strings.setSplit(userDTO.userEmail,'@')[0]}" style="text-align: center" readonly>@
+                            <input type="text" name="email2" th:value="${#strings.setSplit(userDTO.userEmail,'@')[1]}" style="text-align: center" readonly>
+                            <button class="change" id="btnChangeEmail" onclick="changeEmailBtn()">수정하기</button>
+                            <span id="emailError" class="resultText"></span>
+
+                            <div id="emailCodeSection" style="display: none;">
+                                <input type="text" id="inputEmailCode" name="inputEmailCode" placeholder="인증코드 입력" required style="display: inline-block"/>
+                                <span id="resultEmail" class="resultText"></span>
+                                <button id="checkEmailCode">인증코드확인</button>
+                                <span id="resultEmailCode" class="resultText"></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>휴대폰</td>
+                        <td>
+                            <p class="hp">
+                                <input type="text" name="hp1" th:value="${#strings.substring(userDTO.userHp,0,3)}" style="text-align: center" readonly maxlength="3"/>-
+                                <input type="text" name="hp2" th:value="${#strings.substring(userDTO.userHp,4,8)}" style="text-align: center" readonly maxlength="4"/>-
+                                <input type="text" name="hp3" th:value="${#strings.substring(userDTO.userHp,9,13)}" style="text-align: center" readonly maxlength="4"/>
+                                <button class="change" id="btnChangeHp" onclick="changeUserHp()">수정하기</button>
+                                <span id="hpError" class="resultText"></span>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="border-bottom-left-radius: 10px; border-bottom: 0">주소</td>
+                        <td style="border-bottom-right-radius: 10px; border-bottom: 0">
+                            <input type="text" name="userZip" id="userZip" th:value="${userDTO.userZip}" style="border: 0" readonly/>
+                            <p class="address">
+                                <input type="text" name="userAddr1" id="userAddr1" th:value="${userDTO.userAddr1}" style="border: 0" readonly/>
+                                <input type="text" name="userAddr2" id="userAddr2" th:value="${userDTO.userAddr2}" style="border: 0" readonly/>
+                            </p>
+                            <button id="changeAddr" onclick="changeAddrBtn()" style="margin-top: 5px">수정하기</button>
+                            <button id="doneChangeAddr" onclick="doneChangeAddrBtn()" style="margin-top: 5px; display: none;">수정완료</button>
+                            <button id="btnZip" onclick="findZip()" style="display: none; margin-top: 5px">주소검색</button>
+                        </td>
+                    </tr>
+                </table>
+            </article>
+
+            <!-- 판매자 회원이 로그인한 경우에만 출력 -->
+            <article th:if="${userDTO.getUserRole() == 'SELLER'}" class="myTableStyle" id="sellerInfoBox" style="display:none;">
+                <h3 class="myTableHead" style="padding: 10px 0">판매자 정보 설정</h3>
+
+                <table border="0" th:each="seller : ${sellerDTO}" style="margin: 0; border-top: 1px solid #aaa">
+                    <tbody>
+                    <tr>
+                        <td>판매자 식별번호</td>
+                        <td id="sellerNo" th:text="${#strings.substring(seller.sellerNo, 0, 12)} + '****'"></td>
+                    </tr>
+                    <tr>
+                        <td>회사명</td>
+                        <td>
+                            <input type="text" name="company" th:value="${seller.company}" readonly style="width: 200px;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>담당자 이름</td>
+                        <td>
+                            <input type="text" name="sellerName" id="sellerName" th:value="${seller.sellerName}" readonly required>
+                            <span id="resultSellerName" class="resultText"></span>
+                            <button class="change" id="btnChangeSellerName">수정하기</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>담당자 연락처</td>
+                        <td>
+                            <p class="hp">
+                                <input type="text" name="sellerHp1" th:value="${#strings.substring(seller.sellerHp,0,3)}" style="text-align: center" readonly maxlength="3"/>-
+                                <input type="text" name="sellerHp2" th:value="${#strings.substring(seller.sellerHp,4,8)}" style="text-align: center" readonly maxlength="4"/>-
+                                <input type="text" name="sellerHp3" th:value="${#strings.substring(seller.sellerHp,9,13)}" style="text-align: center" readonly maxlength="4"/>
+                                <button class="change" id="btnChangeSellerHp">수정하기</button>
+                                <span id="sellerHpError" class="resultText"></span>
+
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>팩스번호</td>
+                        <td>
+                            <p class="hp">
+                                <input type="text" name="sellerFax1" th:value="${#strings.substring(seller.fax,0,3)}" style="text-align: center" readonly maxlength="3"/>-
+                                <input type="text" name="sellerFax2" th:value="${#strings.substring(seller.fax,4,8)}" style="text-align: center" readonly maxlength="4"/>-
+                                <input type="text" name="sellerFax3" th:value="${#strings.substring(seller.fax,9,13)}" style="text-align: center" readonly maxlength="4"/>
+                                <button class="change" id="btnChangeSellerFax" onclick="changeSellerFax()">수정하기</button>
+                                <span id="sellerFaxError" class="resultText"></span>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>사업자등록번호</td>
+                        <td>
+                            <input type="text" name="businessNum" th:value="${seller.businessNum}" readonly>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>라이센스번호</td>
+                        <td>
+                            <input type="text" name="licenseNum" th:value="${seller.licenseNum}" readonly>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border-bottom-left-radius: 10px; border-bottom: 0">판매자 등급</td>
+                        <td style="border-bottom-right-radius: 10px; border-bottom: 0">
+                            <input type="text" name="sellerGrade" th:value="${seller.sellerGrade}" readonly>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </article>
+            <button id="btnWithdraw" style="display:none;">탈퇴하기</button>
+        </section>
+    </div>
+</div>
+<!--내용 끝-->
+</html>

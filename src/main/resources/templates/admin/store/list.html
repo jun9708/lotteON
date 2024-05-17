@@ -1,0 +1,103 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/adminLayout.html}">
+<!--내용 시작-->
+    <section id="admin-product-list" layout:fragment="content">
+        <script>
+            function accordion() {
+                const button = event.target;
+                const userListTable = button.parentNode;
+                const TableDetail = userListTable.nextElementSibling;
+                if (TableDetail.style.display === "none") {
+                    TableDetail.style.display = "flex";
+                    userListTable.style.backgroundColor = "#e6e6e6";
+                }else {
+                    TableDetail.style.display = "none";
+                    userListTable.style.backgroundColor = "transparent";
+                }
+            }
+        </script>
+        <nav>
+            <h3>판매자 현황</h3>
+            <p>
+                HOME > 상점관리 > <strong>판매자 현황</strong>
+            </p>
+        </nav>
+        <!-- 판매자 현황 시작 -->
+        <section class="sectionBox">
+            <div>
+                <form th:action="@{/admin/store/list}">
+                    <select name="type">
+                        <option value="sellerNo">판매자번호</option>
+                        <option value="company">회사명</option>
+                        <option value="sellerName">담당자</option>
+                    </select>
+                    <input class="searchInput" type="text" name="keyword">
+                    <input class="searchBtn" type="submit" value="검색">
+                </form>
+            </div>
+            <div class="userListTableTitle">
+                <div>구분</div>
+                <div>판매자번호</div>
+                <div>아이디</div>
+                <div>회사명</div>
+                <div>담당자</div>
+                <div></div>
+            </div>
+            <div class="userListTableContent" th:each="seller, index : ${sellerDTO.dtoList}">
+                <div class="userListTableRow">
+                    <div th:text="${sellerDTO.startNo - index.index}"></div>
+                    <div th:text="${seller.sellerNo}"></div>
+                    <div th:text="${seller.userId}"></div>
+                    <div th:text="${seller.company}"></div>
+                    <div th:text="${seller.sellerName}"></div>
+                    <div onclick="accordion()">자세히</div>
+                </div>
+                <div class="userListTableDetail" style="display: none">
+                    <div class="userListTableDetailRow">
+                        <div>연락처</div>
+                        <div th:text="${seller.sellerHp}"></div>
+                        <div>팩스번호</div>
+                        <div th:text="${seller.fax}"></div>
+                    </div>
+                    <div class="userListTableDetailRow">
+                        <div>사업자등록번호</div>
+                        <div th:text="${seller.businessNum}"></div>
+                        <div>통신판매번호</div>
+                        <div th:text="${seller.licenseNum}"></div>
+                    </div>
+                    <div class="userListTableDetailRow">
+                        <div>판매자 등급</div>
+                        <div th:text="${seller.sellerGrade}"></div>
+                        <div>등록 물품 수량</div>
+                        <div class="countAfter" th:text="${seller.prodCount}"></div>
+                    </div>
+                    <div class="userListTableDetailRow">
+                        <div>총 판매 수량</div>
+                        <div th:text="${seller.sellerCount}"></div>
+                        <div class="countAfter">총 판매 금액</div>
+                        <div class="priceAfter" th:text="${#numbers.formatInteger(seller.sellerSum,3,'COMMA')}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pagingBox">
+                <div class="pagingList">
+                    <a th:if="${sellerDTO.prev && sellerDTO.keyword == null}" th:href="@{/admin/store/list(pg=${sellerDTO.start - 1})}">이전</a>
+                    <a th:if="${sellerDTO.prev && sellerDTO.keyword != null}" th:href="@{/admin/store/list(pg=${sellerDTO.start - 1}, keyword=${sellerDTO.keyword})}">이전</a>
+
+                    <th:block th:each="num:${#numbers.sequence(sellerDTO.start, sellerDTO.end)}">
+                        <a class="pageNum" th:if="${sellerDTO.keyword == null}" th:href="@{/admin/store/list(pg=${num})}" th:class="${num == sellerDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                        <a class="pageNum" th:if="${sellerDTO.keyword != null}" th:href="@{/admin/store/list(pg=${num}, keyword=${sellerDTO.keyword})}" th:class="${num == sellerDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                    </th:block>
+
+                    <a th:if="${sellerDTO.next && sellerDTO.keyword == null}" th:href="@{/admin/store/list(pg=${sellerDTO.start + 1})}">다음</a>
+                    <a th:if="${sellerDTO.next && sellerDTO.keyword != null}" th:href="@{/admin/store/list(pg=${sellerDTO.start + 1}, keyword=${sellerDTO.keyword})}">다음</a>
+                </div>
+            </div>
+
+        </section>
+        <!-- 판매자 현황 끝 -->
+    </section>
+<!--내용 끝-->
+</html>

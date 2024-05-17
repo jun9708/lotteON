@@ -1,0 +1,464 @@
+<html xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{/layout/memberLayout.html}">
+<!--내용 시작-->
+	<main id="member" layout:fragment="content">
+
+		<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+		<script th:src="@{/js/util.js}"></script>
+		<script>
+			//유효성 검사에 사용할 상태변수
+			let isUidOk   = false;
+			let isPassOk  = false;
+			let isNameOk  = false;
+			let isEmailOk = false;
+			let isHpOk    = false;
+
+			// 유효성 검사에 사용할 정규표현식
+			const reUid = /^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]{6,12}$/;
+			const rePass  = /^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{5,12}$/;
+			const reName  = /^[가-힣]{2,10}$/;
+			const reEmail = /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i;
+			const reHp    = /^01(?:0|1|[6-9])-(?:\d{4})-\d{4}$/;
+
+			//쿠키 삭제
+			function deleteCookie(cookieName){
+				const expireDate = new Date();
+				expireDate.setDate(expireDate.getDate() - 1);
+				document.cookie = cookieName + "= " + "; expires=" + expireDate.toUTCString();
+			}
+
+			window.onload = function () {
+
+				const cookies = document.cookie.split(';');
+				// 모든 쿠키를 반복
+				let cookieName = []
+				for (let cookie of cookies) {
+					cookieName.push(cookie.trim().split('=')[0]);
+				}
+				// 쿠키 확인
+				if (!cookieName.includes('register')) {
+					alert("잘못된 접근입니다.");
+					window.location.href = "/lotteon/member/login"
+				}
+
+				// 페이지를 벗어날 때 쿠키 삭제
+				window.addEventListener('beforeunload', function() {
+					deleteCookie('register');
+				});
+
+				//아이디 태그
+				const userId = document.getElementById('userId');
+				const resultUid = document.getElementById('resultUid');
+
+				//패스워드 태그
+				const userPw = document.getElementById('userPw');
+				const userPwCheck = document.getElementById('userPwCheck');
+				const resultPw = document.getElementById('resultPw');
+
+				//이름 태그
+				const userName = document.getElementById('userName');
+				const resultName = document.getElementById('resultName');
+
+				//전화번호 태그
+				const userHp = document.getElementById('userHp');
+				const resultHp = document.getElementById('resultHp');
+
+				//이메일 태그
+				const userEmail = document.getElementById('userEmail');
+				const resultEmail = document.getElementById('resultEmail');
+				const checkUserEmail = document.getElementById('checkUserEmail');
+				const checkEmailCode = document.getElementById('checkEmailCode');
+				const checkCodeLabel = document.getElementById('checkCodeLabel');
+				const inputEmailCode = document.getElementById('inputEmailCode');
+				const resultEmailCode = document.getElementById('resultEmailCode');
+
+
+				////////////////////////////////////////////////////////////////////////////////
+				// 아이디 유효성 & 중복 체크 //
+				userId.addEventListener('blur', function () {
+
+					const value = userId.value;
+					const type = "userId";
+					// 1. 정규표현식 통과
+					if (!value.match(reUid)) {
+						resultUid.innerText = "유효하지 않은 아이디입니다.";
+						resultUid.style.color = "red";
+						userId.style.border = "1px solid red";
+						isUidOk = false;
+						return; // 여기서 끝!
+					}
+					console.log(value);
+					console.log(type);
+					// 2. 중복 체크 (DB)
+					fetch(`/lotteon/member/checkUser/${type}/${value}`) // DB에서 중복체크하고 올 controller
+							.then(response => response.json())
+							.then(data => {
+								console.log(data);
+
+								if (data.result > 0) {
+									// 중복일 경우
+									resultUid.innerText = "중복된 아이디입니다.";
+									resultUid.style.color = "red";
+									userId.style.border = "1px solid red";
+									isUidOk = false;
+								} else {
+									// 중복이 아닐경우
+									resultUid.innerText = "사용가능한 아이디입니다.";
+									resultUid.style.color = "green";
+									userId.style.border = "1px solid green";
+									isUidOk = true;
+								}
+							})
+							.catch(err => console.log(err))
+				});
+
+				////////////////////////////////////////////////////////////////////////////////
+				// 1차 비밀번호 유효성체크
+				userPw.addEventListener('blur', function () {
+					const value = userPw.value;
+					const type = "userPw";
+					// 1. 정규표현식 통과
+					if (!value.match(rePass)) {
+						resultPw.innerText = "유효하지 않은 패스워드입니다.";
+						resultPw.style.color = "red";
+						userPw.style.border = "1px solid red";
+						isPassOk = false;
+						return; // 여기서 끝!
+					} else {
+						resultPw.innerText = "사용가능한 비밀번호입니다.";
+						resultPw.style.color = "green";
+						userPw.style.border = "1px solid green";
+						isPassOk = true;
+						return; // 여기서 끝!
+					}
+				});
+
+				// 2차 비밀번호 체크
+				userPwCheck.addEventListener('input', function () {
+
+					const value = userPw.value;
+					const type = "userPw";
+					// 1. 정규표현식 통과
+					if (userPw.value == userPwCheck.value) {
+
+						if (!value.match(rePass)) {
+							resultPwCheck.innerText = "유효하지 않은 패스워드입니다.";
+							resultPwCheck.style.color = "red";
+							userPwCheck.style.border = "1px solid red";
+							isPassOk = false;
+							return; // 여기서 끝!
+						} else {
+							resultPwCheck.innerText = "패스워드가 일치합니다.";
+							resultPwCheck.style.color = "green";
+							userPwCheck.style.border = "1px solid green";
+							isPassOk = true;
+							return; // 여기서 끝!
+						}
+
+					} else {
+						resultPwCheck.innerText = "패스워드가 일치하지 않습니다.";
+						resultPwCheck.style.color = "red";
+						userPwCheck.style.border = "1px solid red";
+						isPassOk = false;
+						return; // 여기서 끝
+					}
+
+				});
+				////////////////////////////////////////////////////////////////////////////////
+				// 이름 유효성 체크
+				userName.addEventListener('blur', function () {
+					const value = userName.value;
+					const type = "userName";
+
+					// 1. 정규표현식 통과
+					if (!value.match(reName)) {
+						resultName.innerText = "유효하지 않은 이름형식입니다.";
+						resultName.style.color = "red";
+						userName.style.border = "1px solid red";
+						isNameOk = false;
+						return; // 여기서 끝!
+					} else {
+						resultName.innerText = "";
+						userName.style.border = "1px solid green";
+						isNameOk = true;
+						return;
+					}
+
+				});
+
+
+				////////////////////////////////////////////////////////////////////////////////
+				// 전화번호 유효성 & 중복 체크 //
+				userHp.addEventListener('blur', function () {
+
+					const value = userHp.value;
+					const type = "userHp";
+					// 1. 정규표현식 통과
+					if (!value.match(reHp)) {
+						resultHp.innerText = "유효하지 않은 전화번호입니다.";
+						resultHp.style.color = "red";
+						userHp.style.border = "1px solid red";
+						isHpOk = false;
+						return; // 여기서 끝!
+					}
+
+					// 2. 중복 체크 (DB)
+					fetch(`/lotteon/member/checkUser/${type}/${value}`) // DB에서 중복체크하고 올 controller
+							.then(response => response.json())
+							.then(data => {
+								console.log(data);
+
+								if (data.result > 0) {
+									// 중복일 경우
+									resultHp.innerText = "중복된 전화번호입니다.";
+									resultHp.style.color = "red";
+									userHp.style.border = "1px solid red";
+									isHpOk = false;
+								} else {
+									// 중복이 아닐경우
+									resultHp.innerText = "사용가능한 전화입니다.";
+									resultHp.style.color = "green";
+									userHp.style.border = "1px solid green";
+									isHpOk = true;
+								}
+							})
+							.catch(err => console.log(err))
+				});
+
+				////////////////////////////////////////////////////////////////////////////////
+				// 이메일 유효성 & 중복 체크
+				checkUserEmail.onclick = function (e) {
+					e.preventDefault();
+					const value = userEmail.value;
+					const type = "userEmail";
+					// 1. 정규표현식 통과
+					if (!value.match(reEmail)) {
+						resultEmail.innerText = "유효하지 않은 이메일 형식입니다.";
+						resultEmail.style.color = "red";
+						userEmail.style.border = "1px solid red";
+						isEmailOk = false;
+						return; // 여기서 끝!
+					}
+
+					userEmail.readOnly = true;
+					resultEmail.innerText = "이메일 인증코드를 전송 중입니다.";
+					resultEmail.style.color = "blue";
+
+					// 2. 중복 체크 (DB)
+					fetch(`/lotteon/member/checkUser/${type}/${value}`) // DB에서 중복체크하고 올 controller
+							.then(response => response.json())
+							.then(data => {
+								console.log(data);
+
+								if (data.result > 0) {
+									// 중복일 경우
+									resultEmail.innerText = "중복된 이메일입니다.";
+									resultEmail.style.color = "red";
+									userEmail.style.border = "1px solid red";
+									userEmail.readOnly = false;
+									isEmailOk = false;
+								} else {
+									// 중복이 아닐경우
+									resultEmail.innerText = "이메일 인증코드가 전송되었습니다.";
+									resultEmail.style.color = "green";
+									userEmail.style.border = "1px solid green";
+									isEmailOk = false;
+									checkCodeLabel.style.display = "block";
+								}
+							})
+							.catch(err => console.log(err))
+				};
+
+				//이메일 인증코드 발급 및 중복 체크
+				checkEmailCode.onclick = function (e) {
+					e.preventDefault();
+					// 사용자가 입력한 코드
+					const inputCode = inputEmailCode.value;
+
+					fetch(`/lotteon/member/checkEmailCode/${inputCode}`)
+							.then(response => response.json())
+							.then(data => {
+								console.log(data);
+								if (data.result > 0) {
+									resultEmailCode.innerText = "인증번호가 일치하지 않습니다.";
+									resultEmailCode.style.color = "red";
+									inputEmailCode.style.border = "1px solid red";
+									isEmailOk = false;
+								} else {
+									resultEmailCode.innerText = "인증번호가 인증되었습니다.";
+									resultEmailCode.style.color = "green";
+									inputEmailCode.style.border = "1px solid green";
+									inputEmailCode.readOnly = true;
+									isEmailOk = true;
+								}
+							})
+							.catch(err => console.log(err))
+				}
+
+
+				//다음 주소 열기
+				const btnZip = document.getElementById('btnZip');
+
+				btnZip.onclick = function (e) {
+					e.preventDefault();
+					postcode();
+				}
+
+				// 최종 유효성 검사 확인
+				const submit = document.getElementsByClassName('join')[0];
+
+				submit.onclick = function (e) {
+
+					if (!isUidOk) {
+						alert('아이디가 유효하지 않습니다.');
+						return false;
+					}
+
+					if (!isPassOk) {
+						alert('비밀번호가 유효하지 않습니다.');
+						return false;
+					}
+
+					if (!isNameOk) {
+						alert('이름이 유효하지 않습니다.');
+						return false;
+					}
+
+					if (!isNickOk) {
+						alert('별명이 유효하지 않습니다.');
+						return false;
+					}
+
+					if (!isEmailOk) {
+						alert('이메일이 유효하지 않습니다.');
+						return false;
+					}
+
+					if (!isHpOk) {
+						alert('휴대폰이 유효하지 않습니다.');
+						return false;
+					}
+
+					// 폼 전송
+					// return true;
+
+
+				}
+			}
+
+		</script>
+
+		<div class="register">
+			<nav>
+				<h1>일반 회원가입</h1>
+			</nav>
+			<form th:action="@{/member/register}" name="registerUserForm" method="POST">
+				<section>
+					<table>
+						<caption>필수 정보입력</caption>
+						<tr>
+							<th><span class="essential">*</span>아이디</th>
+							<td>
+								<input type="text" id="userId" name="userId" placeholder="아이디를 입력" required />
+								<span class="msgId">영문, 숫자로 6~12자까지 설정해 주세요.</span>
+								<span id="resultUid" class="resultText"></span>
+								<p class="resultUid"></p>
+							</td>
+						</tr>
+						<tr>
+							<th><span class="essential">*</span>비밀번호</th>
+							<td>
+								<input type="password" id="userPw" name="userPw" placeholder="비밀번호를 입력" required />
+								<span class="msgPass">영문, 숫자, 특수문자를 조합하여 8~12자까지 설정해 주세요.</span>
+								<span id="resultPw" class="resultText"></span>
+								<p class="resultPw"></p>
+							</td>
+						</tr>
+						<tr>
+							<th><span class="essential">*</span>비밀번호확인</th>
+							<td>
+								<input type="password" id="userPwCheck" name="userPwCheck" placeholder="비밀번호를 확인" required />
+								<span class="msgPass">비밀번호 재입력</span>
+								<span id="resultPwCheck" class="resultText"></span>
+								<p class="resultPwCheck"></p>
+							</td>
+						</tr>
+					</table>
+				</section>
+				<section>
+					<table>
+						<caption>기본 정보입력</caption>
+						<tr>
+							<th><span class="essential">*</span>이름</th>
+							<td>
+								<input type="text" id="userName" name="userName" placeholder="이름을 입력" required />
+								<span id="resultName" class="resultText"></span>
+								<p class="resultName"></p>
+							</td>
+						</tr>
+						<tr>
+							<th><span class="essential">*</span>생일</th>
+							<td>
+								<input type="date" name="userBirth" placeholder="생일 입력" required />
+							</td>
+						</tr>
+						<tr>
+							<th><span class="essential">*</span>성별</th>
+							<td>
+								<label><input type="radio" name="userGender" value="M">&nbsp;남</label>
+								<label><input type="radio" name="userGender" value="W">&nbsp;여</label>
+							</td>
+						</tr>
+						<tr>
+							<th><span class="essential">*</span>EMAIL</th>
+							<td>
+								<!--이메일 입력 필드-->
+								<input type="email" id="userEmail" name="userEmail" placeholder="이메일 입력" required style="display: inline-block"/>
+								<button id="checkUserEmail">인증코드발송</button>
+								<span id="resultEmail" class="resultText"></span>
+
+								<!--이메일 인증코드 필드-->
+								<label id="checkCodeLabel" style="width: 100%; display: none">
+									<input type="text" id="inputEmailCode" name="inputEmailCode" placeholder="인증코드 입력" required style="display: inline-block"/>
+									<button id="checkEmailCode">인증코드확인</button>
+									<span id="resultEmailCode" class="resultText"></span>
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<th><span class="essential">*</span>휴대폰</th>
+							<td>
+								<input type="text" id="userHp" name="userHp" maxlength="13" placeholder="휴대폰번호 입력" required />
+								<span class="msgHp"> - 포함 13자리를 입력하세요.</span>
+								<span id="resultHp" class="resultText"></span>
+								<p class="resultHp"></p>
+							</td>
+						</tr>
+						<tr class="addr">
+							<th>주소</th>
+							<td>
+								<div>
+									<input type="text" name="userZip" id="userZip" placeholder="우편번호 입력 클릭" readonly />
+									<button id="btnZip">우편번호</button>
+								</div>
+								<div>
+									<input type="text" name="userAddr1" id="userAddr1" size="50" placeholder="주소를 검색하세요." readonly />
+								</div>
+								<div>
+									<input type="text" name="userAddr2" id="userAddr2" size="50" placeholder="상세주소를 입력하세요." />
+								</div>
+							</td>
+							<input type="hidden" name="userPromo" th:value="${userPromo}"/>
+						</tr>
+					</table>
+
+				</section>
+				<div>
+					<input type="submit" class="join" value="회원가입" />
+				</div>
+			</form>
+		</div>
+	</main>
+<!--내용 끝-->
+</html>

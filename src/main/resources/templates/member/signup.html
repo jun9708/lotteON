@@ -1,0 +1,101 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/memberLayout.html}">
+
+
+
+<!--내용 시작-->
+    <main id="member" layout:fragment="content">
+
+        <script>
+            window.onload = function () {
+                const agree1 = document.getElementsByName('agree1')[0];
+                const agree2 = document.getElementsByName('agree2')[0];
+                const agree3 = document.getElementsByName('agree3')[0];
+                const userPromo = document.getElementsByName('userPromo')[0];
+                const agree = document.getElementsByClassName('agree')[0];
+
+
+                agree.onclick = () => {
+
+                    if (agree1.checked && agree2.checked && agree3.checked) {
+                        // 일반 유저 vs 판매 유저
+                        const userRole = document.getElementsByName('role')[0];
+                        console.log(userRole.value);
+                        if (userRole.value === 'USER') {
+                            // 회원가입 페이지 접근을 막기 위한 쿠키 생성
+                            makeCookie('USER', 'true', 1);
+
+                            if (userPromo.checked) {
+                                let userPromovalue = "Y"
+                                window.location.href = "/lotteon/member/register?userPromo="+userPromovalue;
+                            } else {
+                                let userPromovalue = "N"
+                                window.location.href = "/lotteon/member/register?userPromo=" + userPromovalue;
+                            }
+                        } else if (userRole.value === 'SELLER') {
+                            // 회원가입 페이지 접근을 막기 위한 쿠키 생성
+                            makeCookie('SELLER', 'true', 1);
+
+                            if (userPromo.checked) {
+                                let userPromovalue = "Y"
+                                window.location.href = "/lotteon/member/registerSeller?userPromo=" + userPromovalue;
+                            } else {
+                                let userPromovalue = "N"
+                                window.location.href = "/lotteon/member/registerSeller?userPromo=" + userPromovalue;
+                            }
+                        }
+                    }else {
+                        // 확인 대화상자 표시
+                        alert("🚨체크항목 1, 2, 3번은 필수항목입니다");
+                    }
+                }
+            }
+
+            // 쿠키 생성
+            function makeCookie(name, value, days) {
+                document.cookie = `register=${name}`;
+            }
+        </script>
+
+        <div class="signup">
+
+            <nav>
+                <h1>약관동의</h1>
+                <input type="hidden" name="role" th:value="${userDTO.userRole}">
+            </nav>
+            <section>
+                <th:block th:if="${userDTO.userRole} == 'USER'">
+                <h3><span class="essential">(필수)</span>케이마켓 일반 회원 이용약관</h3>
+                <textarea class="terms"  readonly>[[${termsDTO.buyer}]]</textarea>
+                <label><input type="checkbox" name="agree1" />동의합니다.</label>
+                </th:block>
+
+                <th:block th:if="${userDTO.userRole} == 'SELLER'">
+                    <h3><span class="essential">(필수)</span>케이마켓 판매 회원 이용약관</h3>
+                    <textarea class="terms"  readonly>[[${termsDTO.seller}]]</textarea>
+                    <label><input type="checkbox" name="agree1" />동의합니다.</label>
+                </th:block>
+
+                <h3><span class="essential">(필수)</span>전자금융거래 이용약관</h3>
+                <textarea class="financial" readonly>[[${termsDTO.finance}]]</textarea>
+                <label><input type="checkbox" name="agree2" />동의합니다.</label>
+
+                <h3><span class="essential">(필수)</span>개인정보 수집동의</h3>
+                <textarea class="privacy" readonly>[[${termsDTO.privacy}]]</textarea>
+                <label><input type="checkbox" name="agree3" />동의합니다.</label>
+            </section>
+
+            <section>
+                <h3><span class="optional">(선택)</span>위치정보 이용약관</h3>
+                <textarea class="location" readonly>[[${termsDTO.location}]]</textarea>
+                <label><input type="checkbox" name="userPromo" value="Y"/>동의합니다.</label>
+            </section>
+
+            <div>
+                <input type="button" class="agree" value="동의하기" />
+            </div>
+        </div>
+    </main>
+<!--내용 끝-->
+</html>

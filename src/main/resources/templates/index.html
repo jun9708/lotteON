@@ -1,0 +1,409 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+  <head>
+    <meta charset="UTF-8" />
+    <title>롯데ON::1조 롯데 온라인 쇼핑몰</title>
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{/images/favicon.ico}" />
+    <link rel="stylesheet" th:href="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css}"/>
+    <link rel="stylesheet" th:href="@{https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css}"/>
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/bxslider/4.2.12/jquery.bxslider.css}"/>
+    <link rel="stylesheet" th:href="@{/css/common.css}" />
+    <script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js}"></script>
+    <script th:src="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js}"></script>
+    <script th:src="@{https://kit.fontawesome.com/20962f3e4b.js}" crossorigin="anonymous"></script>
+    <script th:src="@{https://cdn.jsdelivr.net/bxslider/4.2.12/jquery.bxslider.min.j  s}"></script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4PQT8D58DQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-4PQT8D58DQ');
+    </script>
+    <style>
+      #bannerTop {
+        display: none;
+        width: 100%;
+        height: 80px;
+        border-bottom: 1px solid #e9e9e9;        
+        box-sizing: border-box;
+      }
+
+      #bannerTop.on {
+        display: block;
+      }
+
+      #bannerTop > article {
+        position: relative;
+        width: 1200px;
+        height: 100%;        
+        margin: 0 auto;
+        overflow: hidden;
+      }
+
+      #bannerTop > article > .btnClose {
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        width: 40px;
+        height: 40px;
+        background-image: url('/images/ico_sprite.png');
+        background-position: -122px -142px;
+        background-color: transparent;
+        font-size: 0;
+        border: none;
+        cursor: pointer;
+      }
+
+    </style>
+    <script>
+      $(function(){
+        $('#bannerTop .btnClose').click(function(){
+          $(this).closest('#bannerTop').removeClass('on');
+        });
+      });
+
+      // 슬라이더
+      let globalBanner = 0;
+
+      window.onload = function () {
+        setInterval(sliderPrev, 5000);
+      }
+
+      function sliderPrev() {
+        const totalImageBox = document.getElementsByClassName('totalImageBox')[0];
+        const movingImages = totalImageBox.querySelectorAll('img');
+        const length = movingImages.length;
+        if (globalBanner === (length-1)) {
+          totalImageBox.style.transform = 'translateX(0px)';
+          totalImageBox.style.transition = 'transform  0.5s ease';
+          globalBanner = 0;
+        }else {
+          totalImageBox.style.transform += 'translateX(-976px)';
+          totalImageBox.style.transition = 'transform  0.5s ease';
+          globalBanner += 1;
+        }
+      }
+
+      function sliderNext() {
+        const totalImageBox = document.getElementsByClassName('totalImageBox')[0];
+        const movingImages = totalImageBox.querySelectorAll('img');
+        const length = movingImages.length;
+        const lastPx = -((length-1)*976)
+        if (globalBanner === 0) {
+          totalImageBox.style.transform = `translateX(${lastPx}px)`;
+          totalImageBox.style.transition = 'transform  0.5s ease';
+          globalBanner = (length - 1);
+        }else {
+          totalImageBox.style.transform += 'translateX(976px)';
+          totalImageBox.style.transition = 'transform  0.5s ease';
+          globalBanner -= 1;
+        }
+      }
+
+      function scrollToSection(sectionId){
+        switch (sectionId){
+          case 'prodHit':
+            scrollToId('prodHit');
+            break;
+          case 'prodScore':
+            scrollToId('prodScore');
+            break;
+          case 'prodRdate':
+            scrollToId('prodRdate');
+            break;
+          case 'prodSold':
+            scrollToId('prodSold');
+            break;
+          case 'prodDiscount':
+            scrollToId('prodDiscount');
+            break;
+        }
+      }
+
+      function scrollToId(id) {
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+
+      // 상품 상태 확인
+      function checkProdStatus(event) {
+        const button = event.target;
+        const prod = button.closest('a');
+        if (prod.className === "판매중단") {
+          event.preventDefault();
+          alert("판매 중단된 상품입니다.");
+        }
+      }
+
+      // top 버튼
+      function movingTop() {
+        window.scrollTo(0, 0);
+      }
+    </script>
+
+  </head>
+  <body>
+    <div id="bannerTop" class="on" style="background: #e4dfdf;">
+      <article th:each="banner : ${bannerList1}">
+        <a th:href="@{${banner.banLink}}"><img th:src="@{/uploads/__${banner.banImgName}__}"/></a>
+        <button class="btnClose">close</button>
+      </article>
+    </div>
+    <div id="wrapper">      
+      <header>
+        <div class="top">
+          <div>
+            <!--로그인 안 했을때-->
+            <th:block th:if="${!#authorization.expression('isAuthenticated()')}">
+              <a th:href="@{/member/login}">로그인</a>
+              <a th:href="@{/member/join}">회원가입</a>
+            </th:block>
+            <!--로그인 했을때-->
+            <th:block th:if="${#authorization.expression('isAuthenticated()')}">
+              <a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}">[[${#authentication.principal.user.userName}]]님</a>
+              <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}">마이페이지</a>
+              <a th:href="@{/seller/index}" sec:authorize="hasAnyAuthority('SELLER')">상점관리</a>
+              <a th:href="@{/admin/index(userId=${#authentication.principal.user.userId})}" sec:authorize="hasAnyAuthority('ADMIN')">관리자</a>
+
+              <a th:href="@{product/cart(userId=${#authentication.principal.user.userId})}">
+                <i class="fa fa-shopping-cart" aria-hidden="true"></i>&nbsp;장바구니
+              </a>
+              <a th:href="@{/member/logout}">로그아웃</a>
+
+            </th:block>
+          </div>
+        </div>
+        <div class="logo">
+          <div>
+            <a th:href="@{/}"><img th:src="@{/images/header_logo.png}" alt="로고" /></a>
+            <form action="/lotteon/product/search" method="get">
+              <input type="hidden" name="cateCode" value="">
+              <input type="text" name="keyword" />
+              <button><i class="fa fa-search"></i></button>
+            </form>
+          </div>
+        </div>
+        <div class="menu">
+          <div>
+            <ul class="mainSort">
+              <li style="cursor: pointer"><a onclick="scrollToSection('prodHit')">히트상품</a></li>
+              <li style="cursor: pointer"><a onclick="scrollToSection('prodScore')">추천상품</a></li>
+              <li style="cursor: pointer"><a onclick="scrollToSection('prodRdate')">최신상품</a></li>
+              <li style="cursor: pointer"><a onclick="scrollToSection('prodSold')">인기상품</a></li>
+              <li style="cursor: pointer"><a onclick="scrollToSection('prodDiscount')">할인상품</a></li>
+            </ul>
+            <ul>
+              <li><a th:href="@{/cs/notice/list}">공지사항</a></li>
+              <li><a th:href="@{/cs/faq/list(faqCate=user)}">자주묻는질문</a></li>
+              <li><a th:href="@{/cs/qna/list(qnaCate=user)}">문의하기</a></li>
+              <li><a th:href="@{/cs/index}">고객센터</a></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <main>
+
+        <!-- 카테고리/베스트 상품 영역 -->
+        <aside>
+        <!-- 카테고리 -->
+          <ul class="category">
+            <li><i class="fa fa-bars" aria-hidden="true"></i>카테고리</li>
+            <!--1차 카테고리-->
+            <li th:each="cate01 : ${cate01DTOs}">
+              <a th:href="@{/product/list(cateCode=${cate01.cate01No})}">
+                <i class="fas fa-home" ></i>[[${cate01.cate01Name}]]<i class="fas fa-angle-right"></i>
+              </a>
+              <!--2차 카테고리-->
+              <ol>
+                <li th:each="cate02 : ${cate02DTOs}" th:if="${cate02.cate01No eq cate01.cate01No}">
+                  <a th:href="@{/product/list(cateCode=${cate02.cate01No}+${cate02.cate02No})}" th:text="${cate02.cate02Name}">
+                    가구/DIY<i class="fas fa-angle-right"></i>
+                  </a>
+                  <!--3차 카테고리-->
+                  <ol>
+                    <li th:each="cate03 : ${cate03DTOs}" th:if="${cate03.cate02No eq cate02.cate02No}">
+                      <a th:href="@{/product/list(cateCode=${cate02.cate01No}+${cate03.cate02No}+${cate03.cate03No})}" th:text="${cate03.cate03Name}"></a>
+                    </li>
+                  </ol>
+                </li>
+              </ol>
+            </li>
+          </ul>
+
+          <!-- 베스트상품 배너 -->
+          <article class="best">
+            <h1><i id="prodSold" class="fas fa-crown"></i>베스트상품</h1>
+            <ol>
+              <li th:each="soldItem, index:${sold}">
+                <a th:href="@{'/product/view?prodNo='+${soldItem.prodNo}+'&cateCode='+${soldItem.cateCode}}"  th:class="${soldItem.prodStatus}" onclick="checkProdStatus(event)">
+                  <div class="thumb">
+                    <i th:text="${index.count}"></i>
+                    <img  th:src="@{/uploads/__${soldItem.thumb230}__}"  alt="item1" />
+                  </div>
+                  <h2>[[${soldItem.prodName}]]</h2>
+                  <div th:if="${soldItem.prodDiscount != 0}" class="org_price">
+                    <del>[[${soldItem.prodPrice}]]</del>
+                    <span>[[${soldItem.prodDiscount}]]</span>
+                  </div>
+                  <div class="dis_price">
+                    <ins th:text="${#numbers.formatInteger((soldItem.prodPrice * (100 - soldItem.prodDiscount) * 0.01), 3, 'COMMA')}"></ins>
+                  </div>
+                </a>
+              </li>
+            </ol>
+          </article>
+        </aside>
+        <section>
+          <!-- 슬라이더 영역 -->
+          <section class="slider" style="width: 976px;">
+            <div class="totalImageBox"> <!--이 div에서 배너 반복-->
+              <a th:each="banner : ${bannerList2}" th:href="@{http://__${banner.banLink}__}">
+                <img th:src="@{/uploads/__${banner.banImgName}__}">
+              </a>
+            </div>
+            <span class="sliderPrev" onclick="sliderPrev()">&#10096;</span>
+            <span class="sliderNext" onclick="sliderNext()">&#10097;</span>
+          </section>
+          <!-- 히트상품 영역 -->
+          <h3 style="padding: 10px 20px 10px 20px; margin-bottom: 10px; border-bottom: 1px solid #909090;">
+            <span id="prodHit" style="font-size: 20px; font-weight: bold">히트상품</span>
+            <a th:href="@{/product/list(cateCode='', sort='prodHit')}" style="font-size: 16px; color: #909090; float: right">더보기 &#10095;</a>
+          </h3>
+
+          <section class="hit productBox">
+            <div class="product" th:each="hitItem , index:${hit}">
+              <a th:href="@{'/product/view?prodNo='+${hitItem.prodNo}+'&cateCode='+${hitItem.cateCode}}" th:class="${hitItem.prodStatus}" onclick="checkProdStatus(event)">
+                <div class="thumb">
+                  <img th:src="@{/uploads/__${hitItem.thumb230}__}" alt="t1" style="width: 230px"/>
+                </div>
+                <h2>[[${hitItem.prodName}]]</h2>
+                <p>[[${hitItem.prodInfo}]]</p>
+                <div th:if="${hitItem.prodDiscount != 0}" class="org_price">
+                  <del th:text="${#numbers.formatInteger(hitItem.prodPrice,3,'COMMA')}"></del>
+                  <span th:text="${hitItem.prodDiscount} + '%'"></span>
+                </div>
+                <div class="dis_price">
+                  <ins th:text="${#numbers.formatInteger((hitItem.prodPrice * (100 - hitItem.prodDiscount) * 0.01), 3, 'COMMA')}"></ins>
+                  <span th:if="${hitItem.prodDeliveryFee}==0" class="free">무료배송</span>
+                  <span th:if="${hitItem.prodDeliveryFee}!=0" class="free" style="background-color: transparent; color: #111">배송비 : <span th:text="${#numbers.formatInteger(hitItem.prodDeliveryFee, 3, 'COMMA') + '원'}"></span></span>
+
+                </div>
+              </a>
+            </div>
+          </section>
+          <!-- 추천상품 영역 -->
+          <h3 style="padding: 10px 0 10px 20px; margin-bottom: 10px; border-bottom: 1px solid #909090;">
+            <span id="prodScore" style="font-size: 20px; font-weight: bold">추천상품</span>
+            <a th:href="@{/product/list(cateCode='', sort='prodScore')}" style="font-size: 16px; color: #909090; float: right">더보기 &#10095;</a>
+          </h3>
+
+          <section class="recommend productBox">
+            <div class="product" th:each="scoreItem, index:${score}">
+              <a th:href="@{'/product/view?prodNo='+${scoreItem.prodNo}+'&cateCode='+${scoreItem.cateCode}}" th:class="${scoreItem.prodStatus}" onclick="checkProdStatus(event)">
+                <div class="thumb">
+                  <img th:src="@{/uploads/__${scoreItem.thumb230}__}" alt="t1" style="width: 230px"/>
+                </div>
+                <h2>[[${scoreItem.prodName}]]</h2>
+                <p>[[${scoreItem.prodInfo}]]</p>
+                <div th:if="${scoreItem.prodDiscount != 0}" class="org_price">
+                  <del th:text="${#numbers.formatInteger(scoreItem.prodPrice,3,'COMMA')}"></del>
+                  <span th:text="${scoreItem.prodDiscount} + '%'"></span>
+                </div>
+                <div class="dis_price">
+                  <ins th:text="${#numbers.formatInteger((scoreItem.prodPrice * (100 - scoreItem.prodDiscount) * 0.01), 3, 'COMMA')}"></ins>
+                  <span th:if="${scoreItem.prodDeliveryFee}==0" class="free">무료배송</span>
+                  <span th:if="${scoreItem.prodDeliveryFee}!=0" class="free" style="background-color: transparent; color: #111">배송비 : <span th:text="${#numbers.formatInteger(scoreItem.prodDeliveryFee, 3, 'COMMA') + '원'}"></span></span>
+
+                </div>
+              </a>
+            </div>
+          </section>
+          <!-- 최신상품 영역 -->
+          <h3 style="padding: 10px 0 10px 20px; margin-bottom: 10px; border-bottom: 1px solid #909090;">
+            <span id="prodRdate" style="font-size: 20px; font-weight: bold">최신상품</span>
+            <a th:href="@{/product/list(cateCode='', sort='prodRdate')}" style="font-size: 16px; color: #909090; float: right">더보기 &#10095;</a>
+          </h3>
+
+          <section class="new productBox">
+            <div class="product" th:each="rDateItem, index:${rDate}">
+              <a th:href="@{'/product/view?prodNo='+${rDateItem.prodNo}+'&cateCode='+${rDateItem.cateCode}}" th:class="${rDateItem.prodStatus}" onclick="checkProdStatus(event)">
+                <div class="thumb">
+                  <img th:src="@{/uploads/__${rDateItem.thumb230}__}" alt="t1" style="width: 230px"/>
+                </div>
+                <h2>[[${rDateItem.prodName}]]</h2>
+                <p>[[${rDateItem.prodInfo}]]</p>
+                <div th:if="${rDateItem.prodDiscount != 0}" class="org_price">
+                  <del th:text="${#numbers.formatInteger(rDateItem.prodPrice,3,'COMMA')}"></del>
+                  <span th:text="${rDateItem.prodDiscount} + '%'"></span>
+                </div>
+                <div class="dis_price">
+                  <ins th:text="${#numbers.formatInteger((rDateItem.prodPrice * (100 - rDateItem.prodDiscount) * 0.01), 3, 'COMMA')}"></ins>
+                  <span th:if="${rDateItem.prodDeliveryFee}==0" class="free">무료배송</span>
+                  <span th:if="${rDateItem.prodDeliveryFee}!=0" class="free" style="background-color: transparent; color: #111">배송비 : <span th:text="${#numbers.formatInteger(rDateItem.prodDeliveryFee, 3, 'COMMA') + '원'}"></span></span>
+
+                </div>
+              </a>
+            </div>
+          </section>
+          <!-- 할인상품 영역 -->
+          <h3 style="padding: 10px 0 10px 20px; margin-bottom: 10px; border-bottom: 1px solid #909090;">
+            <span id="prodDiscount" style="font-size: 20px; font-weight: bold">할인상품</span>
+            <a th:href="@{/product/list(cateCode='', sort='prodDiscount')}" style="font-size: 16px; color: #909090; float: right">더보기 &#10095;</a>
+          </h3>
+
+          <section class="discount productBox">
+            <div class="product" th:each="discountItem, index:${discount}">
+              <a th:href="@{'/product/view?prodNo='+${discountItem.prodNo}+'&cateCode='+${discountItem.cateCode}}" th:class="${discountItem.prodStatus}" onclick="checkProdStatus(event)">
+                <div class="thumb">
+                  <img th:src="@{/uploads/__${discountItem.thumb230}__}" alt="t1" style="width: 230px"/>
+                </div>
+                <h2>[[${discountItem.prodName}]]</h2>
+                <p>[[${discountItem.prodInfo}]]</p>
+                <div th:if="${discountItem.prodDiscount != 0}" class="org_price">
+                  <del th:text="${#numbers.formatInteger(discountItem.prodPrice,3,'COMMA')}"></del>
+                  <span th:text="${discountItem.prodDiscount} + '%'"></span>
+                </div>
+                <div class="dis_price">
+                  <ins th:text="${#numbers.formatInteger((discountItem.prodPrice * (100 - discountItem.prodDiscount) * 0.01), 3, 'COMMA')}"></ins>
+                  <span th:if="${discountItem.prodDeliveryFee}==0" class="free">무료배송</span>
+                  <span th:if="${discountItem.prodDeliveryFee}!=0" class="free" style="background-color: transparent; color: #111">배송비 : <span th:text="${#numbers.formatInteger(discountItem.prodDeliveryFee, 3, 'COMMA') + '원'}"></span></span>
+
+                </div>
+              </a>
+            </div>
+          </section>
+        </section>
+      </main>
+      <footer>
+        <ul>
+          <li><a th:href="@{/company/index}">회사소개</a></li>
+          <li><a th:href="@{/policy/terms(cate=buyer)}">서비스이용약관</a></li>
+          <li><a th:href="@{/policy/terms(cate=privacy)}">개인정보처리방침</a></li>
+          <li><a th:href="@{/policy/terms(cate=finance)}">전자금융거래약관</a></li>
+          <li><a href="#">[[${appInfo.version}]]</a></li>
+        </ul>
+        <div>
+          <p><img th:src="@{/images/footer_logo.png}" alt="로고" /></p>
+          <p>
+            <strong>(주)롯데ON</strong><br />
+            서울특별시 송파구 올림픽로 300 롯데월드타워 26층 (역삼동 강남파이낸스센터)<br />
+            대표이사 : 김사무엘상현, 정준호, 강성현<br />
+            사업자등록번호 : 529-85-00774(롯데쇼핑(주) e커머스사업부)<br />
+            통신판매업 신고 : 서울송파 제0158호<br>
+            호스팅 서비스사업자 : 롯데쇼핑(주) e커머스사업부
+          </p>
+          <p>
+            <strong>고객센터</strong><br />
+            Tel : 1899-7000(유료) (평일 09:00~18:00)<br />
+            Fax : 051-123-4567 | E-mail : lotteon@lotte.net<br />
+          </p>
+        </div>
+      </footer>
+      <button type="button" id="top" onclick="movingTop()">상단이동</button>
+    </div>
+  </body>
+</html>

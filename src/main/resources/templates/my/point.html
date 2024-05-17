@@ -1,0 +1,142 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/myLayout.html}">
+<!--내용 시작-->
+    <div id="my" layout:fragment="content">
+        <script>
+            window.onload = function (){
+                highlight();
+            }
+
+            // 날짜계산
+            function checkDate() {
+                const startDate = document.getElementsByName('startDate')[0].value;
+                const finalDate = document.getElementsByName('finalDate')[0].value;
+                if (startDate && finalDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(finalDate);
+
+                    const diffInMs = end - start;
+
+                    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+                    if (diffInDays >= 365) {
+                        alert('검색기간은 1년을 넘을 수 없습니다.');
+                        document.getElementsByName('startDate')[0].value = '';
+                        document.getElementsByName('finalDate')[0].value = '';
+                    }
+                }
+            }
+        </script>
+        <!--마이페이지 상단 회원 정보-->
+        <nav>
+            <div>
+                <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}"><img th:src="@{/images/my/my_logo.jpg}" alt="나의쇼핑정보"></a>
+
+                <div class="UserInfo">
+                    <p th:text="${#authentication.principal.user.userName}"></p>
+                    <p th:text="${#authentication.principal.user.userGrade}"></p>
+                </div>
+                <ol>
+                    <li><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">주문·배송<span class="delivery" th:text="${session.countOrder}"></span></a></li>
+                    <li><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">할인쿠폰<span class="coupon" th:text="${session.couponCount}"></span></a></li>
+                    <li><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트<span class="point" th:text="${#numbers.formatInteger(session.pointBalance,3,'COMMA')}"></span></a></li>
+                    <li><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의내역<span class="qna" th:text="${session.myQnaCount}"></span></a></li>
+                </ol>
+            </div>
+        </nav>
+
+        <div class="point">
+            <!--마이페이지 사이드바-->
+            <ul class="myCate">
+                <span class="menu_else"></span>
+                <li class=""><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">전체주문내역</a></li>
+                <li class=""><a th:href="@{/my/wish(userId=${#authentication.principal.user.userId})}">관심상품</a></li>
+                <li class=""><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트내역</a></li>
+                <li class=""><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">쿠폰</a></li>
+                <li class=""><a th:href="@{/my/review(userId=${#authentication.principal.user.userId})}">나의리뷰</a></li>
+                <li class=""><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의하기</a></li>
+                <li class=""><a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}">나의설정</a></li>
+            </ul>
+
+            <section>
+                <th:block th:each="banner : ${banMyOrderList}" >
+                    <a th:href="@{http://__${banner.banLink}__}"><img th:src="@{/uploads/__${banner.banImgName}__}" alt="패션, 타운 하나로 끝" class="banner"></a>
+                </th:block>
+                <article>
+                    <h3>포인트내역</h3>
+                    <!--포인트내역 검색바-->
+                    <div class="myOrderSearch">
+                        <p>기간별 조회</p>
+                        <a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}" th:class="${pageResponseDTO.cate == null} ? 'searchOn' : ''">전체</a>
+                        <a th:href="@{/my/point(userId=${#authentication.principal.user.userId}, cate='week')}" th:class="${pageResponseDTO.cate == 'week'} ? 'searchOn' : ''">일주일</a>
+                        <a th:href="@{/my/point(userId=${#authentication.principal.user.userId}, cate='15day')}" th:class="${pageResponseDTO.cate == '15day'} ? 'searchOn' : ''">15일</a>
+                        <a th:href="@{/my/point(userId=${#authentication.principal.user.userId}, cate='month')}" th:class="${pageResponseDTO.cate == 'month'} ? 'searchOn' : ''">1개월</a>
+                        <a th:href="@{/my/point(userId=${#authentication.principal.user.userId}, cate='3month')}" th:class="${pageResponseDTO.cate == '3month'} ? 'searchOn' : ''">3개월</a>
+                        <a th:href="@{/my/point(userId=${#authentication.principal.user.userId}, cate='6month')}" th:class="${pageResponseDTO.cate == '6month'} ? 'searchOn' : ''">6개월</a>
+                        <a th:href="@{/my/point(userId=${#authentication.principal.user.userId}, cate='year')}" th:class="${pageResponseDTO.cate == 'year'} ? 'searchOn' : ''">12개월</a>
+                        <form th:action="@{/my/point}" method="get" class="searchCustomDate">
+                            <input type="date" name="startDate" onchange="checkDate()">
+                            <p style="display: inline-block; width: 10px;">~</p>
+                            <input type="date" name="finalDate" onchange="checkDate()">
+                            <input type="hidden" name="cate" value="custom">
+                            <input type="hidden" name="userId" th:value="${#authentication.principal.user.userId}">
+                            <input type="submit" value="검색">
+                        </form>
+                    </div>
+
+                    <!--포인트내역 목록-->
+                    <!--포인트 없을때-->
+                    <div class="PointList" th:if="${pageResponseDTO.dtoList.size()} == 0">
+                        <div>
+                            <div>날짜</div>
+                            <div>구분</div>
+                            <div>적립금액</div>
+                            <div>비고</div>
+                        </div>
+                        <div style="justify-content: center;">
+                            <div style="border: 0;">
+                                <p style="font-size : 18px;" >포인트내역이 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--포인트 있을때-->
+                    <div class="PointList" th:if="${pageResponseDTO.dtoList.size()} > 0">
+                        <div>
+                            <div>날짜</div>
+                            <div>구분</div>
+                            <div>적립금액</div>
+                            <div>비고</div>
+                        </div>
+                        <div th:each="point : ${pageResponseDTO.dtoList}">
+                            <div th:text="${#strings.substring(point.changeDate, 0, 10)}"></div>
+                            <div th:text="${point.changeType}"></div>
+                            <div class="pointAfter">
+                                <span th:if="${point.changeType == '사용'}"></span>
+                                <span th:text="${#numbers.formatInteger(point.changePoint, 3, 'COMMA')}" style="font-size: 16px"></span>
+                            </div>
+                            <div th:text="${point.changeCode}"></div>
+                        </div>
+
+                        <p class="page" th:if="${pageResponseDTO.dtoList.size()} > 0">
+                            <a th:if="${pageResponseDTO.prev && pageResponseDTO.cate == null}" th:href="@{/my/point(pg=${pageResponseDTO.start -1}, userId=${#authentication.principal.user.userId})}">이전</a>
+                            <a th:if="${pageResponseDTO.prev && pageResponseDTO.cate != null}" th:href="@{/my/point(pg=${pageResponseDTO.start -1}, userId=${#authentication.principal.user.userId}, cate=${pageResponseDTO.cate}, startDate=${pageResponseDTO.startDate}, finalDate=${pageResponseDTO.finalDate})}">이전</a>
+
+                            <th:block th:each="num:${#numbers.sequence(pageResponseDTO.start, pageResponseDTO.end)}">
+                                <a class="pageNum" th:if="${pageResponseDTO.cate == null}" th:href="@{/my/point(pg=${num}, userId=${#authentication.principal.user.userId})}" th:class="${num == pageResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                                <a class="pageNum" th:if="${pageResponseDTO.cate != null}" th:href="@{/my/point(pg=${num}, cate=${pageResponseDTO.cate}, userId=${#authentication.principal.user.userId}, startDate=${pageResponseDTO.startDate}, finalDate=${pageResponseDTO.finalDate})}" th:class="${num == pageResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                            </th:block>
+
+                            <a th:if="${pageResponseDTO.next && pageResponseDTO.cate == null}" th:href="@{/my/point(pg=${pageResponseDTO.end + 1}, userId=${#authentication.principal.user.userId})}">다음</a>
+                            <a th:if="${pageResponseDTO.next && pageResponseDTO.cate != null}" th:href="@{/my/point(pg=${pageResponseDTO.end + 1}, userId=${#authentication.principal.user.userId}, cate=${pageResponseDTO.cate}, startDate=${pageResponseDTO.startDate}, finalDate=${pageResponseDTO.finalDate})}">다음</a>
+                        </p>
+                    </div>
+
+                </article>
+            </section>
+
+        </div>
+    </div>
+<!--내용 끝-->
+</html>

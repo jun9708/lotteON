@@ -1,0 +1,215 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/myLayout.html}">
+<!--내용 시작-->
+    <div id="my" layout:fragment="content">
+        <script>
+            window.onload = function (){
+                highlight();
+            }
+            // 체크박스 전체선택
+            function checkBoxTotal() {
+                const totalCheckBox = document.getElementById('totalCheckBox');
+                const eachCheckBox = document.getElementsByClassName('eachCheckBox');
+                if (totalCheckBox.checked) {
+                    Array.from(eachCheckBox).forEach(function (checkBox) {
+                        checkBox.checked = true;
+                    })
+                }else {
+                    Array.from(eachCheckBox).forEach(function (checkBox) {
+                        checkBox.checked = false;
+                    })
+                }
+            }
+
+            let wishNoArr = [];
+            let wishContentArr = [];
+            // 전체 삭제 버튼 클릭시
+            function deleteWishAll() {
+                const eachCheckBox = document.getElementsByClassName('eachCheckBox');
+                Array.from(eachCheckBox).forEach(function (checkBox) {
+                    if (checkBox.checked) {
+                        wishNoArr.push(checkBox.value);
+                        wishContentArr.push(checkBox.parentNode);
+                    }
+                })
+                deleteWishList();
+            }
+
+            // 개별 삭제 버튼 클릭시
+            function deleteWishEach() {
+                const button = event.target;
+                const checkBox = button.parentNode.parentNode.querySelector('.eachCheckBox');
+                wishNoArr.push(checkBox.value);
+                wishContentArr.push(checkBox.parentNode);
+                deleteWishList();
+            }
+
+            // 위시리스트 삭제
+            function deleteWishList() {
+                const totalCheckBox = document.getElementById('totalCheckBox');
+                const eachCheckBox = document.getElementsByClassName('eachCheckBox');
+                const jsonData = {
+                    "wishNoArr" : wishNoArr
+                }
+
+                fetch("/lotteon/my/wish/deleteWish", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(jsonData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        if (data.result > 0) {
+                            alert("해당 상품을 관심상품에서 삭제했습니다.");
+                            Array.from(wishContentArr).forEach(function (wishContent) {
+                                wishContent.remove();
+                            })
+                        } else {
+                            // 실패
+                            alert("삭제에 실패했습니다.");
+                        }
+                    })
+                    .catch(err => console.log(err))
+                    .finally(() => {
+                        wishNoArr = [];
+                        wishContentArr = [];
+                        Array.from(eachCheckBox).forEach(function (checkBox) {
+                            checkBox.checked = false;
+                        })
+                        totalCheckBox.checked = false;
+                    });
+            }
+
+            // 장바구니 담기 버튼
+            function wishProdToCart() {
+                const button = event.target;
+                const wishInfoArr = button.className.split('?');
+                const checkBox = button.parentNode.parentNode.querySelector('.eachCheckBox');
+                const prodName = button.parentNode.parentNode.querySelector('a').innerText;
+                let result = confirm(prodName + "을(를) 장바구니에 추가하시겠습니까?");
+                if (result) {
+                    const userId = document.getElementById('userId').value;
+                    const jsonData = {
+                        "userId" : userId,
+                        "prodNo" : wishInfoArr[0],
+                        "optNo" : wishInfoArr[1],
+                        "count" : wishInfoArr[2],
+                    }
+
+                    fetch("/lotteon/my/wish/wishProdToCart", {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(jsonData)
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data);
+                            if (data.result > 0) {
+                                // 성공
+                                wishNoArr.push(checkBox.value);
+                                wishContentArr.push(checkBox.parentNode);
+                                deleteWishList();
+                                alert("해당 상품이 장바구니에 담겼습니다.");
+                            } else {
+                                // 실패
+                                alert("실패했습니다.");
+                            }
+                        })
+                        .catch(err => console.log(err))
+                }else {
+                    alert("취소되었습니다.");
+                }
+            }
+        </script>
+        <!--마이페이지 상단 회원 정보-->
+        <nav>
+            <div>
+                <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}"><img th:src="@{/images/my/my_logo.jpg}" alt="나의쇼핑정보"></a>
+
+                <div class="UserInfo">
+                    <p th:text="${#authentication.principal.user.userName}"></p>
+                    <p th:text="${#authentication.principal.user.userGrade}"></p>
+                </div>
+                <ol>
+                    <li><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">주문·배송<span class="delivery" th:text="${session.countOrder}"></span></a></li>
+                    <li><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">할인쿠폰<span class="coupon" th:text="${session.couponCount}"></span></a></li>
+                    <li><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트<span class="point" th:text="${#numbers.formatInteger(session.pointBalance,3,'COMMA')}"></span></a></li>
+                    <li><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의내역<span class="qna" th:text="${session.myQnaCount}"></span></a></li>
+                </ol>
+            </div>
+        </nav>
+
+        <div class="review">
+            <!--마이페이지 사이드바-->
+            <ul class="myCate">
+                <span class="menu_else"></span>
+                <li class=""><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">전체주문내역</a></li>
+                <li class=""><a th:href="@{/my/wish(userId=${#authentication.principal.user.userId})}">관심상품</a></li>
+                <li class=""><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트내역</a></li>
+                <li class=""><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">쿠폰</a></li>
+                <li class=""><a th:href="@{/my/review(userId=${#authentication.principal.user.userId})}">나의리뷰</a></li>
+                <li class=""><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의하기</a></li>
+                <li class=""><a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}">나의설정</a></li>
+            </ul>
+
+            <section>
+                <input type="hidden" id="userId" th:value="${#authentication.principal.user.userId}">
+                <th:block th:each="banner : ${banMyOrderList}" >
+                    <a th:href="@{http://__${banner.banLink}__}"><img th:src="@{/uploads/__${banner.banImgName}__}" alt="패션, 타운 하나로 끝" class="banner"></a>
+                </th:block>
+                <article>
+                    <h3>관심상품</h3>
+
+                    <!--관심상품 출력-->
+                    <!--관심상품 없을때-->
+                    <div class="wishTable" th:if="${wishList.dtoList.size()} == 0">
+                        <div style="height: 30px;"></div>
+                        <div class="wishContent" style="border-bottom: 0;">
+                            <div class="contentWishContent" style="position: relative; border: 0; width: 100%; height: 50px; text-align: center; ">
+                                <p style="position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); font-size: 18px;">관심상품이 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--관심상품 있을때-->
+                    <div class="wishTable" th:if="${wishList.dtoList.size()} > 0">
+                        <div>
+                            <input type="checkbox" id="totalCheckBox" onclick="checkBoxTotal()">
+                            <div>전체선택</div>
+                            <div onclick="deleteWishAll()" style="cursor: pointer">선택삭제</div>
+                        </div>
+                        <div class="wishContent" th:each="wish : ${wishList.dtoList}">
+                            <input type="checkbox" th:value="${wish.wishNo}" class="eachCheckBox">
+                            <img th:src="@{/uploads/__${wish.thumb190}__}">
+                            <div>
+                                <a th:href="@{/product/view(prodNo=${wish.prodNo}, cateCode=${wish.cateCode})}" th:text="${wish.prodName}"></a>
+                                <p th:if="${wish.optName != null}" th:text="${wish.optName}">옵션</p>
+                                <p th:text="${wish.wishCount}">수량</p>
+                                <p th:text="${#numbers.formatInteger(wish.prodPrice, 3, 'COMMA')}">가격</p>
+                            </div>
+                            <div>
+                                <span th:class="${wish.prodNo} + '?' + ${wish.optNo} + '?' + ${wish.wishCount}" onclick="wishProdToCart()">장바구니 담기</span>
+                                <span onclick="deleteWishEach()">관심상품 삭제</span>
+                            </div>
+                        </div>
+
+                        <p class="page">
+                            <a th:if="${wishList.prev == null}" th:href="@{/my/wish(pg=${wishList.start -1}, userId=${#authentication.principal.user.userId})}">이전</a>
+
+                            <th:block th:each="num:${#numbers.sequence(wishList.start, wishList.end)}">
+                                <a class="pageNum" th:if="${wishList.cate == null}" th:href="@{/my/wish(pg=${num}, userId=${#authentication.principal.user.userId})}" th:class="${num == wishList.pg} ? 'on' : ''">[[${num}]]</a>
+                            </th:block>
+
+                            <a th:if="${wishList.next == null}" th:href="@{/my/wish(pg=${wishList.end + 1}, userId=${#authentication.principal.user.userId})}">다음</a>
+                        </p>
+                    </div>
+
+                </article>
+            </section>
+
+        </div>
+    </div>
+<!--내용 끝-->
+</html>

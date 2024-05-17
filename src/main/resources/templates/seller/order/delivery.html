@@ -1,0 +1,269 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/sellerLayout.html}">
+<!--내용 시작-->
+    <section id="admin-product-list" layout:fragment="content">
+
+        <script th:inline="javascript">
+            window.onload = function (){
+                // 그래프
+
+                const statusMap = [[${sellerInfoDTO.statusCountMap}]];
+
+                console.log(statusMap);
+                console.log(statusMap['입금대기']);
+
+                const waiting = statusMap['입금대기'];
+                const ready = statusMap['배송준비'];
+                const doing = statusMap['배송중'];
+                const cancel = statusMap['취소요청'];
+                const exchange = statusMap['교환요청'];
+                const refund = statusMap['환불요청'];
+
+                const ctx = document.getElementById('pie-chart2');
+                const ctx2 = document.getElementById('pie-chart3');
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ["입금대기", "배송준비", "배송중"],
+                        datasets: [{
+                            label: "",
+                            backgroundColor: ["#FF6B6B", "#FFD93D","#4D96FF"],
+                            data: [waiting, ready, doing]
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        title: {
+                            display: true,
+                            text: '배송현황 '
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                fullWidth: false,
+                                labels: {
+                                    font: {
+                                        size: 16 // 라벨의 글자 크기 설정
+                                    }
+                                }
+                            }
+                        },
+                    }
+                });
+
+                new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ["취소요청", "교환요청", "환불요청"],
+                        datasets: [{
+                            label: "",
+                            backgroundColor: ["#FFD93D", "#4D96FF","#FF6B6B"],
+                            data: [cancel,exchange,refund]
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        title: {
+                            display: true,
+                            text: 'CS현황'
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                fullWidth: false,
+                                labels: {
+                                    font: {
+                                        size: 16 // 라벨의 글자 크기 설정
+                                    }
+                                }
+                            }
+                        },
+                    }
+                });
+            }
+
+            // 정렬 필터 박스 표시 함수
+            function filterDrop() {
+                const button = event.target;
+                const filterList = button.nextElementSibling;
+                if (filterList.style.display === "block"){
+                    filterList.style.display = "none";
+                }else {
+                    filterList.style.display = "block";
+                }
+            }
+
+            let globalSave = "";
+            // 주문 상태 변경 모달창 띄우는 함수
+            function openStatusModal() {
+                const button = event.target;
+                const detailNo = button.className;
+                const deliveryPopup = document.getElementsByClassName('deliveryPopup')[0];
+                const statusDiv = button.parentNode.getElementsByTagName('div')[4];
+
+                if (deliveryPopup.style.display === "flex"){
+                    deliveryPopup.style.display = "none";
+                    deliveryPopup.id = "";
+                    globalSave = "";
+                }else {
+                    deliveryPopup.style.display = "flex";
+                    deliveryPopup.id = detailNo;
+                    globalSave = statusDiv;
+                }
+            }
+
+            // 모달창 닫기
+            function closeModal() {
+                const deliveryPopup = document.getElementsByClassName('deliveryPopup')[0];
+                deliveryPopup.style.display = "none";
+                deliveryPopup.id = "";
+                globalSave = "";
+            }
+
+            // 주문 상태 변경 함수
+            function updateStatus() {
+                const button = event.target;
+                const popupBox = button.parentNode;
+                const detailNo = popupBox.id;
+                const detailStatus = button.innerText;
+                const deliveryPopup = document.getElementsByClassName('deliveryPopup')[0];
+
+                const jsonData = {
+                    "detailNo" : detailNo,
+                    "detailStatus" : detailStatus
+                }
+
+                fetch("/lotteon/seller/product/updateStatus", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(jsonData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        if (data > 0) {
+                            alert("성공");
+
+                            globalSave.innerText = detailStatus;
+
+
+                            deliveryPopup.style.display = "none";
+                            deliveryPopup.id = "";
+                            globalSave = "";
+
+                        }else {
+                            alert("실패");
+                            deliveryPopup.style.display = "none";
+                            deliveryPopup.id = "";
+                            globalSave = "";
+                        }
+                    })
+                    .catch(err => console.log(err))
+
+            }
+
+        </script>
+
+        <nav>
+            <h3>배송관리</h3>
+            <p>
+                HOME > 주문관리 > <strong>배송관리</strong>
+            </p>
+        </nav>
+        <!-- 상품목록 컨텐츠 시작 -->
+        <section>
+            <div class="deliveryInfo">
+                <div class="deliveryChart" style="flex-direction: column">
+                    <h4 style="font-weight: bold; font-size: 15px; margin: 10px 0; text-align: center">배송 현황</h4>
+                    <canvas id="pie-chart2" width="500" height="250"></canvas>
+                </div>
+                <div class="deliveryChart" style="flex-direction: column">
+                    <h4 style="font-weight: bold; font-size: 15px; margin: 10px 0; text-align: center">CS 현황</h4>
+                    <canvas id="pie-chart3" width="500" height="250"></canvas>
+                </div>
+            </div>
+
+            <div class="orderListTable">
+                <div class="filterBox">
+                    <span onclick="filterDrop()">정렬 ∨</span>
+                    <ul class="filterList">
+                        <li><a th:href="@{/seller/order/delivery(prodSeller=${session.prodSeller})}">전체</a></li>
+                        <li><a th:href="@{/seller/order/delivery(keyword='waiting', prodSeller=${session.prodSeller})}">입금대기</a></li>
+                        <li><a th:href="@{/seller/order/delivery(keyword='ready', prodSeller=${session.prodSeller})}">배송준비</a></li>
+                        <li><a th:href="@{/seller/order/delivery(keyword='doing', prodSeller=${session.prodSeller})}">배송중</a></li>
+                        <li><a th:href="@{/seller/order/delivery(keyword='finish', prodSeller=${session.prodSeller})}">배송완료</a></li>
+                        <li><a th:href="@{/seller/order/delivery(keyword='cancel', prodSeller=${session.prodSeller})}">취소요청</a></li>
+                        <li><a th:href="@{/seller/order/delivery(keyword='exchange', prodSeller=${session.prodSeller})}">교환요청</a></li>
+                        <li><a th:href="@{/seller/order/delivery(keyword='refund', prodSeller=${session.prodSeller})}">환불요청</a></li>
+                    </ul>
+                </div>
+                <div class="orderListHead">
+                    <div>구분</div>
+                    <div>주문 번호</div>
+                    <div>상품 이름</div>
+                    <div>수량</div>
+                    <div>주문 상태</div>
+                    <div>구매 날짜</div>
+                    <div></div>
+                </div>
+                <div class="orderListBody" th:each="orders,index : ${selectOrder.dtoList}">
+                    <div class="orderInfo">
+                        <div th:text="${selectOrder.startNo - index.index}"></div>
+                        <div th:text="${orders.detailNo}"></div>
+                        <div th:text="${orders.prodName}" style="text-align: left"></div>
+                        <div th:text="${orders.count}"></div>
+
+                        <div th:if="${orders.detailStatus == '입금대기'}" th:text="${orders.detailStatus}" style="color: #5E1675"></div>
+                        <div th:if="${orders.detailStatus == '배송준비'}" th:text="${orders.detailStatus}" style="color: #2C4E80"></div>
+                        <div th:if="${orders.detailStatus == '배송중'}" th:text="${orders.detailStatus}" style="color: #0079FF"></div>
+                        <div th:if="${orders.detailStatus == '배송완료'}" th:text="${orders.detailStatus}" style="color: #36AE7C"></div>
+                        <div th:if="${orders.detailStatus == '취소요청'}" th:text="${orders.detailStatus}" style="color: #FFA900"></div>
+                        <div th:if="${orders.detailStatus == '교환요청'}" th:text="${orders.detailStatus}" style="color: #F94A29"></div>
+                        <div th:if="${orders.detailStatus == '환불요청'}" th:text="${orders.detailStatus}" style="color: #D61355"></div>
+                        <div th:if="${orders.detailStatus == '취소완료'}" th:text="${orders.detailStatus}" style="color: #FFA900"></div>
+                        <div th:if="${orders.detailStatus == '교환완료'}" th:text="${orders.detailStatus}" style="color: #F94A29"></div>
+                        <div th:if="${orders.detailStatus == '환불완료'}" th:text="${orders.detailStatus}" style="color: #D61355"></div>
+                        <div th:if="${orders.detailStatus == '구매확정'}" th:text="${orders.detailStatus}" style="color: #36AE7C"></div>
+
+                        <div th:text="${orders.detailDate}"></div>
+                        <div onclick="openStatusModal()" th:class="${orders.detailNo}" style="width: 50px;">상태변경</div>
+                    </div>
+                </div>
+
+                <div class="pagingBox">
+                    <div class="pagingList">
+                        <a th:if="${selectOrder.prev && selectOrder.keyword == null}" th:href="@{/seller/order/delivery(pg=${selectOrder.start - 1}, prodSeller=${session.prodSeller})}">이전</a>
+                        <a th:if="${selectOrder.prev && selectOrder.keyword != null}" th:href="@{/seller/order/delivery(pg=${selectOrder.start - 1}, prodSeller=${session.prodSeller}, keyword=${selectOrder.keyword})}">이전</a>
+
+                        <th:block th:each="num:${#numbers.sequence(selectOrder.start, selectOrder.end)}">
+                            <a class="pageNum" th:if="${selectOrder.keyword == null}" th:href="@{/seller/order/delivery(pg=${num}, prodSeller=${session.prodSeller})}" th:class="${num == selectOrder.pg} ? 'on' : ''">[[${num}]]</a>
+                            <a class="pageNum" th:if="${selectOrder.keyword != null}" th:href="@{/seller/order/delivery(pg=${num}, prodSeller=${session.prodSeller}, keyword=${selectOrder.keyword})}" th:class="${num == selectOrder.pg} ? 'on' : ''">[[${num}]]</a>
+                        </th:block>
+
+                        <a th:if="${selectOrder.next && selectOrder.keyword == null}" th:href="@{/seller/order/delivery(pg=${selectOrder.start + 1}, prodSeller=${session.prodSeller})}">다음</a>
+                        <a th:if="${selectOrder.next && selectOrder.keyword != null}" th:href="@{/seller/order/delivery(pg=${selectOrder.start + 1}, prodSeller=${session.prodSeller}, keyword=${selectOrder.keyword})}">다음</a>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+            <div class="deliveryPopup">
+                <p><span onclick="closeModal()">닫기</span></p>
+                <div onclick="updateStatus()">입금대기</div>
+                <div onclick="updateStatus()">배송준비</div>
+                <div onclick="updateStatus()">배송중</div>
+                <div onclick="updateStatus()">배송완료</div>
+                <div onclick="updateStatus()">취소완료</div>
+                <div onclick="updateStatus()">교환완료</div>
+                <div onclick="updateStatus()">환불완료</div>
+            </div>
+
+        </section>
+        <!-- 상품목록 컨텐츠 끝 -->
+    </section>
+<!--내용 끝-->
+</html>

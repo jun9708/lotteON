@@ -1,0 +1,1579 @@
+/* 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    font: normal 12px '고딕';
+}
+
+ul, ol {list-style: none;}
+a {text-decoration: none; color: #111;}
+
+#admin-wrapper {
+    width: 100%;
+    height: auto;
+}
+
+/* 헤더영역 */
+header {
+    width: 100%;
+    height: 120px;
+    background: url('../../images/admin/admin_bg_header.jpg') repeat-x;
+}
+.sellerHeader {
+    width: 100%;
+    height: 120px;
+    background: url('../../images/seller/seller_bg_header.png') repeat-x;
+}
+
+header > div {
+    width: 1400px;
+    height: 100%;
+    margin: 0 auto;
+}
+header > div > .logo {
+    float: left;
+    margin-top: 46px;
+}
+header > div > p {
+    float: right;
+    color: #fff;
+    margin-top: 46px;
+}
+header > div > p > span {
+    margin-right: 16px;
+}
+header > div > p > a {
+    color: #fff;
+}
+
+/* 메인영역 - 공통 */
+main {
+    width: 1400px;
+    height: auto;
+    margin: 0 auto;
+    overflow: hidden;
+}
+main > aside {
+    float: left;
+    width: 270px;
+    height: auto;
+    background: url('../../images/admin/admin_bg_aside.jpg') repeat-y;
+    border-left: 1px solid #c0c0c0;
+    box-sizing: border-box;
+}
+
+.btn {
+    display: inline-block;
+    width: 100px;
+    height: 30px;
+    border-radius: 4px;
+    background-color: #9e9e9e;
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    line-height: 30px;
+}
+
+#gnb {
+    width: 100%;
+    height: auto;
+}
+#gnb > li {
+    width: 100%;
+    min-height: 66px;
+    border-top: 1px solid #c0c0c0;
+    box-sizing: border-box;
+}
+#gnb > li:last-child {border-bottom: 1px solid #c0c0c0;}
+
+#gnb > li > a {
+    display: block;
+    width: 100%;
+    height: 66px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #222;
+    line-height: 66px;
+    text-indent: 10px;
+}
+#gnb > li > a > i {
+    margin-right: 10px;
+    font-size: 20px;
+}
+
+#gnb ol {
+    display: none;
+    width: 100%;
+    height: auto;
+}
+#gnb ol > li {
+    width: 100%;
+    height: 32px;
+}
+#gnb ol > li > a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-indent: 52px;
+}
+
+
+
+main > section {
+    float: right;
+    width: 1130px;
+    min-height: 600px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+main > section > nav {
+    position: relative;
+    width: 100%;
+    height: 46px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #c0c0c0;
+    box-sizing: border-box;
+}
+
+main > section > nav > h3 {
+    position: absolute;
+    left: 0;
+    bottom: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+main > section > nav > p {
+    position: absolute;
+    right: 0;
+    bottom: 10px;
+}
+main > section > nav > p > strong {
+    font-weight: bold;
+}
+
+main > section > article {
+    overflow: hidden;
+}
+
+main > section > article section {
+    display: flex;
+    flex-direction: column;
+    margin: 50px 0;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fafafa;
+}
+main > section > article section > p {
+    background: #eaeaea;
+    padding: 10px;
+    margin: 10px 0;
+    box-sizing: border-box;
+}
+
+main h4 {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+main table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+main table  tr:nth-child(1) {
+    height: 30px;
+    padding: 10px 0;
+    background-color: #f6f6f6;
+}
+main table tr {
+
+}
+main table tr > td {
+    border-top: 1px solid #e6e6e6;
+    border-bottom: 1px solid #e6e6e6;
+    padding: 10px;
+    text-align: center;
+}
+main table tr > td:nth-child(1) {width: 50px;}
+main table tr > td:nth-child(2) {width: 50px;}
+main table tr > td:nth-child(3) {width: 50px;}
+main table tr > td:nth-child(5) {width: 50px;}
+main table tr > td:nth-child(6) {width: 80px;}
+main table tr > td:nth-child(7) {width: 100px;}
+.percentAfter:after {content: '%'}
+.listPriceAfter:after {content: '원'}
+.afterPoint:after {content: 'P'}
+.stockAfter:after {content: '개'}
+.contentStyle {
+    width: 750px!important;
+    padding: 20px 10px;
+    text-align: left;
+    line-height: 22px;
+}
+
+main table span {
+    display: block;
+}
+
+
+/* 푸터영역 */
+footer {
+    width: 100%;
+    height: 60px;
+    background: #0d3a46;
+}
+
+footer > div {
+    width: 1400px;
+    height: 100%;
+    margin: 0 auto;
+}
+
+footer > div > p {
+    padding-top: 22px;
+    color: #fff;
+    font-weight: bold;
+    box-sizing: border-box;
+}
+
+/* 아이콘, 버튼 공통 */
+p.ico {
+    width: 100%;
+    height: 58px;
+    margin-top: 20px;
+    border-width: 1px;
+    border-style: solid;
+    padding-left: 50px;
+    line-height: 58px;
+    box-sizing: border-box;
+}
+p.info    {border-color: #8497BF; background: #A8B2C5 url('../../images/admin/admin_ico_info.png') no-repeat scroll 15px 16px;}
+p.success {border-color: #C6D881; background: #E6EFC2 url('../../images/admin/admin_ico_success.png') no-repeat scroll 15px 16px;}
+p.alert   {border-color: #FDD845; background: #FFF6BF url('../../images/admin/admin_ico_alert.png') no-repeat scroll 15px 16px;}
+p.error   {border-color: #FBC7C9; background: #FBE3E4 url('../../images/admin/admin_ico_error.png') no-repeat scroll 15px 16px;}
+
+label {
+    display: inline-block;
+    width: 100px;
+    font-size: 12px;
+    font-weight: bold;
+    vertical-align: top;
+}
+
+
+input {
+    width: 200px;
+    padding: 6px;
+    border: 1px solid #959595;
+    font-size: 13px;
+    background-color: #fefefe;
+    color: #333;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+input[type=checkbox] {
+    width: auto;
+    margin-right: 6px;
+}
+
+select {
+    width: 150px;
+    padding: 6px;
+    border: 1px solid #959595;
+    font-size: 13px;
+    background-color: #fefefe;
+    color: #333;
+    box-sizing: border-box;
+}
+
+textarea {
+    padding: 5px;
+    border: 1px solid #959595;
+    font-size: 13px;
+    background-color: #eaeaea;
+    color: #333;
+    box-sizing: border-box;
+    resize: none;
+}
+
+/* span {
+    vertical-align: bottom;
+    color: #bc2e13;
+} */
+
+button {
+    border: 1px solid #959595;
+    font-size: 12px;
+    background: #a8b2c5;
+    padding: 9px 15px;
+    color: #fff;
+    vertical-align: top;
+}
+
+button[type=submit] {
+    float: right;
+    height: 26px;
+    margin-right: 246px;
+    padding: 0 15px;
+    background-color: #a8b2c5;
+    border: 1px solid #959595;
+    font-size: 12px;
+    color: #fff;
+    vertical-align: middle;
+}
+/**/
+
+#admin-wrapper {
+    background-color: #e7e7e7;
+}
+.shopInfo {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    box-sizing: border-box;
+    margin: 10px 0;
+}
+/* 공통 */
+.searchInput, .searchBtn {
+    outline: none;
+    vertical-align: top;
+    padding: 7px;
+}
+.searchBtn {
+    width: 100px;
+    cursor: pointer;
+}
+
+.pagingBox {
+    display: flex;
+    margin-top: 20px;
+    justify-content: center;
+}
+.pagingList > a {
+    display: inline-block;
+    min-width: 20px;
+    height: 20px;
+    padding: 4px;
+    text-align: center;
+    line-height: 20px;
+    background-color: #fafafa;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+}
+.pagingList > a:hover {
+    background-color: #dadada;
+}
+header > div > .logo {
+    float: left;
+    font-size: 30px;
+    color: white;
+    margin: 30px 0;
+}
+.on {
+    background-color: #dadada!important;
+}
+
+.articleBox {
+    display: flex;
+    flex-direction: column;
+    width: 516px;
+    height: 200px;
+    box-sizing: border-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    padding: 16px;
+    margin: 10px 0;
+    background-color: #fafafa;
+}
+.articleBox > p {
+    padding: 10px 0;
+    overflow: hidden;
+    cursor: pointer;
+}
+.articleBox > p > a {
+    float: left;
+    display: block;
+    width: 360px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    overflow: hidden;
+}
+.articleBox > p > span {
+    float: right;
+}
+
+    /* 통계정보 */
+.shopAverage {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: 160px;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+.shopGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 260px;
+    height: 160px;
+    box-sizing: border-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    background-color: #fafafa;
+}
+.shopGroup > div:nth-child(1){
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 0;
+}
+.shopGroup > div {
+    width: 238px;
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+}
+.shopGroup > div > img {
+    width: 90px;
+    height: 90px;
+}
+.shopGroup > div > div {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 10px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+.shopGroup > div > div > p {
+    display: flex;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 4px 0;
+    justify-content: space-between;
+}
+.shopGroup > div > div > p > span {
+    font-size: 14px;
+}
+
+    /* 그래프 */
+.shopGraph {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 400px;
+    box-sizing: border-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    background-color: #fafafa;
+    margin-bottom: 20px;
+}
+.graphTitle {
+    display: flex;
+    justify-content: center;
+    height: 60px;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 10px;
+    margin: 0 400px;
+    border-bottom: 1px solid #909090;
+}
+.graphContent {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 14px;
+}
+.graphBtn {
+    width: 150px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 10px;
+    margin: 20px 0;
+    font-weight: bold;
+}
+.graphBtn:hover {
+    color: white;
+    background-color: #909090;
+}
+
+#admin-cs-list > section > .qna tr > td:nth-child(5) {width: 80px; text-align: left;}
+
+/* seller/cs/qna/list */
+.qna tr > th:nth-child(3) {
+    width: 300px!important;
+}
+
+
+/* seller/cs/qna/view */
+#sellerQnaView h4 {
+    margin-bottom: 10px;
+    margin-left: 4px;
+}
+.requestQna {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    background-color: #fafafa;
+}
+.requestQna > .reqQnaTitle {
+    display: flex;
+    height: auto;
+    border: 1px solid #c4c4c4;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+.requestQna > .reqQnaTitle > span {
+    justify-content: center;
+    padding: 10px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.requestQna > .reqQnaTitle > span:nth-child(1){
+    width: 100px;
+    background-color: #d7d7d7;
+    text-align: center;
+}
+.requestQna > .reqQnaTitle > span:nth-child(2){
+    width: 460px;
+}
+.requestQna > .reqQnaTitle > span:nth-child(3){
+    width: 100px;
+    background-color: #d7d7d7;
+    text-align: center;
+}
+.requestQna > .reqQnaTitle > span:nth-child(4){
+    width: 400px;
+}
+
+.requestQna > .reqQnaInfo {
+    display: flex;
+    height: auto;
+    border-left: 1px solid #c4c4c4;
+    border-right: 1px solid #c4c4c4;
+}
+.requestQna > .reqQnaInfo > span {
+    justify-content: center;
+    padding: 10px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.requestQna > .reqQnaInfo > span:nth-child(1){
+    width: 100px;
+    background-color: #d7d7d7;
+    text-align: center;
+}
+.requestQna > .reqQnaInfo > span:nth-child(2){
+    width: 460px;
+}
+.requestQna > .reqQnaInfo > span:nth-child(3){
+    width: 100px;
+    background-color: #d7d7d7;
+    text-align: center;
+}
+.requestQna > .reqQnaInfo > span:nth-child(4){
+    width: 150px;
+}
+.requestQna > .reqQnaInfo > span:nth-child(5){
+    width: 100px;
+    background-color: #d7d7d7;
+    text-align: center;
+}
+.requestQna > .reqQnaInfo > span:nth-child(6){
+    width: 150px;
+}
+
+.requestQna > .reqQnaContent {
+    display: flex;
+    height: auto;
+    min-height: 100px;
+    border: 1px solid #c4c4c4;
+
+}
+.requestQna > .reqQnaContent > span {
+    justify-content: center;
+    padding: 10px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.requestQna > .reqQnaContent > span:nth-child(1){
+    width: 100px;
+    background-color: #d7d7d7;
+    text-align: center;
+}
+.requestQna > .reqQnaContent > span:nth-child(2){
+    width: 570px;
+}
+
+.responseQna {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 10px 0 10px;
+    box-sizing: border-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    background-color: #fafafa;
+    margin-top: 20px;
+}
+
+.responseQna > .resQnaBox {
+    display: flex;
+    justify-content: left;
+    min-height: 100px;
+    height: auto;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+.responseQna > .resQnaBox > .resQnaInfo {
+    width: 100px;
+    background-color: #d7d7d7;
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.responseQna > .resQnaBox > .resQnaInfo > p:nth-child(1){
+    margin-bottom: 20px;
+}
+.responseQna > .resQnaBox > .resQnaComment {
+    width: 840px;
+}
+.responseQna > .resQnaBox > .resQnaComment > input{
+    align-self: auto;
+    margin: 10px;
+    width: 810px;
+    font-size: 14px;
+    box-sizing: border-box;
+    border: 0;
+    outline: none;
+    padding: 0;
+    background-color: #fafafa;
+}
+.responseQna > .resQnaBox > span {
+    display: flex;
+    align-self: end;
+    width: 50px;
+    height: 30px;
+    border-radius: 4px;
+    background-color: #4291e9;
+    color: white;
+    font-size: 14px;
+    justify-content: center;
+    line-height: 30px;
+    margin: 0 10px 10px 0;
+    cursor: pointer;
+}
+.responseQna > .resQnaBox > span:nth-child(4){
+    background-color: #EB5353;
+}
+.responseQna > span {
+    display: flex;
+    align-self: end;
+    width: 100px;
+    height: 40px;
+    border-radius: 4px;
+    background-color: #4291e9;
+    color: white;
+    font-size: 14px;
+    justify-content: center;
+    line-height: 40px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+/* seller/product/option */
+.modifyBtn, .cancelBtn{
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+    border-radius: 4px;
+    background-color: #e6e6e6;
+    border: 1px solid #c4c4c4;
+    font-size: 14px;
+    font-weight: bold;
+    justify-content: center;
+    line-height: 30px;
+    margin-top: 10px;
+    cursor: pointer;
+    text-align: center;
+}
+
+
+/* seller/order/orderList */
+.orderListInfo {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fafafa;
+}
+.orderListChart {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: content-box;
+}
+
+
+
+.orderListTable {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fafafa;
+    margin-top: 20px;
+}
+.filterBox {
+    border-bottom: 1px solid #e6e6e6;
+    padding: 10px;
+    box-sizing: content-box;
+}
+.filterBox > span {
+    display: inline-block;
+    width: 102px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 4px 10px;
+    box-sizing: border-box;
+}
+.filterBox > span:hover {
+    color: #8200af;
+}
+.filterList {
+    display: none;
+    position: absolute;
+    width: 100px;
+    border: 1px solid #bebebe;
+    background-color: #fafafa;
+    box-sizing: content-box;
+}
+.filterList > li {
+    padding: 4px 10px;
+    cursor: pointer;
+}
+.filterList > li:hover {
+    background-color: #bebebe;
+}
+.filterList > li > a {
+    font-size: 14px;
+}
+.orderListHead {
+    display: flex;
+    width: 100%;
+    padding: 20px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+}
+.orderListHead > div {font-weight: bold; font-size: 14px; text-align: center}
+.orderListHead > div:nth-child(1) {width: 60px;}
+.orderListHead > div:nth-child(2) {width: 120px;}
+.orderListHead > div:nth-child(3) {width: 500px;}
+.orderListHead > div:nth-child(4) {width: 60px;}
+.orderListHead > div:nth-child(5) {width: 120px;}
+.orderListHead > div:nth-child(6) {width: 120px;}
+
+.orderListBody {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0 10px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+}
+.orderInfo {
+    display: flex;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+.orderListBody > .orderInfo > div {font-size: 14px; text-align: center}
+.orderListBody > .orderInfo > div:nth-child(1) {width: 60px; font-weight: bold;}
+.orderListBody > .orderInfo > div:nth-child(2) {width: 120px;}
+.orderListBody > .orderInfo > div:nth-child(3) {width: 500px;}
+.orderListBody > .orderInfo > div:nth-child(4) {width: 60px;}
+.orderListBody > .orderInfo > div:nth-child(5) {width: 120px; color: #36AE7C; font-weight: bold;}
+.orderListBody > .orderInfo > div:nth-child(6) {width: 120px;}
+.orderListBody > .orderInfo > div:nth-child(7) {width: 40px; font-size: 12px; cursor: pointer}
+.orderInfo:hover {
+    background-color: #ececec!important;
+}
+
+
+.detailInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 95%;
+    padding: 10px;
+    box-sizing: border-box;
+    background-color: #f5f5f5;
+    border: 2px solid #ececec;
+    border-top: 0;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.detailInfoRow {
+    display: flex;
+    width: 780px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #e6e6e6;
+}
+.detailInfo > .detailInfoRow > div {font-size: 14px; text-align: center; padding: 10px 0}
+.detailInfo > .detailInfoRow > div:nth-child(1) {width: 180px; font-weight: bold;}
+.detailInfo > .detailInfoRow > div:nth-child(2) {width: 210px;}
+.detailInfo > .detailInfoRow > div:nth-child(3) {width: 180px; font-weight: bold;}
+.detailInfo > .detailInfoRow > div:nth-child(4) {width: 210px;}
+
+.detailInfoAddr {
+    display: flex;
+    width: 780px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #e6e6e6;
+}
+.detailInfo > .detailInfoAddr > div {font-size: 14px; text-align: center; padding: 10px 0}
+.detailInfo > .detailInfoAddr > div:nth-child(1) {width: 180px; font-weight: bold;}
+.detailInfo > .detailInfoAddr > div:nth-child(2) {width: 600px;}
+
+.deliveryPopup {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    flex-wrap: wrap;
+    width: 400px;
+    height: auto;
+    padding: 10px 20px 20px 20px;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    background-color: #fafafa;
+}
+.deliveryPopup > p {
+    width: 100%;
+    text-align: right;
+    margin-bottom: 10px;
+}
+.deliveryPopup > p > span {
+    cursor: pointer;
+}
+.deliveryPopup > div {
+    width: 90px;
+    height: 40px;
+    margin: 15px 5px;
+    border: 1px solid #909090;
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-size: 14px;
+    line-height: 40px;
+    text-align: center;
+    cursor: pointer;
+}
+
+
+
+
+/* seller/product/sales */
+.orderListFlex {
+    display: flex;
+    justify-content: space-between;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+.orderListFlex h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+.twoDiv {
+    display: flex;
+    width: 530px;
+    padding: 20px;
+    box-sizing: border-box;
+    flex-direction: column;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    background-color: #fafafa;
+}
+
+.salesRow {
+    display: flex;
+    border-bottom: 1px solid #c4c4c4;;
+}
+.salesRow:nth-child(2) > div {font-weight: bold}
+.salesInfo > .salesRow > div {font-size: 14px; text-align: center; padding: 10px 0}
+.salesInfo > .salesRow > div:nth-child(1) {width: 80px; font-weight: bold;}
+.salesInfo > .salesRow > div:nth-child(2) {width: 150px;}
+.salesInfo > .salesRow > div:nth-child(3) {width: 150px;}
+.salesInfo > .salesRow > div:nth-child(4) {width: 150px;}
+.salesRow > div::after {content: '원';}
+.salesRow:nth-child(2) > div::after {content: none;}
+.salesInfo > .salesRow > div:nth-child(1)::after {content: none;}
+
+.salesWeekRow {
+    display: flex;
+    border-bottom: 1px solid #c4c4c4;;
+}
+.movingBox .salesWeekRow > div > span:nth-child(2) {font-weight: bold; font-size: 14px; text-align: center; padding: 10px 0}
+.movingBox .salesWeekRow > div {font-size: 14px; text-align: center; padding: 10px 0}
+.movingBox .salesWeekRow > div:nth-child(1) {width: 90px; font-weight: bold;}
+.movingBox .salesWeekRow > div:nth-child(2) {width: 175px;}
+.movingBox .salesWeekRow > div:nth-child(3) {width: 90px;}
+.movingBox .salesWeekRow > div:nth-child(4) {width: 175px;}
+.movingBox .salesWeekRow:nth-child(1) > div {width:100%; text-align: center}
+.afterPrice::after {content: '원';}
+.afterCount::after {content: '건';}
+.salesInfoWeek {
+    overflow: hidden;
+}
+
+.movingBox {
+    position: relative;
+    width: 4064px;
+    display: flex;
+    box-sizing: border-box;
+}
+.movingEach {
+    width: 488px;
+    margin-right: 20px;
+}
+
+
+/* seller/order/delivery */
+.deliveryInfo {
+    display: flex;
+    justify-content: space-between;
+    box-sizing: content-box;
+}
+.deliveryChart {
+    display: flex;
+    width: 47.5%;
+    justify-content: space-between;
+    box-sizing: content-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fafafa;
+}
+.deliveryText {
+    display: flex;
+    width: 22%;
+    justify-content: space-between;
+    box-sizing: content-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fafafa;
+}
+.statusList {
+    display: none;
+    position: absolute;
+    width: 120px;
+    border: 1px solid #bebebe;
+    background-color: #fafafa;
+    box-sizing: content-box;
+}
+.statusList > li {
+    padding: 4px 10px;
+    cursor: pointer;
+}
+.statusList > li:hover {
+    background-color: #bebebe;
+}
+.statusList > li > a {
+    font-size: 14px;
+}
+
+
+/* cs */
+.sectionBox {
+    display: flex;
+    width: 1070px;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: content-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fafafa;
+}
+.sectionBox > table {
+
+}
+.sectionBox > table  tr:nth-child(1) {
+    padding: 10px 0;
+    background-color: #f6f6f6;
+}
+
+/* 상품등록 : product-register */
+#admin-product-register {}
+#admin-product-register input[type=submit] {
+    float: right;
+    width: 100px;
+}
+/* 등록된 옵션 */
+.existOptionTable {
+    display: flex;
+    flex-direction: column;
+    width: 1065px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    height: auto;
+}
+.existOptionTitle {
+    display: flex;
+    width: 100%;
+    padding: 10px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+}
+.existOptionTitle > div {
+    width: 340px;
+}
+.existOptionTitle > div:nth-child(1) {
+    width: 150px;
+}
+.existOptionContent {
+    display: flex;
+    width: 100%;;
+    padding: 10px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+}
+.existOptionContent > div {
+    width: 340px;
+}
+.existOptionContent > div:nth-child(1) {
+    width: 150px;
+}
+
+
+
+/* 등록된 옵션 조합 */
+.existOptDetailTable {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    width: 1065px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    height: auto;
+}
+.existOptDetailTitle {
+    display: flex;
+    width: 100%;
+    padding: 10px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+}
+.existOptDetailTitle > div {
+    width: 160px;
+}
+.existOptDetailTitle > div:nth-child(1) {
+    width: 80px;
+}
+.existOptDetailContent {
+    display: flex;
+    width: 100%;;
+    padding: 10px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+}
+.existOptDetailContent > div {
+    width: 160px;
+}
+.existOptDetailContent > div:nth-child(1) {
+    width: 80px;
+}
+.existOptDetailContent > div:nth-child(1) > input{
+    width: 60px;
+}
+.existOptDetailContent > div > input{
+    width: 140px;
+}
+
+/* 옵션 만들기 */
+.makeOption {
+    display: flex;
+    flex-direction: column;
+    width: 1065px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    height: auto;
+}
+.makeOption > div {
+    width: 150px;
+    padding: 10px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+}
+.makeOption > div:nth-child(1) > div {
+    padding-left: 50px;
+}
+.makeOption > div > div:nth-child(1) {
+    width: 150px;
+    padding: 10px;
+    text-align: center;
+    border: 0;
+}
+.makeOption > div > div {
+    width: 300px;
+    padding: 10px;
+    box-sizing: border-box;
+    border-left: 1px solid #e6e6e6;
+}
+.makeOption > .regOptTitle {
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    align-items: center;
+}
+.makeOption > .regOptContent {
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    align-items: center;
+}
+.makeOption > .regOptContent input {
+    display: inline-block;
+    width: 180px;
+    height: 30px;
+    margin: 4px 0;
+    line-height: 30px;
+    vertical-align: top;
+    border: 1px solid #e6e6e6;
+    outline-color: #c4c4c4;
+}
+.makeOption > .regOptContent span {
+    display: inline-block;
+    width: 40px;
+    height: 30px;
+    margin: 4px 0;
+    text-align: center;
+    line-height: 30px;
+    box-sizing: border-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    background-color: #e6e6e6;
+    cursor: pointer;
+}
+#btnNewOptAdd {
+    display: inline-block;
+    width: 200px;
+    align-self: center;
+    float: right;
+    height: 30px;
+    padding: 0 4px;
+    margin: 20px 10px;
+    text-align: center;
+    line-height: 30px;
+    box-sizing: border-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    background-color: #e6e6e6;
+    cursor: pointer;
+}
+#btnRegOpt {
+    display: inline-block;
+    width: 200px;
+    align-self: center;
+    float: right;
+    height: 30px;
+    padding: 0 4px;
+    margin: 20px 10px;
+    text-align: center;
+    line-height: 30px;
+    box-sizing: border-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    background-color: #e6e6e6;
+    cursor: pointer;
+}
+
+.registerOption {
+    display: flex;
+    flex-direction: column;
+    width: 1065px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    height: auto;
+}
+.registerOption > div {
+    padding: 10px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+}
+.registerOption > div:nth-child(1) > div {
+    text-align: center;
+}
+.registerOption > div > div:nth-child(1) {
+    width: 100px;
+    padding: 10px;
+    text-align: center;
+    border: 0;
+}
+.registerOption > div > div:nth-last-child(1) {
+    width: 100px;
+    padding: 10px;
+    text-align: center;
+}
+.registerOption > div > div {
+    width: 150px;
+    padding: 10px;
+    box-sizing: border-box;
+    border-left: 1px solid #e6e6e6;
+}
+.registerOption > .regOptTitle {
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    align-items: center;
+}
+.registerOption > .regOptContent {
+    display: flex;
+    box-sizing: border-box;
+    padding: 0 10px;
+    width: 100%;
+    align-items: center;
+}
+.registerOption > .regOptContent input {
+    display: inline-block;
+    width: 120px;
+    height: 30px;
+    line-height: 30px;
+    vertical-align: top;
+    border: 1px solid #e6e6e6;
+    outline-color: #c4c4c4;
+}
+.optValue1, .optValue2, .optValue3 {
+    text-align: center;
+    outline: none;
+}
+.registerOption > .regOptContent span {
+    display: inline-block;
+    width: 40px;
+    height: 30px;
+    margin: 4px 0;
+    text-align: center;
+    line-height: 30px;
+    box-sizing: border-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    background-color: #e6e6e6;
+    cursor: pointer;
+}
+.optNum {
+    line-height: 19px!important;
+    height: 20px!important;
+    background-color: #ffffff !important;
+    border: 1px solid #d2d2d2!important;
+}
+
+
+/* 상품수정 : product-option */
+.optionTable tr > td {
+    width: 325px;
+}
+.optionTable tr > td:nth-child(1), td:nth-child(3) {
+    width: 200px;
+    background: #f6f6f6;
+}
+
+.modifyTable {
+
+}
+.modifyTable tr {background-color: transparent!important;}
+.modifyTable tr > td:nth-child(1) {background-color: #f6f6f6; font-weight: bold}
+.modifyTable tr > td:nth-child(3) {background-color: #f6f6f6; font-weight: bold}
+.modifyTable tr:nth-child(1) > td:nth-child(1) {width: 150px;}
+.modifyTable tr:nth-child(1) > td:nth-child(2) {width: 390px;}
+.modifyTable tr:nth-child(1) > td:nth-child(3) {width: 150px;}
+.modifyTable tr:nth-child(1) > td:nth-child(4) {width: 390px;}
+
+.modifyTable tr > td {background-color: transparent}
+
+.modifyTable tr > td > input {
+    width: 90%;
+    outline-style: none;
+    border: 0;
+    background-color: transparent;
+}
+
+/* 회원목록, 판매자목록 테이블 */
+.userListTableTitle {
+    display: flex;
+    width: 100%;
+    padding: 20px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+}
+.userListTableTitle > div {
+    font-size: 14px;
+    font-weight: bold;
+}
+.userListTableTitle > div:nth-child(1) {width: 50px;}
+.userListTableTitle > div:nth-child(2) {width: 200px;}
+.userListTableTitle > div:nth-child(3) {width: 200px;}
+.userListTableTitle > div:nth-child(4) {width: 300px;}
+.userListTableTitle > div:nth-child(5) {width: 150px;}
+.userListTableTitle > div:nth-child(6) {width: 130px;}
+
+
+.userListTableContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.userListTableRow {
+    display: flex;
+    width: 100%;
+    padding: 10px 20px;
+    box-sizing: border-box;
+}
+.userListTableRow > div:nth-child(1) {width: 50px;}
+.userListTableRow > div:nth-child(2) {width: 200px;}
+.userListTableRow > div:nth-child(3) {width: 200px;}
+.userListTableRow > div:nth-child(4) {width: 300px;}
+.userListTableRow > div:nth-child(5) {width: 150px;}
+.userListTableRow > div:nth-child(6) {width: 130px; cursor: pointer}
+.userListTableDetail {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    box-sizing: border-box;
+    background-color: #f5f5f5;
+    border: 2px solid #ececec;
+    border-top: 0;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+.userListTableDetailRow {
+    display: flex;
+    width: 75%;
+    padding: 10px 20px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+    align-items: center;
+}
+.userListTableDetailRow > div:nth-child(1) {width: 150px; font-weight: bold}
+.userListTableDetailRow > div:nth-child(2) {width: 200px;}
+.userListTableDetailRow > div:nth-child(3) {width: 150px; font-weight: bold}
+.userListTableDetailRow > div:nth-child(4) {width: 200px;}
+.userListTableDetailRow > .countAfter:after {content: ' 건'}
+.userListTableDetailRow > .priceAfter:after {content: ' 원'}
+.popupStyle {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    flex-wrap: wrap;
+    width: 400px;
+    height: auto;
+    padding: 10px 20px 20px 20px;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    background-color: #fafafa;
+}
+.popupStyle > p {
+    width: 360px;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+.popupStyle > span {
+    width: 400px;
+    font-size: 14px;
+    margin-top: 20px;
+}
+.userRolePopup > div, .userStatusPopup > div {
+    display: inline-block;
+    width: 80px;
+    margin: 0 10px;
+    padding: 5px 0;
+    text-align: center;
+    box-sizing: border-box;
+    font-weight: bold;
+    font-size: 16px;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.userGradePopup > div {
+    display: inline-block;
+    width: 100px;
+    margin: 0 10px;
+    padding: 5px 0;
+    text-align: center;
+    box-sizing: border-box;
+    font-weight: bold;
+    font-size: 16px;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* admin - user - point */
+.userPointTableDetailRow {
+    display: flex;
+    width: 75%;
+    padding: 10px 20px;
+    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
+    align-items: center;
+}
+.userPointTableDetailRow:nth-child(1) > div {
+    font-weight: bold;
+}
+.userPointTableDetailRow > div {
+    text-align: center;
+}
+.userPointTableDetailRow > div:nth-child(1) {width: 200px; font-weight: bold}
+.userPointTableDetailRow > div:nth-child(2) {width: 100px; text-align: right}
+.pointAfter:after {content: 'P'}
+.userPointTableDetailRow > div:nth-child(3) {width: 250px;}
+.userPointTableDetailRow > div:nth-child(4) {width: 150px;}
+
+.changePoint > div {
+    margin-bottom: 10px;
+}
+.changePoint > div > span {
+    display: inline-block;
+    width: 80px;
+}
+.changePoint > div:nth-child(3) > input {
+    width: 100px;
+}
+.changePoint > div:nth-child(4) > input {
+    width: 250px;
+}
+.changePoint > span {
+    padding: 6px 10px;
+    align-content: center;
+    text-align: center;
+    cursor: pointer;
+    margin: 0 100px;
+    border: 1px solid #999999;
+    border-radius: 10px;
+}
+.myTableStyle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 1px solid #aaa;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+.myTableHead {
+    display: flex;
+    justify-content: center;
+    background-color: #f5f5f5;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+.myTableHead > div {
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center!important;
+}
+.myTableBody {
+    display: flex;
+    justify-content: center;
+    border-top: 1px solid #aaa;
+}
+
+.prodRegiRow {
+    padding: 10px;
+    align-items: center;
+}
+.prodRegiRow > div {
+    margin: 0 10px;
+}
+
+/* 모달 */
+.prodQnaModalBack {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    background-color: rgba(128, 128, 128, 0.5);
+    z-index: 10;
+}
+.prodImgModal {
+    display: flex;
+    position: fixed;
+    flex-direction: column;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    flex-wrap: wrap;
+    width: auto;
+    height: auto;
+    padding: 10px 20px 20px 20px;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    background-color: #fafafa;
+}
+.prodImgModal > div > span {
+    font-size: 16px;
+    font-weight: bold;
+}
+.prodImg940Modal {
+    height: 600px;
+    overflow: scroll;
+}
+
+.formBox {
+    display: flex;
+    width: 1070px;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: content-box;
+    border: 1px solid #c4c4c4;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fafafa;
+}
+.formBox > table tr > td:nth-child(1) {
+    width: 150px;
+}
+.formBox > table tr > td:nth-child(2) {
+    text-align: left;
+}
+.formBox > table tr > td > textarea {
+    width: 870px;
+}

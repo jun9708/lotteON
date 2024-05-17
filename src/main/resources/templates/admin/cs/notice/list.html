@@ -1,0 +1,280 @@
+    <html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/adminLayout.html}">
+
+<!--내용 시작-->
+    <section id="admin-cs-list" layout:fragment="content">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script type="text/javascript">
+            window.onload = function() {
+                let typeValue = onloadSelectCate();
+
+                // 1차 select 박스 value 값을 바탕으로 2차 select 박스 option 생성
+                const noticeCate = document.querySelector("select[name='noticeCate']");
+                typeList(noticeCate.value);
+
+                // 2차 select 박스 선택한 경우에만 2차 select 박스 value 값 지정
+                if (typeValue !== ""){
+                    onloadSelectType(typeValue);
+                }
+            };
+            function onloadSelectCate() {
+                // 카테별 타입 옵션 띄우기
+                let currentURL = window.location.href;
+                // splitValue은 faqCate=delivery
+                let splitValue = currentURL.split('?')[1];
+                let cateValue = ""
+                let typeValue = ""
+                if (splitValue != null) {
+                    // splitURL2 = [faqCate, coupon]
+                    // [faqCate, user&faqType, regi]
+                    let splitValue2 = splitValue.split('=');
+                    //2차 카테를 선택했으면 발동
+                    if (splitValue2.length > 2) {
+                        // 2차 선택을 함
+                        // [user, faqType]
+                        cateValue = splitValue2[1].split('&')[0];
+                        // [regi]
+                        // [faqCate, delivery&faqType, deldate] 이상태에서 splitValue2[2]=deldate &가 없어서 그냥 반영
+                        let value = splitValue2[2].split('&')[0];
+                        if (isNaN(value)) {
+                            typeValue = value;
+                        }
+                    }else {
+                        // 1차 선택일때 value엔 pg 넘버가 들어감
+                        let value2 = splitValue.split('=')[1];
+                        // isNaN은 변수가 숫자인지 문자인지 검사하고 문자이면 true반환 숫자이면 false반환 value값이 숫자면 cateValue가 null
+                        if(isNaN(value2)){
+                            cateValue = value2;
+                        }
+                    }
+                }
+                // 1차 카테고리 선택
+                const noticeCate = document.querySelector("select[name='noticeCate']");
+                if (cateValue !== "") {
+                    noticeCate.value = cateValue;
+                }
+                return typeValue;
+            }
+            function onloadSelectType(typeValue) {
+                // 2차 카테고리 선택
+                const noticeType = document.querySelector("select[name='noticeType']");
+                if (typeValue !== "") {
+                    noticeType.value = typeValue;
+                }
+            }
+            // 1차선택 조회
+            function firstOption() {
+                const noticeCate = document.querySelector("select[name='noticeCate']").value;
+
+                if (noticeCate !== "1차선택") {
+                    // URL 구성
+                    let url = "/lotteon/admin/cs/notice/list?";
+                    // faqCate 파라미터 추가
+                    if (noticeCate) {
+                        url += "noticeCate=" + noticeCate;
+                    }
+                    // 페이지 이동
+                    location.href = url;
+                }
+            }
+
+            // 2차선택 조회
+            function redirectToCateType() {
+                const noticeCate = document.querySelector("select[name='noticeCate']").value;
+                const noticeType = document.querySelector("select[name='noticeType']").value;
+
+                console.log("noticeCate: " + noticeCate);
+                console.log("noticeType: " + noticeType);
+
+                // URL 구성
+                let url = "/lotteon/admin/cs/notice/list?";
+                let noticeCateValue = noticeCate.value;
+                if (noticeCate) {
+                    url += "noticeCate=" + noticeCate;
+                }
+                if (noticeType) {
+                    url += "&noticeType=" + noticeType;
+                }
+                // 페이지 이동
+                location.href = url;
+            }
+            function typeList(CateValue) {
+                console.log(CateValue)
+                const noticeType = document.getElementsByName('noticeType')[0];
+                if (CateValue != null ) {
+                    // 원래 있던 option들 삭제
+                    const noticeTypeChild = noticeType.childNodes;  // name이 faqType인 select태그 안에있는 option태그 전부
+                    Array.from(noticeTypeChild).forEach(function (child) {
+                        child.remove();
+                    })
+                    // 새로운 옵션 삽입
+                    const TypeOption = `<option>2차선택</option>
+                                        <option value="guide">안내</option>
+                                        <option value="announce">발표</option>
+                                        <option value="prodinfo">위해상품정보</option>
+                                        <option value="uservice">고객서비스</option>`;
+                    noticeType.insertAdjacentHTML('beforeend', TypeOption);
+                }
+            }
+
+            $(function(){
+                // 삭제 체크박스
+                var chkObj = document.getElementsByName("RowCheck");
+                // 체크된 글
+                var rowCnt = chkObj.length;
+
+                $("input[name='allCheck']").click(function(){
+                    var chk_listArr = $("input[name='RowCheck']");
+                    for(var i=0; i<chk_listArr.length; i++){
+                        chk_listArr[i].checked = this.checked;
+                    }
+                });
+
+                $("input[name='RowCheck']").click(function (){
+                    if($("input[name='RowCheck']:checked").length == rowCnt){
+                        $("input[name='allCheck']")[0].checked = true;
+                    }else{
+                        $("input[name='allCheck']")[0].checked = false;
+                    }
+                });
+            });
+            function deleteValue(event){
+                console.log("here...1");
+                event.preventDefault();
+                const inputChecked = $("input[name='RowCheck']:checked");
+
+                const url = "/lotteon/admin/cs/notice/delete"; //controller를 보내고자하는 url
+                const valueArr = new Array();
+                const list = $("input[name='RowCheck']");
+                for(let i=0; i<list.length; i++){
+                    if(list[i].checked){ //선택되어 있으면 배열에 값을 저장함
+                        valueArr.push(list[i].value);
+                    }
+                }
+
+                console.log("here...2 : " + valueArr);
+
+                if(valueArr.length != 0){
+                    const chk = confirm("정말 삭제하시겠습니까?");
+                    if(chk){
+                        $.ajax({
+                            url : url,              // 전송 URL
+                            type : 'POST',          // POST방식
+                            traditional : true,
+                            data : {
+                                valueArr : valueArr // 보내고자 하는 data 변수 설정
+                            },
+                            success: function (data){
+
+                                console.log("here...4 : " + data.result);
+
+                                if(data.result > 0){
+                                    alert("삭제 성공");
+                                    location.replace("/lotteon/admin/cs/notice/list") // list로 페이지 새로고침
+
+                                }else{
+                                    alert("삭제 실패");
+                                }
+                            }
+                        });
+                    }
+                } else{
+                    alert("선택된 글이 없습니다.");
+                    console.log("here...3");
+                }
+            }
+            function deleteNotice(event){
+                const chk = confirm("정말 삭제하시겠습니까?");
+                if(!chk){
+                    event.preventDefault();
+                }
+            }
+        </script>
+        <nav>
+            <h3>공지사항 목록</h3>
+            <p>
+                HOME > 고객센터 > <strong>공지사항</strong>
+            </p>
+        </nav>
+        <!-- 상품목록 컨텐츠 시작 -->
+        <section class="sectionBox">
+            <div>
+                <select name="noticeCate" onchange="firstOption()">
+                    <option>1차선택</option>
+                    <option value="service">고객서비스</option>
+                    <option value="event">이벤트당첨</option>
+                    <option value="safe">안전거래</option>
+                    <option value="danger">위해상품</option>
+                </select>
+                <select name="noticeType" onchange="redirectToCateType()">
+                    <option>2차선택</option>
+                    <option value="guide">안내</option>
+                    <option value="announce">발표</option>
+                    <option value="prodinfo">위해상품정보</option>
+                    <option value="uservice">고객서비스</option>
+                </select>
+            </div>
+            <table class="notice">
+                <tr>
+                    <th><input type="checkbox" name="allCheck"/></th>
+                    <th>번호</th>
+                    <th>유형</th>
+                    <th>제목</th>
+                    <th>조회</th>
+                    <th>날짜</th>
+                    <th>관리</th>
+                </tr>
+
+                <tr th:each="notice, index:${pageResponseDTO.dtoList}">
+                    <td><input type="checkbox" th:value="${notice.noticeNo}" name="RowCheck"/></td>
+                    <td th:text="${pageResponseDTO.startNo - index.index}"></td>
+                    <td th:if="${notice.noticeCate}=='choice'" style="white-space: nowrap;">[유형선택]</td>
+                    <td th:if="${notice.noticeCate}=='service'" style="white-space: nowrap;">[고객서비스]</td>
+                    <td th:if="${notice.noticeCate}=='event'" style="white-space: nowrap;">[이벤트당첨]</td>
+                    <td th:if="${notice.noticeCate}=='safe'" style="white-space: nowrap;">[안전거래]</td>
+                    <td th:if="${notice.noticeCate}=='danger'" style="white-space: nowrap;">[위해상품]</td>
+                    <td style="text-align: left">
+                        <span>
+                            <a th:href="@{/admin/cs/notice/view(noticeNo=${notice.noticeNo})}">
+                               <span th:if="${notice.noticeType == 'guide'}" style="white-space: nowrap;"><span th:text="'[안내]' + ${notice.noticeTitle}"></span></span>
+                                <span th:if="${notice.noticeType == 'announce'}" style="white-space: nowrap;"><span th:text="'[발표] ' + ${notice.noticeTitle}"></span></span>
+                                <span th:if="${notice.noticeType == 'prodinfo'}" style="white-space: nowrap;"><span th:text="'[위해상품정보] ' + ${notice.noticeTitle}"></span></span>
+                                <span th:if="${notice.noticeType == 'uservice'}" style="white-space: nowrap;"><span th:text="'[고객서비스] ' + ${notice.noticeTitle}"></span></span>
+                            </a>
+                        </span>
+                    </td>
+                    <td th:text="${notice.noticeHit}"></td>
+                    <td th:if="${notice.noticeDate != null}" th:text="${#temporals.format(notice.noticeDate, 'yyyy-MM-dd')}" style="white-space: nowrap;" ></td>
+                    <td>
+                        <a class="deleteNotice" th:href="@{/admin/cs/notice/delete(noticeNo=${notice.noticeNo})}" onclick="deleteNotice(event);">[삭제]</a>
+                        <a th:href="@{/admin/cs/notice/modify(noticeNo=${notice.noticeNo})}">[수정]</a>
+                    </td>
+                </tr>
+            </table>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px">
+                <a class="btn" onclick="deleteValue(event);" style="background-color: #D04848">선택삭제</a>
+                <a class="btn" th:href="@{/admin/cs/notice/write}" style="background-color: #6895D2">작성하기</a>
+            </div>
+
+            <div class="pagingBox">
+                <div class="pagingList">
+                    <a th:if="${pageResponseDTO.prev && noticeCate == null && noticeType == null}" th:href="@{/admin/cs/notice/list(pg=${pageResponseDTO.start - 1})}">이전</a>
+                    <a th:if="${pageResponseDTO.prev && noticeCate != null && noticeType != null}" th:href="@{/admin/cs/notice/list(noticeCate=${noticeCate},noticeType=${noticeType},pg=${pageResponseDTO.start - 1})}">이전</a>
+
+                    <th:block th:each="num:${#numbers.sequence(pageResponseDTO.start, pageResponseDTO.end)}">
+                        <a class="pageNum" th:if="${noticeCate == null && noticeType == null}" th:href="@{/admin/cs/notice/list(pg=${num})}" th:class="${num == pageResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                        <a class="pageNum" th:if="${noticeCate != null && noticeType == null}" th:href="@{/admin/cs/notice/list(noticeCate=${noticeCate},pg=${num})}" th:class="${num == pageResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                        <a class="pageNum" th:if="${noticeCate != null && noticeType != null}" th:href="@{/admin/cs/notice/list(noticeCate=${noticeCate},noticeType=${noticeType},pg=${num})}" th:class="${num == pageResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                    </th:block>
+
+                    <a th:if="${pageResponseDTO.next && noticeCate == null && noticeType == null}" th:href="@{/admin/cs/notice/list(pg=${pageResponseDTO.end + 1})}">다음</a>
+                    <a th:if="${pageResponseDTO.next && noticeCate != null && noticeType != null}" th:href="@{/admin/cs/notice/list(noticeCate=${noticeCate},noticeType=${noticeType},pg=${pageResponseDTO.end + 1})}">다음</a>
+                </div>
+            </div>
+
+        </section>
+        <!-- 상품목록 컨텐츠 끝 -->
+    </section>
+<!--내용 끝-->
+</html>

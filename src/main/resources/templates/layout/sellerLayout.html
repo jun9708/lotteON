@@ -1,0 +1,80 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>롯데ON::1조 관리자 페이지</title>
+    <script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js}"></script>
+    <script th:src="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js}"></script>
+    <script th:src="@{https://kit.fontawesome.com/20962f3e4b.js}" crossorigin="anonymous"></script>
+    <script th:src="@{/js/admin/gnb.js}"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js}"></script>
+    <script th:src="@{https://cdn.jsdelivr.net/npm/chart.js}"></script>
+    <link rel="stylesheet" th:href="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css}"/>
+    <link rel="stylesheet" th:href="@{https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css}"/>
+    <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4PQT8D58DQ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-4PQT8D58DQ');
+    </script>
+</head>
+<body>
+    <div id="admin-wrapper">
+        <header class="sellerHeader">
+            <div>
+                <a th:href="@{/seller/index}" class="logo">BUSINESS</a>
+                <p>
+                    <span th:text="'[판매자] ' + ${session.sellerCompany} + '님 반갑습니다.'"> </span>
+                    <a th:href="@{/}">HOME |</a>
+                    <a th:href="@{/member/logout}">로그아웃 |</a>
+                    <a th:href="@{/cs/index}">고객센터</a>
+                </p>
+            </div>
+        </header>
+        <main>
+            <aside>
+                <!-- Global Navigation Bar -->
+                <ul id="gnb">
+                    <li>
+                        <a href="#"><i class="fas fa-box-open" aria-hidden="true"></i>상품관리</a>
+                        <ol>
+                            <li><a th:href="@{/seller/product/list(prodSeller=${session.prodSeller})}">상품현황</a></li>
+                            <li><a th:href="@{/seller/product/register}">상품등록</a></li>
+                        </ol>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fa fa-credit-card" aria-hidden="true"></i>주문관리</a>
+                        <ol>
+                            <li><a th:href="@{/seller/order/orderList(prodSeller=${session.prodSeller})}">주문현황</a></li>
+                            <li><a th:href="@{/seller/order/sales(prodSeller=${session.prodSeller})}">매출현황</a></li>
+                            <li><a th:href="@{/seller/order/delivery(prodSeller=${session.prodSeller})}">배송관리</a></li>
+                        </ol>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>고객센터</a>
+                        <ol>
+                            <li><a th:href="@{/seller/cs/notice/list}">공지사항</a></li>
+                            <li><a th:href="@{/seller/cs/qna/list(prodSeller=${session.prodSeller})}">고객문의관리</a></li>
+                        </ol>
+                    </li>
+                </ul>
+            </aside>
+            <div layout:fragment="content">
+            <!--내용시작-->
+
+            <!--내용 끝-->
+            </div>
+        </main>
+        <footer>
+            <div>
+                <p>Copyright ©lotteon.com All rights reserved. ADMINISTRATOR Version 5.4.1.2</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

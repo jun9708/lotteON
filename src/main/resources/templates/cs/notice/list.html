@@ -1,0 +1,79 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/csLayout.html}">
+<!--내용 시작-->
+<section id="cs" layout:fragment="content">
+        <div class="notice">
+          <nav>
+            <div>
+              <p>홈<span>></span>공지사항</p>
+            </div>
+          </nav>
+          <section class="list">
+            <aside>
+              <h2>공지사항</h2>
+              <ul>
+                <li th:class="${noticeCate == null ? 'on':''}"><a th:href="@{/cs/notice/list}">전체</a></li>
+                <li th:class="${noticeCate == 'service' ? 'on':''}"><a th:href="@{/cs/notice/list(noticeCate='service')}">고객서비스</a></li>
+                <li th:class="${noticeCate == 'safe' ? 'on':''}"><a th:href="@{/cs/notice/list(noticeCate='safe')}">안전거래</a></li>
+                <li th:class="${noticeCate == 'danger' ? 'on':''}"><a th:href="@{/cs/notice/list(noticeCate='danger')}">위해상품</a></li>
+                <li th:class="${noticeCate == 'event' ? 'on':''}"><a th:href="@{/cs/notice/list(noticeCate='event')}">이벤트당첨</a></li>
+              </ul>
+            </aside>
+            <article>
+                <nav th:if="${noticeCate == null}">
+                    <h1>전체</h1>
+                    <h2>공지사항 전체 내용입니다.</h2>
+                </nav>
+                <nav th:if="${noticeCate == 'service'}">
+                    <h1>고객서비스</h1>
+                    <h2>고객서비스 전체 내용입니다.</h2>
+                </nav>
+                <nav th:if="${noticeCate == 'safe'}">
+                    <h1>안전거래</h1>
+                    <h2>안전거래 전체 내용입니다.</h2>
+                </nav>
+                <nav th:if="${noticeCate == 'danger'}">
+                    <h1>위해상품</h1>
+                    <h2>위해상품 전체 내용입니다.</h2>
+                </nav>
+                <nav th:if="${noticeCate == 'event'}">
+                    <h1>이벤트당첨</h1>
+                    <h2>이벤트당첨 전체 내용입니다.</h2>
+                </nav>
+
+              <table>
+                <tr th:each="notice, index:${pageResponseDTO.dtoList}" th:if="${index.index} &lt; 5">
+                  <td>
+                    <a th:href="@{/cs/notice/view(noticeNo=${notice.noticeNo})}">
+                      <span th:if="${notice.noticeType == 'guide'}" style="white-space: nowrap;"><span th:text="'[안내]'+ ' ' + ${notice.noticeTitle}"></span></span>
+                      <span th:if="${notice.noticeType == 'announce'}" style="white-space: nowrap;"><span th:text="'[발표]' + ' ' + ${notice.noticeTitle}"></span></span>
+                      <span th:if="${notice.noticeType == 'prodinfo'}" style="white-space: nowrap;"><span th:text="'[위해상품정보]'+ ' ' + ${notice.noticeTitle}"></span></span>
+                      <span th:if="${notice.noticeType == 'uservice'}" style="white-space: nowrap;"><span th:text="'[고객서비스]'+ ' ' + ${notice.noticeTitle}"></span></span>
+                    </a>
+                  </td>
+                  <td th:if="${notice.noticeDate != null}" th:text="${#temporals.format(notice.noticeDate, 'yy-MM-dd')}" style="text-align: right;"></td>
+                </tr>
+              </table>
+
+              <div class="pagingBox">
+                <div class="pagingList">
+                    <!-- 이전 버튼 -->
+                    <a th:if="${pageResponseDTO.prev && noticeCate == null}" th:href="@{/cs/notice/list(pg=${pageResponseDTO.start - 1})}"> 이전</a>
+                    <a th:if="${pageResponseDTO.prev && noticeCate != null}" th:href="@{/cs/notice/list(pg=${pageResponseDTO.start - 1}, noticeCate=${noticeCate})}"> 이전</a>
+                <!-- 페이지 링크 -->
+                   <th:block th:each="num:${#numbers.sequence(pageResponseDTO.start, pageResponseDTO.end)}">
+                       <a th:if="${noticeCate == null}" th:href="@{/cs/notice/list(pg=${num})}" th:class="${pageResponseDTO.pg == num} ? 'current' : 'off'" th:text="${num}"></a>
+                       <a th:if="${noticeCate != null}" th:href="@{/cs/notice/list(pg=${num}, noticeCate=${noticeCate})}" th:class="${pageResponseDTO.pg == num} ? 'current' : 'off'" th:text="${num}"></a>
+                    </th:block>
+                <!-- 다음 버튼 -->
+                     <a th:if="${pageResponseDTO.next && noticeCate == null}" th:href="@{/cs/notice/list(pg=${pageResponseDTO.end + 1})}"> 다음</a>
+                    <a th:if="${pageResponseDTO.next && noticeCate != null}" th:href="@{/cs/notice/list(pg=${pageResponseDTO.end + 1}, noticeCate=${noticeCate})}"> 다음</a>
+                </div>
+              </div>
+            </article>
+          </section>
+        </div>
+      </section>
+<!--내용 끝-->
+</html>

@@ -1,0 +1,65 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/adminLayout.html}">
+<!--내용 시작-->
+<section id="admin-product-list" layout:fragment="content">
+  <script>
+    function deleteNotice(event){
+      const chk = confirm("정말 삭제하시겠습니까?");
+      if(!chk){
+        event.preventDefault();
+      }
+    }
+  </script>
+  <nav>
+    <h3>문의하기 답변</h3>
+    <p>
+      HOME > 고객센터 > <strong>문의하기</strong>
+    </p>
+  </nav>
+  <!-- 문의답변 컨텐츠 시작 -->
+    <article class="sectionBox">
+      <form th:action="@{/admin/cs/qna/reply}" method="post">
+        <input type="hidden" name="qnaNo" th:value="${qna.qnaNo}" />
+        <table>
+          <tbody>
+          <tr>
+            <td>유형</td>
+            <td th:if="${qna.qnaCate == 'user'}" style="white-space: nowrap; text-align: left">회원</td>
+            <td th:if="${qna.qnaCate == 'coupon'}" style="white-space: nowrap; text-align: left">쿠폰/이벤트</td>
+            <td th:if="${qna.qnaCate == 'order'}" style="white-space: nowrap; text-align: left">주문/결제</td>
+            <td th:if="${qna.qnaCate == 'delivery'}" style="white-space: nowrap; text-align: left">배송</td>
+            <td th:if="${qna.qnaCate == 'cancel'}" style="white-space: nowrap; text-align: left">취소/반품/환불</td>
+            <td th:if="${qna.qnaCate == 'travel'}" style="white-space: nowrap; text-align: left">여행/숙박/항공</td>
+            <td th:if="${qna.qnaCate == 'safe'}" style="white-space: nowrap; text-align: left">안전결제</td>
+          </tr>
+          <tr>
+            <td>제목</td>
+            <td th:text="${qna.qnaTitle}" style="text-align: left"></td>
+          </tr>
+          <tr>
+            <td>내용</td>
+            <td th:text="${qna.qnaContent}" style="width: 90%; height: 150px; text-align: left"></td>
+          </tr>
+          <tr>
+            <td>답변</td>
+            <td>
+              <textarea name="qnaReply" cols="100" rows="10" placeholder="답변을 작성해주세요." style="width: 100%; height: 100%;"></textarea>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        <div style="text-align: right; margin-top: 50px">
+          <a th:href="@{/admin/cs/qna/delete(qnaNo=${qna.qnaNo})}"><input onclick="deleteNotice(event);" type="button" value="삭제" style="background-color: #9e9e9e; color: white; border: none; padding: 10px 20px; cursor: pointer;"/>
+            <input type="submit" value="답변등록" style="background-color: #4291e9; color: white; border: none; padding: 10px 20px; cursor: pointer;"/>
+          <a th:href="@{/admin/cs/qna/list}"><input type="button" value="목록" style="background-color: #4291e9; color: white; border: none; padding: 10px 20px; cursor: pointer;" /></a>
+        </div>
+      </form>
+    </article>
+
+
+
+  <!-- 상품목록 컨텐츠 끝 -->
+</section>
+<!--내용 끝-->
+</html>

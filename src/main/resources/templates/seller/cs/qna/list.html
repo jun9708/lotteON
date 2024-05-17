@@ -1,0 +1,73 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/sellerLayout.html}">
+
+<!--내용 시작-->
+    <section id="admin-cs-list" layout:fragment="content">
+        <nav>
+            <h3>문의하기 목록</h3>
+            <p>
+                HOME > 고객센터 > <strong>문의하기</strong>
+            </p>
+        </nav>
+        <!-- qna 컨텐츠 시작 -->
+        <section class="sectionBox">
+            <div>
+                <form th:action="@{/seller/cs/qna/list}" style="display:flex;">
+                    <select name="type" style="width: 100px;">
+                        <option value="prodNo">상품번호</option>
+                        <option value="prodQnaTitle">제목</option>
+                        <option value="prodQnaStatus">답변상태</option>
+                    </select>
+                    <input type="text" name="keyword" style="height: 33px;">
+                    <input type="hidden" name="prodSeller" th:value="${session.prodSeller}" readonly>
+                    <input type="submit" value="검색" style="height: 33px; width: 60px; background-color: #F0F0F0">
+                </form>
+            </div>
+            <table class="qna">
+                <tr>
+                    <th style="width: 1px;"></th>
+                    <th>번호</th>
+                    <th>제목</th>
+                    <th>상품명</th>
+                    <th>작성자</th>
+                    <th>작성일</th>
+                    <th>상태</th>
+                </tr>
+
+                <tr th:each="ProdQnaDTO, index : ${prodQnaList.dtoList}">
+                    <td style="width: 1px;"></td>
+                    <td th:text="${prodQnaList.startNo - index.index}"></td>
+                    <td style="text-align: left; background-color: transparent; width: 350px">
+                        <span>
+                            <a th:href="@{/seller/cs/qna/view(qnaNo=${ProdQnaDTO.prodQnaNo})}">
+                                <span th:text="${ProdQnaDTO.prodQnaTitle}"></span>
+                            </a>
+                        </span>
+                    </td>
+                    <td th:text="${ProdQnaDTO.prodName}" style="width:300px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; text-align: left;"></td>
+                    <td th:text="${ProdQnaDTO.userId}"></td>
+                    <td th:if="${ProdQnaDTO.prodQnaDate != null}" th:text="${#temporals.format(ProdQnaDTO.prodQnaDate, 'yyyy-MM-dd')}" style="white-space: nowrap;" ></td>
+                    <td th:text="${ProdQnaDTO.prodQnaStatus}"></td>
+                </tr>
+            </table>
+
+            <div class="pagingBox">
+                <div class="pagingList">
+                    <a th:if="${prodQnaList.prev && noticeCate == null}" th:href="@{/seller/cs/qna/list(pg=${prodQnaList.start - 1}, prodSeller=${session.prodSeller})}">이전</a>
+                    <a th:if="${prodQnaList.prev && noticeCate != null}" th:href="@{/seller/cs/qna/list(pg=${prodQnaList.start - 1}, prodSeller=${session.prodSeller}, type=${prodQnaList.type}, keyword=${prodQnaList.keyword})}">이전</a>
+
+                    <th:block th:if="${prodQnaList.startNo != 0}" th:each="num:${#numbers.sequence(prodQnaList.start, prodQnaList.end)}">
+                        <a class="pageNum" th:if="${noticeCate == null}" th:href="@{/seller/cs/qna/list(pg=${num}, prodSeller=${session.prodSeller})}" th:class="${num == prodQnaList.pg} ? 'on' : ''">[[${num}]]</a>
+                        <a class="pageNum" th:if="${noticeCate != null}" th:href="@{/seller/cs/qna/list(pg=${num}, prodSeller=${session.prodSeller}, type=${prodQnaList.type}, keyword=${prodQnaList.keyword})}" th:class="${num == prodQnaList.pg} ? 'on' : ''">[[${num}]]</a>
+                    </th:block>
+
+                    <a th:if="${prodQnaList.next && noticeCate == null}" th:href="@{/seller/cs/qna/list(pg=${prodQnaList.end + 1}, prodSeller=${session.prodSeller})}">다음</a>
+                    <a th:if="${prodQnaList.next && noticeCate != null}" th:href="@{/seller/cs/qna/list(pg=${prodQnaList.end + 1}, prodSeller=${session.prodSeller}, type=${prodQnaList.type}, keyword=${prodQnaList.keyword})}">다음</a>
+                </div>
+            </div>
+        </section>
+        <!-- 상품목록 컨텐츠 끝 -->
+    </section>
+<!--내용 끝-->
+</html>

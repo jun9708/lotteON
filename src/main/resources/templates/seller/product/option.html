@@ -1,0 +1,932 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/sellerLayout.html}">
+<!--내용 시작-->
+    <section id="admin-product-register" layout:fragment="content">
+        <script th:inline="javascript">
+            window.onload = function (){
+                changeOptNoToName()
+            }
+
+            // 카테고리 번호를 한글로 변경하는 함수
+            function changeOptNoToName() {
+                const opt1No = document.getElementsByClassName('opt1No');
+                const opt2No = document.getElementsByClassName('opt2No');
+                const opt3No = document.getElementsByClassName('opt3No');
+                changeArray(opt1No);
+                changeArray(opt2No);
+                changeArray(opt3No);
+            }
+            function changeArray(optionNo) {
+                const optionList = [[${optionDTOList}]];
+
+                for (let i = 0; i < optionNo.length; i++) {
+                    const eachNo = optionNo[i];
+
+                    for (let j = 0; j < optionList.length; j++) {
+                        const eachOption = optionList[j];
+
+                        if (parseInt(eachNo.value) === parseInt(eachOption.optNo)) {
+                            eachNo.value = eachOption.optValue;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 카테고리 수정 버튼 함수
+            function modifyCateCode() {
+                const button = event.target;
+                const cancelBtn = button.nextElementSibling;
+                const trAll = button.parentNode.parentNode.querySelectorAll('.cateCodeTr');
+
+                if (button.innerText === "수정") {
+                    button.innerText = "저장";
+                    cancelBtn.style.display = "flex";
+                    Array.from(trAll).forEach(function (tr) {
+                        tr.style.display = "table-row";
+                    })
+                }else {
+                    let result = saveCateCode();
+                    if (result) {
+                        button.innerText = "수정";
+                        Array.from(trAll).forEach(function (tr) {
+                            tr.style.display = "none";
+                        })
+                    }
+                }
+            }
+
+            // 카테고리 수정 취소 버튼 함수
+            function cancelCateCode() {
+                const button = event.target;
+                const modifyBtn = button.previousElementSibling;
+                const trAll = button.parentNode.parentNode.querySelectorAll('.cateCodeTr');
+                modifyBtn.innerText = "수정";
+                button.style.display = "none";
+                Array.from(trAll).forEach(function (tr) {
+                    tr.style.display = "none";
+                })
+            }
+
+            // 변경된 카테고리값 DB 저장
+            function saveCateCode() {
+                const prodNo = document.getElementsByName('prodNo')[0];
+                const cate01No = document.getElementsByName('cate01No')[0];
+                const cate02No = document.getElementsByName('cate02No')[0];
+                const cate03No = document.getElementsByName('cate03No')[0];
+
+                if (cate01No.value != null && cate02No.value != null && cate03No.value != null) {
+                    const jsonData = {
+                        "prodNo": prodNo.value,
+                        "cate01No": cate01No.value,
+                        "cate02No": cate02No.value,
+                        "cate03No": cate03No.value
+                    }
+                    console.log("jsonData : " + jsonData)
+                    fetch("/lotteon/admin/product/modifyCate", {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(jsonData)
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data);
+
+                            if (data.result > 0) {
+                                alert("성공");
+                                location.href = `/lotteon/seller/product/option?prodNo=${prodNo.value}`
+                                return true;
+                            }else {
+                                alert("카테고리를 변경할 수 없습니다.");
+                                return false;
+                            }
+                        })
+                        .catch(err => console.log(err))
+                }else {
+                    alert("카테고리를 변경할 수 없습니다.");
+                    return false;
+                }
+            }
+
+            // 2차 카테고리 분류 생성
+            function changeCate02() {
+                const cate01Data = [[${cate01DTOs}]];
+                const cate02Data = [[${cate02DTOs}]];
+                const cate03Data = [[${cate03DTOs}]];
+
+                const cate01Select = event.target;
+                const selectTable = cate01Select.parentNode.parentNode.parentNode;
+                const cate02Select = selectTable.querySelector('[name="cate02No"]')
+                const cate03Select = selectTable.querySelector('[name="cate03No"]')
+
+                // 기존에 존재하는 option 삭제
+                const nowCate02Option = cate02Select.querySelectorAll('.changeOpt');
+                Array.from(nowCate02Option).forEach(function (option) {
+                    option.remove();
+                })
+
+                // 새로운 option 생성
+                Array.from(cate02Data).forEach(function (data) {
+                    if (data.cate01No === cate01Select.value) {
+                        const cate02Option = `<option class="changeOpt" value="${data.cate02No}">${data.cate02Name}</option>`
+                        cate02Select.insertAdjacentHTML('beforeend', cate02Option);
+                    }
+                })
+
+                // cate03 비우기
+                const nowCate03Option = cate03Select.querySelectorAll('.changeOpt');
+                Array.from(nowCate03Option).forEach(function (option) {
+                    option.remove();
+                })
+            }
+
+            // 3차 카테고리 분류 생성
+            function changeCate03() {
+                const cate01Data = [[${cate01DTOs}]];
+                const cate02Data = [[${cate02DTOs}]];
+                const cate03Data = [[${cate03DTOs}]];
+
+                const cate02Select = event.target;
+                const selectTable = cate02Select.parentNode.parentNode.parentNode;
+                const cate03Select = selectTable.querySelector('[name="cate03No"]');
+
+                // 기존에 존재하는 option 삭제
+                const nowCate03Option = cate03Select.querySelectorAll('.changeOpt');
+                Array.from(nowCate03Option).forEach(function (option) {
+                    option.remove();
+                })
+
+                // 새로운 option 생성
+                Array.from(cate03Data).forEach(function (data) {
+                    if (data.cate02No === cate02Select.value) {
+                        const cate03Option = `<option class="changeOpt" value="${data.cate03No}">${data.cate03Name}</option>`
+                        cate03Select.insertAdjacentHTML('beforeend', cate03Option);
+                    }
+                })
+            }
+
+            // cateCode 생성
+            function createCateCode() {
+                const cateCode = document.getElementsByClassName('cateCode')[0];
+                const cate01Code = document.querySelector('[name="cate01No"]').value;
+                const cate02Code = document.querySelector('[name="cate02No"]').value;
+                const cate03Code = document.querySelector('[name="cate03No"]').value;
+                cateCode.value = cate01Code + cate02Code + cate03Code;
+            }
+
+            // 옵션 이름 추가
+            function addOptionName() {
+                const btnAddOptName = event.target;
+                const optNameDiv = btnAddOptName.parentNode;
+                const regOptContent = optNameDiv.parentNode;
+                const makeOption = regOptContent.parentNode;
+                const RegOptContents = makeOption.querySelectorAll('.regOptContent');
+
+                if (RegOptContents.length < 3) {
+                    const newRegOptContent = `<div class="regOptContent">
+                                            <div class="optNumber">옵션 ${RegOptContents.length+1}</div>
+                                            <div>
+                                                <input type="text" class="optName" placeholder="옵션 이름 ex) size"/>
+                                                <span onclick="addOptionName()">추가</span>
+                                                <span onclick="deleteOptionName()">삭제</span>
+                                            </div>
+                                            <div class="optValueNumber">
+                                                <div>
+                                                    <input type="text" class="optValue" placeholder="옵션 값 ex) small, large"/>
+                                                    <span onclick="addOptionValue()">추가</span>
+                                                    <span onclick="deleteOptionValue()">삭제</span>
+                                                </div>
+                                            </div>
+                                        </div>`;
+                    regOptContent.insertAdjacentHTML('afterend', newRegOptContent);
+                    btnAddOptName.style.display = "none";
+                }else {
+                    alert("옵션은 최대 3개까지 등록 할 수 있습니다.");
+                }
+            }
+
+            // 옵션 이름 삭제
+            function deleteOptionName() {
+                const btnAddOptName = event.target;
+                const optNameDiv = btnAddOptName.parentNode;
+                const regOptContent = optNameDiv.parentNode;
+                const makeOption = regOptContent.parentNode;
+                const RegOptContents = makeOption.querySelectorAll('.regOptContent');
+
+                if (RegOptContents.length >= 2) {
+                    regOptContent.remove();
+                    const RegOptContents = makeOption.querySelectorAll('.regOptContent');
+                    const RegOptContentsArray = Array.from(RegOptContents);
+
+                    const lastRegOptContent = RegOptContentsArray.pop();
+                    console.log(RegOptContents.length);
+                    console.log(lastRegOptContent);
+                    const lastBtnAddOptName = lastRegOptContent.querySelector('span[onclick="addOptionName()"]');
+                    lastBtnAddOptName.style.display = "inline-block";
+
+                }
+                const optNumber = makeOption.querySelectorAll('.optNumber');
+                Array.from(optNumber).forEach(function (number, index){
+                    number.innerText = "옵션 " + [index+1];
+                })
+            }
+
+            // 옵션 값 추가
+            function addOptionValue() {
+                const btnAddOptValue = event.target; // 버튼
+                const optValueNumber = btnAddOptValue.parentNode; // 부모
+                const optValueDiv = optValueNumber.parentNode; // 부모의 부모
+                const optValue = optValueDiv.querySelectorAll('.optValue');
+
+                if (optValue.length < 4) {
+                    const newOptValueDiv = `<div class="optValueNumber">
+                                                <input type="text" class="optValue" placeholder="옵션 값 ex) small, large"/>
+                                                <span onclick="addOptionValue()">추가</span>
+                                                <span onclick="deleteOptionValue()">삭제</span>
+                                            </div>`;
+                    optValueNumber.insertAdjacentHTML('afterend', newOptValueDiv);
+                    btnAddOptValue.style.display = "none";
+                }else {
+                    alert("하나의 옵션에 옵션값은 최대 4개까지 등록 할 수 있습니다.");
+                }
+            }
+
+            // 옵션 값 삭제
+            function deleteOptionValue() {
+                const btnDeleteOptValue = event.target; // 버튼
+                const optValueNumber = btnDeleteOptValue.parentNode; // 부모
+                const optValueDiv = optValueNumber.parentNode; // 부모의 부모
+                const optValues = optValueDiv.querySelectorAll('.optValueNumber');
+                if (optValues.length >= 2) {
+                    optValueNumber.remove();
+                    const optValues = optValueDiv.querySelectorAll('.optValueNumber');
+                    const optValuesArray = Array.from(optValues);
+                    const lastOptValue = optValuesArray.pop();
+                    const lastBtnAddOptValue = lastOptValue.querySelector('span[onclick="addOptionValue()"]');
+                    lastBtnAddOptValue.style.display = "inline-block";
+
+                }
+            }
+
+            // 옵션 생성
+            function createOption() {
+                const btnCreateOption = event.target; // 버튼
+                const createOptSection = btnCreateOption.parentNode; // 부모
+                const optNameAll = createOptSection.querySelectorAll('.optName');
+                const registerOption = document.querySelector('.registerOption');
+                const regOptContentAll = createOptSection.querySelectorAll('.regOptContent');
+                const option1All = regOptContentAll.length >= 1 ? Array.from(regOptContentAll[0].querySelectorAll('.optValue')) : [];
+                const option2All = regOptContentAll.length >= 2 ? Array.from(regOptContentAll[1].querySelectorAll('.optValue')) : [];
+                const option3All = regOptContentAll.length >= 3 ? Array.from(regOptContentAll[2].querySelectorAll('.optValue')) : [];
+
+                const optTitle1 = document.getElementById('optTitle1');
+                const optTitle2 = document.getElementById('optTitle2');
+                const optTitle3 = document.getElementById('optTitle3');
+
+                // 배열 반복을 통한 옵션 정보 자동 생성
+                Array.from(option1All).forEach(function (option1){
+                    const optValue1 = option1.value;
+
+                    // 사용자가 입력한 옵션이 1개인 경우
+                    if (option2All.length === 0) {
+                        console.log( optNameAll[0].value);
+                        const optValue2 = "0";
+                        const optValue3 = "0";
+                        createEachOption(registerOption, optValue1, optValue2, optValue3);
+
+                        optTitle1.innerText = optNameAll[0].value;
+                        optTitle2.innerText = "0";
+                        optTitle3.innerText = "0";
+
+                    }else{
+                        // 사용자가 입력한 옵션이 2개인 경우
+                        Array.from(option2All).forEach(function (option2){
+                            const optValue2 = option2.value;
+                            if (option3All.length === 0) {
+                                const optValue3 = "0";
+                                createEachOption(registerOption, optValue1, optValue2, optValue3);
+
+                                optTitle1.innerText = optNameAll[0].value;
+                                optTitle2.innerText = optNameAll[1].value;
+                                optTitle3.innerText = "0";
+
+                            }else{
+                                // 사용자가 입력한 옵션이 3개인 경우
+                                Array.from(option3All).forEach(function (option3){
+                                    const optValue3 = option3.value;
+                                    createEachOption(registerOption, optValue1, optValue2, optValue3);
+
+                                    optTitle1.innerText = optNameAll[0].value;
+                                    optTitle2.innerText = optNameAll[1].value;
+                                    optTitle3.innerText = optNameAll[2].value;
+                                })
+                            }
+                        })
+                    }
+                })
+            }
+
+            // 생성한 옵션 태그 생성하는 함수
+            function createEachOption(registerOption, optValue1, optValue2, optValue3) {
+                const regOptNumber = document.querySelectorAll('.regOptNumber');
+                const newRegOptContent = `<div class="regOptContent">
+                                                        <div class="regOptNumber">
+                                                            옵션 번호
+                                                            <span class="optNum">${regOptNumber.length+1}</span>
+                                                            </div>
+                                                        <div>
+                                                            <input type="text" class="optValue1" value="${optValue1}" readonly/>
+                                                        </div>
+                                                        <div>
+                                                            <input type="text" class="optValue2" value="${optValue2}" readonly/>
+                                                        </div>
+                                                        <div>
+                                                            <input type="text" class="optValue3" value="${optValue3}" readonly/>
+                                                        </div>
+                                                        <div>
+                                                            <input type="text" class="optPrice" placeholder="옵션 가격"/>
+                                                        </div>
+                                                        <div>
+                                                            <input type="text" class="optStock" placeholder="옵션 재고"/>
+                                                        </div>
+                                                        <div>
+                                                            <span onclick="deleteOption()">삭제</span>
+                                                        </div>
+                                                    </div>
+                                                    `
+                registerOption.insertAdjacentHTML('beforeend', newRegOptContent);
+            }
+
+            // 자동 생성한 옵션 한줄 삭제 함수
+            function deleteOption() {
+                const deleteOption = event.target; // 버튼
+                const parentDiv = deleteOption.parentNode; // 부모
+                const regOptContent = parentDiv.parentNode; // 부모
+                const optValue1 = regOptContent.querySelector('.optValue1').value;
+                const optValue2 = regOptContent.querySelector('.optValue2').value;
+                const optValue3 = regOptContent.querySelector('.optValue3').value;
+
+                const result = confirm("[ " + optValue1 + "_" + optValue2 + "_" + optValue3 + " ] 옵션을 삭제하시겠습니까?");
+                if (result){
+                    regOptContent.remove();
+                }
+            }
+
+            // 자동 생성한 옵션 DB에 등록
+            function registerOption() {
+                const registerOption = event.target; // 버튼
+                const registerOptSection = registerOption.parentNode; // 부모
+                const registerOptionAll = registerOptSection.querySelector('.registerOption'); // 첫번째줄
+                const regOptContentAll = registerOptSection.querySelectorAll('.regOptContent'); // 첫번째줄 이후
+                const prodNo = document.getElementsByName('prodNo')[0].value; // 상품 번호 (prodNo)
+
+                /*
+                    상품 옵션 이름과 옵션 값을 배열로 저장 [prodNo, optName, optValue]
+                    ex ) [22, 사이즈, small] / [22, 사이즈, large]
+                 */
+                const optTitle1 = document.getElementById('optTitle1').innerText;
+                const optTitle2 = document.getElementById('optTitle2').innerText;
+                const optTitle3 = document.getElementById('optTitle3').innerText;
+
+                // 옵션 1
+                const prodOption1 = [];
+                const valueCheck1 = new Set(); // 중복값 확인을 위한 set
+                Array.from(regOptContentAll).forEach(function (regOpt) {
+                    const optValue1 = regOpt.querySelector('.optValue1').value;
+
+                    if (!valueCheck1.has(optValue1)){
+                        valueCheck1.add(optValue1);
+
+                        const OptNameValue = [];
+                        OptNameValue.push(prodNo);
+                        OptNameValue.push(optTitle1);
+                        OptNameValue.push(optValue1);
+                        prodOption1.push(OptNameValue);
+                        console.log(OptNameValue);
+                    }
+                })
+                console.log(prodOption1);
+
+                // 옵션 2
+                const prodOption2 = [];
+                const valueCheck2 = new Set(); // 중복값 확인을 위한 set
+                Array.from(regOptContentAll).forEach(function (regOpt) {
+                    const optValue2 = regOpt.querySelector('.optValue2').value;
+
+                    if (!valueCheck2.has(optValue2)){
+                        valueCheck2.add(optValue2);
+
+                        const OptNameValue = [];
+                        OptNameValue.push(prodNo);
+                        OptNameValue.push(optTitle2);
+                        OptNameValue.push(optValue2);
+                        prodOption2.push(OptNameValue);
+                    }
+                })
+
+                // 옵션 3
+                const prodOption3 = [];
+                const valueCheck3 = new Set(); // 중복값 확인을 위한 set
+                Array.from(regOptContentAll).forEach(function (regOpt) {
+                    const optValue3 = regOpt.querySelector('.optValue3').value;
+
+                    if (!valueCheck3.has(optValue3)){
+                        valueCheck3.add(optValue3);
+
+                        const OptNameValue = [];
+                        OptNameValue.push(prodNo);
+                        OptNameValue.push(optTitle3);
+                        OptNameValue.push(optValue3);
+                        prodOption3.push(OptNameValue);
+                    }
+                })
+
+                /*
+                    상품 옵션 연관 관계 및 가격,재고를 배열로 저장
+                    ex) small - black - 남성 - 3000원 - 200개
+                        small - black - 여성 - 2000원 - 100개
+                 */
+                const prodOptionDTO = [];
+                Array.from(regOptContentAll).forEach(function (regOpt) {
+                    const optNum = regOpt.querySelector('.optNum').innerText;
+                    const optValue1 = regOpt.querySelector('.optValue1').value;
+                    const optValue2 = regOpt.querySelector('.optValue2').value;
+                    const optValue3 = regOpt.querySelector('.optValue3').value;
+                    const optPrice = regOpt.querySelector('.optPrice').value;
+                    const optStock = regOpt.querySelector('.optStock').value;
+
+                    if (optPrice !== "" && optStock !== "") {
+                        const extraOptDTO = [];
+                        extraOptDTO.push(optNum);
+                        extraOptDTO.push(optValue1);
+                        extraOptDTO.push(optValue2);
+                        extraOptDTO.push(optValue3);
+                        extraOptDTO.push(optPrice);
+                        extraOptDTO.push(optStock);
+                        prodOptionDTO.push(extraOptDTO);
+                    }else{
+                        const optPriceInput = regOpt.querySelector('.optPrice');
+                        const optStockInput = regOpt.querySelector('.optStock');
+                        optPriceInput.style.border = "1px solid red";
+                        optStockInput.style.border = "1px solid red";
+                        prodOptionDTO.length = 0;
+                    }
+                })
+                console.log(prodOptionDTO);
+
+                // 서버 전송
+                const jsonData = {
+                    "prodOption1" : prodOption1,
+                    "prodOption2" : prodOption2,
+                    "prodOption3" : prodOption3,
+                    "prodOptionDTO" : prodOptionDTO
+                }
+                fetch("/lotteon/admin/product/regOption", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(jsonData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        alert("해당 상품에 옵션이 등록되었습니다.");
+                    })
+                    .catch(err => console.log(err))
+            }
+
+            // 940 이미지 크게 보기 모달창
+            function prodImgModalOpen() {
+                const QnaModalBack = document.getElementsByClassName('prodQnaModalBack')[0];
+                QnaModalBack.style.display = "block"
+            }
+
+            // 940 이미지 모달창 닫기
+            function closeQnaModal() {
+                const QnaModalBack = document.getElementsByClassName('prodQnaModalBack')[0];
+                const closeBtn = document.getElementsByClassName('closeBtn')[0];
+                if (event.target === QnaModalBack || event.target === closeBtn) {
+                    QnaModalBack.style.display = "none"
+                }
+            }
+
+            // 상품 기본 정보 수정 & 저장
+            function modifyProdInfo() {
+                const button = event.target;
+                if (button.innerText === "수정") {
+                    const modifyTable = document.getElementsByClassName('modifyTable')[0]; // 기본 정보 테이블
+                    const cancelBtn = document.getElementsByClassName('cancelBtn')[0]; // 취소버튼
+                    const prodName = modifyTable.querySelector('[name="prodName"]');
+                    const prodInfo = modifyTable.querySelector('[name="prodInfo"]');
+                    const prodCompany = modifyTable.querySelector('[name="prodCompany"]');
+                    const prodPrice = modifyTable.querySelector('[name="prodPrice"]');
+                    const prodDiscount = modifyTable.querySelector('[name="prodDiscount"]');
+                    const prodPoint = modifyTable.querySelector('[name="prodPoint"]');
+                    const prodStock = modifyTable.querySelector('[name="prodStock"]');
+                    const prodDeliveryFee = modifyTable.querySelector('[name="prodDeliveryFee"]');
+                    const modifyImage = document.getElementsByClassName('modifyImage')[0];
+                    const modifyImage940 = document.getElementsByClassName('modifyImage940')[0];
+
+                    button.innerText = "저장"
+                    cancelBtn.style.display = "inline-block";
+                    prodName.readOnly = false;
+                    prodName.style.border = "1px solid #909090";
+                    prodInfo.readOnly = false;
+                    prodInfo.style.border = "1px solid #909090";
+                    prodCompany.readOnly = false;
+                    prodCompany.style.border = "1px solid #909090";
+                    prodPrice.readOnly = false;
+                    prodPrice.style.border = "1px solid #909090";
+                    prodPrice.value = parseFloat((prodPrice.value).replace(/,/g, ''));
+                    prodDiscount.readOnly = false;
+                    prodDiscount.style.border = "1px solid #909090";
+                    prodPoint.readOnly = false;
+                    prodPoint.style.border = "1px solid #909090";
+                    prodPoint.value = parseFloat((prodPoint.value).replace(/,/g, ''));
+                    prodStock.readOnly = false;
+                    prodStock.style.border = "1px solid #909090";
+                    prodStock.value = parseFloat((prodStock.value).replace(/,/g, ''));
+                    prodDeliveryFee.readOnly = false;
+                    prodDeliveryFee.style.border = "1px solid #909090";
+                    prodDeliveryFee.value = parseFloat((prodDeliveryFee.value).replace(/,/g, ''));
+                    modifyImage.style.display = "flex";
+                    modifyImage940.style.display = "block";
+                }else if (button.innerText === "저장") {
+                    // 빈칸 체크 이후 form 전송
+                    console.log("G2")
+                    const prodInfoForm = document.getElementsByClassName('prodInfoForm')[0];
+                    prodInfoForm.submit();
+
+                }
+            }
+
+            // 상품 기본 정보 취소
+            function cancelProdInfo() {
+                const button = event.target;
+                const modifyTable = document.getElementsByClassName('modifyTable')[0]; // 기본 정보 테이블
+                const modifyBtn = button.previousElementSibling; // 수정 버튼
+                const prodName = modifyTable.querySelector('[name="prodName"]');
+                const prodInfo = modifyTable.querySelector('[name="prodInfo"]');
+                const prodCompany = modifyTable.querySelector('[name="prodCompany"]');
+                const prodPrice = modifyTable.querySelector('[name="prodPrice"]');
+                const prodDiscount = modifyTable.querySelector('[name="prodDiscount"]');
+                const prodPoint = modifyTable.querySelector('[name="prodPoint"]');
+                const prodStock = modifyTable.querySelector('[name="prodStock"]');
+                const prodDeliveryFee = modifyTable.querySelector('[name="prodDeliveryFee"]');
+                const modifyImage = document.getElementsByClassName('modifyImage')[0];
+                const modifyImage940 = document.getElementsByClassName('modifyImage940')[0];
+
+                button.style.display = "none";
+                modifyBtn.innerText = "수정"
+                prodName.readOnly = true;
+                prodName.style.border = "0";
+                prodInfo.readOnly = true;
+                prodInfo.style.border = "0";
+                prodCompany.readOnly = true;
+                prodCompany.style.border = "0";
+                prodPrice.readOnly = true;
+                prodPrice.style.border = "0";
+                prodPrice.value = parseInt(prodPrice.value).toLocaleString();
+                prodDiscount.readOnly = true;
+                prodDiscount.style.border = "0";
+                prodPoint.readOnly = true;
+                prodPoint.style.border = "0";
+                prodPoint.value = parseInt(prodPoint.value).toLocaleString();
+                prodStock.readOnly = true;
+                prodStock.style.border = "0";
+                prodStock.value = parseInt(prodStock.value).toLocaleString();
+                prodDeliveryFee.readOnly = true;
+                prodDeliveryFee.style.border = "0";
+                prodDeliveryFee.value = parseInt(prodDeliveryFee.value).toLocaleString();
+                modifyImage.style.display = "none";
+                modifyImage940.style.display = "none";
+            }
+
+        </script>
+        <nav>
+            <script th:src="@{/js/util.js}"></script>
+
+            <h3>상품수정</h3>
+            <p>
+                HOME > 상품관리 > <strong>상품수정</strong>
+            </p>
+        </nav>
+        <!-- 상품등록 컨텐츠 시작 -->
+        <article>
+
+            <!-- 상품분류 -->
+            <section style="margin-top: 10px">
+                <h4>상품분류</h4>
+                <p>
+                    기본분류는 반드시 선택하셔야 합니다. 하나의 상품에 1개의 분류를 지정 합니다.
+                </p>
+                <table>
+                    <tr>
+                        <td>상품 분류</td>
+                        <td class="cateCode" th:text="${productDTO.cateCode}"></td>
+                    </tr>
+                    <tr class="cateCodeTr" style="display: none">
+                        <td>1차 분류</td>
+                        <td>
+                            <select name="cate01No" onchange="changeCate02()" style="width: 200px;">
+                                <option value="">1차 분류 선택</option>
+                                <option class="changeOpt" th:each="cate01 : ${cate01DTOs}" th:value="${cate01.cate01No}" th:text="${cate01.cate01Name}">패션·의류·뷰티</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr class="cateCodeTr" style="display: none">
+                        <td>2차 분류</td>
+                        <td>
+                            <select name="cate02No" onchange="changeCate03()" style="width: 200px;">
+                                <option value="">2차 분류 선택</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr class="cateCodeTr" style="display: none">
+                        <td>3차 분류</td>
+                        <td>
+                            <select name="cate03No" onchange="createCateCode()" style="width: 200px;">
+                                <option value="">3차 분류 선택</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <div style="display: flex; align-self: end;">
+                    <span class="modifyBtn" onclick="modifyCateCode()">수정</span>
+                    <span class="modifyBtn" onclick="cancelCateCode()" style="display:none; margin-left: 20px">취소</span>
+                </div>
+            </section>
+            <!-- 기본정보 -->
+            <section>
+                <h4>기본정보</h4>
+                <form class="prodInfoForm" th:action="@{/seller/product/modifyProdInfo}" method="post" enctype="multipart/form-data">
+                    <table class="modifyTable">
+                        <input type="hidden" name="prodNo" th:value="${productDTO.prodNo}">
+                        <tr>
+                            <td>상품명</td>
+                            <td>
+                                <input type="text" name="prodName" th:value="${productDTO.prodName}" readonly>
+                            </td>
+                            <td>기본설명</td>
+                            <td>
+                                <input type="text" name="prodInfo" th:value="${productDTO.prodInfo}" readonly>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>제조사</td>
+                            <td>
+                                <input type="text" name="prodCompany" th:value="${productDTO.prodCompany}" readonly>
+                            </td>
+                            <td>판매가격</td>
+                            <td>
+                                <input type="text" name="prodPrice" th:value="${#numbers.formatInteger(productDTO.prodPrice,3,'COMMA')}" readonly>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>할인율</td>
+                            <td>
+                                <input type="text" name="prodDiscount" th:value="${productDTO.prodDiscount}" readonly>
+                            </td>
+                            <td>포인트</td>
+                            <td>
+                                <input th:if="${productDTO.prodPoint} > 999" type="text" name="prodPoint" th:value="${#numbers.formatInteger(productDTO.prodPoint,3,'COMMA')}" readonly>
+                                <input th:if="${productDTO.prodPoint} < 999" type="text" name="prodPoint" th:value="${productDTO.prodPoint}" readonly>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>재고수량</td>
+                            <td>
+                                <input th:if="${productDTO.prodStock} > 999" type="text" name="prodStock" th:value="${#numbers.formatInteger(productDTO.prodStock,3,'COMMA')}" readonly>
+                                <input th:if="${productDTO.prodStock} < 999" type="text" name="prodStock" th:value="${productDTO.prodStock}" readonly>
+                            </td>
+                            <td>배송비</td>
+                            <td>
+                                <input th:if="${productDTO.prodDeliveryFee} > 999" type="text" name="prodDeliveryFee" th:value="${#numbers.formatInteger(productDTO.prodDeliveryFee,3,'COMMA')}" readonly>
+                                <input th:if="${productDTO.prodDeliveryFee} < 999" type="text" name="prodDeliveryFee" th:value="${productDTO.prodDeliveryFee}" readonly>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>상품 썸네일</td>
+                            <td colspan="3">
+                                <div style="display: flex; justify-content: space-between">
+                                    <label style="width: 250px; border: 3px solid #e6e6e6">
+                                        <img th:src="@{/uploads/__${productDTO.thumb190}__}" class="thumb190" style="width: 250px;">
+                                        <span style="height: 30px; line-height: 30px">크기 190 x 190</span>
+                                    </label>
+                                    <label style="width: 250px; border: 3px solid #e6e6e6">
+                                        <img th:src="@{/uploads/__${productDTO.thumb230}__}" class="thumb230" style="width: 250px;">
+                                        <span style="height: 30px; line-height: 30px">크기 230 x 230</span>
+                                    </label>
+                                    <label style="width: 250px; border: 3px solid #e6e6e6">
+                                        <img th:src="@{/uploads/__${productDTO.thumb456}__}" class="thumb456" style="width: 250px;">
+                                        <span style="height: 30px; line-height: 30px">크기 456 x 456</span>
+                                    </label>
+                                </div>
+                                <div class="modifyImage" style="display: none; justify-content: space-between; margin-top: 20px">
+                                    <label style="width: 250px;">
+                                        <span style="font-size: 14px; margin-bottom: 10px">상품 이미지 변경</span>
+                                        <input type="file" name="multThumb190"/>
+                                    </label>
+                                    <label style="width: 250px;">
+                                        <span style="font-size: 14px; margin-bottom: 10px">상품 이미지 변경</span>
+                                        <input type="file" name="multThumb230"/>
+                                    </label>
+                                    <label style="width: 250px;">
+                                        <span style="font-size: 14px; margin-bottom: 10px">상품 이미지 변경</span>
+                                        <input type="file" name="multThumb456"/>
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>상세 상품정보</td>
+                            <td colspan="3">
+                                <label onclick="prodImgModalOpen()" style="display: inline-block; width: 250px; height: 80px; border: 3px solid #e6e6e6; align-content: center; cursor: pointer">
+                                    <b>클릭해서 이미지 보기</b>
+                                </label>
+                                <div class="modifyImage940" style="display: none; width:100%; height: 70px;">
+                                    <span style=" margin: 10px 0">크기 가로 940px 높이 제약없음, 크기 최대 1MB, 상세페이지 상품정보에 출력될 이미지 입니다.</span>
+                                    <input type="file" name="multThumb940"/>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+                <div style="align-self: end;">
+                    <span class="modifyBtn" onclick="modifyProdInfo()">수정</span>
+                    <span class="cancelBtn" onclick="cancelProdInfo()" style="display:none;">취소</span>
+                </div>
+            </section>
+
+            <!--이미지 크게보기 모달창-->
+            <div class="prodQnaModalBack bigImageBox" onclick="closeQnaModal()">
+                <div class="prodImgModal">
+                    <div style="display:flex; justify-content: space-between; margin-bottom: 10px">
+                        <span>상세 상품정보 이미지</span>
+                        <span class="closeBtn" onclick="closeQnaModal()" style="cursor: pointer">X</span>
+                    </div>
+                    <div class="prodImg940Modal">
+                        <img th:src="@{/uploads/__${productDTO.thumb940}__}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 옵션 정보 -->
+            <section>
+                <h4 style="display: inline-block">등록된 상품 옵션</h4>
+                <p>
+                    하나의 상품에 최대 4개의 옵션을 설정할 수 있습니다.
+                </p>
+                <div class="existOptionTable">
+                    <div class="existOptionTitle">
+                        <div>구분</div>
+                        <div>옵션 이름</div>
+                        <div>옵션 값</div>
+                        <div>재고</div>
+                    </div>
+                    <div class="existOptionContent" th:each="optionDTO : ${optionDTOList}">
+                        <div>
+                            <input type="text" th:value="${optionDTO.optNo}" readonly style="width: 60px; border: 0"/>
+                            <input type="hidden" th:value="${optionDTO.prodNo}" readonly/>
+                        </div>
+                        <div>
+                            <input type="text" th:value="${optionDTO.optName}" readonly/>
+                        </div>
+                        <div>
+                            <input type="text" th:value="${optionDTO.optValue}" readonly/>
+                        </div>
+                        <div>옵션 관리</div>
+                    </div>
+                </div>
+
+                <div class="existOptDetailTable">
+                    <div class="existOptDetailTitle">
+                        <div>구분</div>
+                        <div>옵션1</div>
+                        <div>옵션2</div>
+                        <div>옵션3</div>
+                        <div>옵션 가격</div>
+                        <div>옵션 재고</div>
+                        <div>옵션 관리</div>
+                    </div>
+                    <div class="existOptDetailContent" th:each="detail : ${optionDetail}">
+                        <div>
+                            <input type="text" th:value="${detail.optDetailNo}" readonly/>
+                            <input type="hidden" th:value="${detail.prodNo}" readonly/>
+                        </div>
+                        <div>
+                            <input class="opt1No" type="text" th:value="${detail.optNo1}" readonly/>
+                        </div>
+                        <div>
+                            <input class="opt2No" type="text" th:value="${detail.optNo2}" readonly/>
+                        </div>
+                        <div>
+                            <input class="opt3No" type="text" th:value="${detail.optNo3}" readonly/>
+                        </div>
+                        <div>
+                            <input type="text" th:value="${detail.optPrice}" readonly/>
+                        </div>
+                        <div>
+                            <input type="text" th:value="${detail.optStock}" readonly/>
+                        </div>
+                        <div>
+                            <span>옵션 관리</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 옵션 정보 생성 -->
+            <section>
+                <h4 style="display: inline-block">상품 옵션 생성</h4>
+                <p>
+                    하나의 상품에 최대 3개의 옵션을 설정할 수 있습니다.<br>
+                    하나의 옵션에 최대 4개의 값을 설정할 수 있습니다.
+                </p>
+                <div class="makeOption">
+                    <div class="regOptTitle">
+                        <div>구분</div>
+                        <div>옵션 이름</div>
+                        <div>옵션 값</div>
+                    </div>
+                    <div class="regOptContent">
+                        <div class="optNumber">옵션 1</div>
+                        <div>
+                            <input type="text" class="optName" placeholder="옵션 이름 ex) size"/>
+                            <span onclick="addOptionName()">추가</span>
+                            <span onclick="deleteOptionName()">삭제</span>
+                        </div>
+                        <div>
+                            <div class="optValueNumber">
+                                <input type="text" class="optValue" placeholder="옵션 값 ex) small, large"/>
+                                <span onclick="addOptionValue()">추가</span>
+                                <span onclick="deleteOptionValue()">삭제</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span id="btnNewOptAdd" onclick="createOption()">신규 옵션 생성</span>
+            </section>
+
+            <!-- 옵션 정보 등록 -->
+            <section>
+                <h4 style="display: inline-block">상품 옵션 만들기</h4>
+                <p>
+                    하나의 상품에 최대 3개의 옵션을 설정할 수 있습니다.<br>
+                    하나의 옵션에 최대 4개의 값을 설정할 수 있습니다.
+                </p>
+                <div class="registerOption">
+                    <div class="regOptTitle">
+                        <div>구분</div>
+                        <div id="optTitle1">옵션 1</div>
+                        <div id="optTitle2">옵션 2</div>
+                        <div id="optTitle3">옵션 3</div>
+                        <div>옵션 가격</div>
+                        <div>옵션 재고</div>
+                        <div>옵션 관리</div>
+                    </div>
+                </div>
+                <span id="btnRegOpt" onclick="registerOption()">신규 옵션 등록</span>
+            </section>
+
+            <!-- 상품정보 제공 고시 -->
+            <section style="margin-top: 40px">
+                <h4>상품정보 제공고시</h4>
+                <p>
+                    [전자상거래에 관한 상품정보 제공에 관한 고시] 항목에 의거 등록해야 되는 정보입니다.
+                </p>
+                <table>
+                    <tr>
+                        <td>상품상태</td>
+                        <td><input type="text" name="prodStatus" value="새상품"/></td>
+                    </tr>
+                    <tr>
+                        <td>부가세 면세여부</td>
+                        <td><input type="text" name="prodTax" value="과세상품"/></td>
+                    </tr>
+                    <tr>
+                        <td>영수증발행</td>
+                        <td><input type="text" name="prodReceipt" value="발행가능 - 신용카드 전표, 온라인 현금영수증"/></td>
+                    </tr>
+                    <tr>
+                        <td>사업자구분</td>
+                        <td><input type="text" name="prodBusinessType" value="사업자 판매자"/></td>
+                    </tr>
+                    <tr>
+                        <td>원산지</td>
+                        <td><input type="text" name="prodOrg" value="국내산"/></td>
+                    </tr>
+                </table>
+            </section>
+
+            <a th:href="@{/seller/product/list(prodSeller=${session.prodSeller})}" style="display:inline-block; width: 90px; padding: 6px; border: 1px solid #959595; font-size: 13px; background-color: #fefefe; color: #333; text-align: center; box-sizing: border-box;">목록</a>
+        </article>
+
+        <p class="ico alert">
+            <strong>Warning!</strong>
+            전자상거래 등에서의 상품 등의 정보제공에 관한 고시에 따라 총 35개 상품군에 대해 상품 특성 등을 양식에 따라 입력할 수 있습니다.
+        </p>
+        <!-- 상품등록 컨텐츠 끝 -->
+    </section>
+<!--내용 끝-->
+</html>

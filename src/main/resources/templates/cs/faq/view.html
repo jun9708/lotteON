@@ -1,0 +1,49 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/csLayout.html}">
+<!--내용 시작-->
+<section id="cs" layout:fragment="content">
+        <div class="faq">
+          <nav>
+            <div>
+              <p>홈<span>></span>자주묻는 질문</p>
+            </div>
+          </nav>
+          <section class="view">
+            <aside>
+              <h2>자주묻는 질문</h2>
+              <ul>
+                <li th:class="${faqCate == 'user' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='user')}">회원</a></li>
+                <li th:class="${faqCate == 'coupon' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='coupon')}">쿠폰/이벤트</a></li>
+                <li th:class="${faqCate == 'order' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='order')}">주문/결제</a></li>
+                <li th:class="${faqCate == 'delivery' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='delivery')}">배송</a></li>
+                <li th:class="${faqCate == 'cancel' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='cancel')}">취소/반품/교환</a></li>
+                <li th:class="${faqCate == 'travel' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='travel')}">여행/숙박/항공</a></li>
+                <li th:class="${faqCate == 'safe' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='safe')}">안전거래</a></li>
+              </ul>
+            </aside>
+            <article>
+              <nav>
+                <h2 class="title"><span>Q.</span>[[${view.faqTitle}]]</a></h2>
+              </nav>
+
+              <div class="content">
+                <p>
+                  [[${view.faqContent}]]
+                </p>
+                <p>
+                  ※ 피싱 관련 피해신고<br /><br />
+                  ▶ 경찰청 사이버수사국 (국번없이)182 :
+                  http://cyberbureau.police.go.kr<br />
+                  ▶ KISA 인터넷침해대응센터 (국번없이)118 :
+                  http://www.krcert.or.kr<br />
+                  감사합니다.<br />
+                </p>
+              </div>
+              <a th:href="@{/cs/faq/list(faqCate=${view.faqCate})}" class="btnList">목록보기</a>
+            </article>
+          </section>
+        </div>
+      </section>
+<!--내용 끝-->
+</html>

@@ -1,0 +1,588 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/adminLayout.html}">
+<!--내용 시작-->
+    <section id="admin-config-banner" layout:fragment="content">
+        <!--admin/banner 에서만 사용하는 js와 css-->
+        <script>
+            $(function() {
+                $("#tabs").tabs();
+
+                // 팝업 닫기
+                $('.btnClose').click(function(){
+                    $(this).closest('.popup').removeClass('on');
+                });
+
+                // 배너등록 팝업 띄우기
+                $('.btnRegister').click(function(e){
+                    e.preventDefault();
+                    $('#bannerRegister').addClass('on');
+                });
+            });
+            // 게시글 선택하기
+            let banNos = []; // 전역변수 어디서든 접근, 참조 가능한 변수
+            let trTags = [];
+            function checkBox() {
+                // 체크를 하면 saveBannerNo에 번호를 저장
+                const button = event.target; // 버튼 본인
+                const btnParent = button.parentNode; // 버튼의 부모태그 (td)
+                const trTag = btnParent.parentNode;
+                const nextParent = btnParent.nextElementSibling; // 버튼의 부모의 다음 td 태그
+                const bannerNo = nextParent.innerText;
+
+                if (button.checked) {
+                    banNos.push(bannerNo);
+                    trTags.push(trTag);
+                }else {
+                    // 체크를 풀면 saveBannerNo 번호를 삭제
+                    let index = banNos.indexOf(bannerNo);
+                    let index2 = trTags.indexOf(trTag);
+                    banNos.splice(index, 1);
+                    trTags.splice(index2, 1);
+                }
+            }
+            // 게시글 전체선택
+            function allCheckBox(tabId) {
+                const tab = document.getElementById(tabId);
+                const checkboxes = tab.getElementsByClassName('banCheckBox');
+                const button = tab.querySelector('input[type="checkbox"][name="all"]');
+                const isChecked = button.checked;
+
+                // 모든 체크박스 체크 또는 해제
+                for (let checkbox of checkboxes) {
+                    checkbox.checked = isChecked;
+                }
+                if (isChecked) {
+                    // 모두 체크 상태일 때
+                    banNos = []; // 배열 초기화
+                    trTags = []; // 배열 초기화
+
+                    const banNoTdAll = tab.getElementsByClassName('banNoTd');
+                    console.log(banNoTdAll);
+
+                    Array.from(banNoTdAll).forEach(function (each) {
+                        banNos.push(each.innerText);
+                    })
+                    for (let tr of tab.querySelectorAll('.bannerAll')) {
+                        trTags.push(tr);
+                    }
+                } else {
+                    // 모두 해제 상태일 때
+                    banNos = [];
+                    trTags = [];
+                }
+            }
+            // 삭제기능
+            function deleteBtn() {
+                // 삭제 버튼을 클릭하면 saveBannerNo를 가져와서 삭제 진행
+                if (banNos.length != 0) {
+                    confirm("선택하신 글을 삭제하시겠습니까?");
+                }else{
+                    alert("선택된 글이 없습니다.");
+                }
+                if(banNos){
+                    const jsonData ={
+                        "banNos" : banNos
+                    }
+                    fetch("/lotteon/admin/banner/delete",{
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(jsonData)
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('삭제에 실패했습니다.');
+                            }
+                            return response.json()
+                        })
+                        .then(data => {
+                            if (data.data === '삭제 성공') {
+                                Array.from(trTags).forEach(function (tr) {
+                                    tr.remove();
+                                })
+                            }
+                        })
+                        .catch(err => console.log(err))
+                }else{
+                    banNos.length = 0;
+                    trTags.length = 0;
+                    alert("취소되었습니다.");
+                }
+            }
+            // 활성화 버튼을 누르면 나머지 배너들은 비활성화 되고 누른것만 활성화로 변함
+            function banUsable(sectionId) {
+                const button = event.target;
+                const banImgCate = button.id;
+                const banNo = button.parentNode.parentNode.querySelectorAll('td')[1].innerText;
+                const banStatus = button.parentNode.previousElementSibling;
+
+                const jsonData = {
+                    "banImgCate" : banImgCate,
+                    "banNo" : banNo
+                }
+                const confirmResult = confirm("배너를 활성화 하시겠습니까?");
+                if (confirmResult) {
+                fetch("/lotteon/admin/banner/banUsable", {
+                    method : 'POST',
+                    headers : {'Content-Type': 'application/json'},
+                    body: JSON.stringify(jsonData)
+                })
+                    .then(response => response.json())
+                    .then(data =>{
+                        if(data.result > 0){
+                            const allBanStatuses = document.querySelectorAll(`#${sectionId} table tr td:nth-child(10)`);
+                            allBanStatuses.forEach(td => {
+                                td.innerText = "NO";
+                            });
+                            alert("배너가 성공적으로 활성화되었습니다.");
+                            banStatus.innerText = "YES";
+                        }else{
+                            alert("오류가 발생했습니다.");
+                        }
+                    })
+                    .catch(err => console.log(err))
+            }
+            }
+            // 활성화 버튼을 누르면 yes
+            function yesUsable() {
+                const button = event.target;
+                const banImgCate = button.id;
+                const banNo = button.parentNode.parentNode.querySelectorAll('td')[1].innerText;
+                const banUsable = button.parentNode.previousElementSibling.innerText;
+
+                const jsonData = {
+                    "banUsable" : "YES",
+                    "banNo" : banNo
+                }
+                const confirmResult = confirm("배너를 활성화 하시겠습니까?");
+                if (confirmResult) {
+                    fetch("/lotteon/admin/banner/updateBanUsable", {
+                        method : 'POST',
+                        headers : {'Content-Type': 'application/json'},
+                        body: JSON.stringify(jsonData)
+                    })
+                        .then(response => response.json())
+                        .then(data =>{
+                            console.log(data);
+                            if(data.result > 0){
+                                alert("배너가 성공적으로 활성화되었습니다.");
+                                button.parentNode.previousElementSibling.innerText = "YES";
+                            }else{
+                                alert("오류가 발생했습니다.");
+                            }
+                        })
+                        .catch(err => console.log(err))
+                }
+            }
+            //비활성화 버튼누르면 NO
+            function noUsable() {
+                const button = event.target;
+                const banImgCate = button.id;
+                const banNo = button.parentNode.parentNode.querySelectorAll('td')[1].innerText;
+                const banUsable = button.parentNode.previousElementSibling.innerText;
+
+                const jsonData = {
+                    "banUsable" : "NO",
+                    "banNo" : banNo
+                }
+                const confirmResult = confirm("배너를 비활성화 하시겠습니까?");
+                if (confirmResult) {
+                    fetch("/lotteon/admin/banner/updateBanUsable", {
+                        method : 'POST',
+                        headers : {'Content-Type': 'application/json'},
+                        body: JSON.stringify(jsonData)
+                    })
+                        .then(response => response.json())
+                        .then(data =>{
+                            console.log(data);
+                            if(data.result > 0){
+                                alert("배너가 성공적으로 비활성화되었습니다.");
+                                button.parentNode.previousElementSibling.innerText = "NO";
+                            }else{
+                                alert("오류가 발생했습니다.");
+                            }
+                        })
+                        .catch(err => console.log(err))
+                }
+            }
+            // 이미지 크게 보기 모달창
+            function bannerImgModalOpen() {
+                const button = event.target;
+                const imgTag = button.querySelector('.thumb');
+                let imageSrc = null;
+                if (imgTag !== null) {
+                    imageSrc = imgTag.src;
+                }else {
+                    imageSrc = button.src;
+                }
+                console.log(imageSrc);
+                const bannerModalBack = document.getElementsByClassName('bannerModalBack')[0];
+                const modalImgTag = document.getElementsByClassName('modalImgTag')[0];
+                modalImgTag.src = imageSrc;
+                bannerModalBack.style.display = "block"
+            }
+            // 이미지 모달창 닫기
+            function closeQnaModal() {
+                const bannerModalBack = document.getElementsByClassName('bannerModalBack')[0];
+                const closeBtn = document.getElementsByClassName('closeBtn')[0];
+                if (event.target === bannerModalBack || event.target === closeBtn) {
+                    bannerModalBack.style.display = "none"
+                }
+            }
+        </script>
+        <nav>
+            <h3>배너관리</h3>
+            <p>
+                HOME > 환경설정 > <strong>배너관리</strong>
+            </p>
+        </nav>
+
+        <article id="tabs">
+            <ul>
+                <li><a href="#tabs1">메인 상단 배너</a></li>
+                <li><a href="#tabs2">메인 슬라이더 배너</a></li>
+                <li><a href="#tabs3">상품 상세보기 배너</a></li>
+                <li><a href="#tabs4">회원 로그인 배너</a></li>
+                <li><a href="#tabs5">마이페이지 배너</a></li>
+            </ul>
+
+            <!-- 메인 상단 배너-->
+            <section id="tabs1" style="margin: 0 0 10px 0">
+                <h4>메인 상단배너</h4>
+                <p>
+                    쇼핑몰 메인 슬라이더 영역에 노출되는 배너입니다.<br>
+                    이미지를 클릭하면 큰 화면으로 볼 수 있습니다.
+                </p>
+                <table>
+                    <tr>
+                        <th><input type="checkbox" id="bannerCheckBox" name="all" onclick="allCheckBox('tabs1')"/></th>
+                        <th>배너번호</th>
+                        <th>이미지</th>
+                        <th>배너정보</th>
+                        <th>배너위치</th>
+                        <th>시작날짜</th>
+                        <th>종료날짜</th>
+                        <th>시작시간</th>
+                        <th>종료시간</th>
+                        <th>활성화</th>
+                        <th>관리</th>
+                    </tr>
+
+                    <tr class="bannerAll" th:each="banner : ${main1}">
+                        <td><input type="checkbox" class="banCheckBox" name="배너번호" onclick="checkBox()"/></td>
+                        <td class="banNoTd" th:text="${banner.banNo}"></td>
+                        <td onclick="bannerImgModalOpen()" style="cursor: pointer">
+                            <img th:src="@{/uploads/__${banner.banImgName}__}" class="thumb" width="30px">
+                        </td>
+                        <td>
+                            <ul>
+                                <li th:text="${banner.banName}" class="name"></li>
+                                <li class="link"><a th:href="@{http://__${banner.banLink}__}">배너링크</a></li>
+                            </ul>
+                        </td>
+                        <td th:text="${banner.banImgCate}"></td>
+                        <td th:text="${banner.banSdate}"></td>
+                        <td th:text="${banner.banEdate}"></td>
+                        <td th:text="${banner.banStime}"></td>
+                        <td th:text="${banner.banEtime}"></td>
+                        <td th:text="${banner.banUsable}"></td>
+                        <td>
+                            <span onclick="banUsable('tabs1')" id="main1" style="cursor: pointer">[활성]</span>
+                        </td>
+                    </tr>
+                </table>
+                <input type="button" class="btnNegative" onclick="deleteBtn()" value="선택삭제"/>
+                <input type="button" class="btnPositive btnRegister" value="등록하기"/>
+            </section>
+
+            <!-- 메인 슬라이더 배너-->
+            <section id="tabs2" style="margin: 0 0 10px 0">
+                <h4>메인 슬라이더배너</h4>
+                <p>
+                    쇼핑몰 메인 슬라이더 영역에 노출되는 배너입니다.<br>
+                    이미지를 클릭하면 큰 화면으로 볼 수 있습니다.
+                </p>
+                <table>
+                    <tr>
+                        <th><input type="checkbox" name="all" onclick="allCheckBox('tabs2')"/></th>
+                        <th>배너번호</th>
+                        <th>이미지</th>
+                        <th>배너정보</th>
+                        <th>배너위치</th>
+                        <th>시작날짜</th>
+                        <th>종료날짜</th>
+                        <th>시작시간</th>
+                        <th>종료시간</th>
+                        <th>활성화</th>
+                        <th>관리</th>
+                    </tr>
+                    <tr th:each="banner : ${main2}">
+                        <td><input type="checkbox" class="banCheckBox" name="배너번호" onclick="checkBox()"/></td>
+                        <td class="banNoTd" th:text="${banner.banNo}"></td>
+                        <td onclick="bannerImgModalOpen()" style="cursor: pointer">
+                            <img th:src="@{/uploads/__${banner.banImgName}__}" class="thumb" width="30px">
+                        </td>
+                        <td>
+                            <ul>
+                                <li th:text="${banner.banName}" class="name"></li>
+                                <li class="link"><a th:href="@{http://__${banner.banLink}__}">배너링크</a></li>
+                            </ul>
+                        </td>
+                        <td th:text="${banner.banImgCate}"></td>
+                        <td th:text="${banner.banSdate}"></td>
+                        <td th:text="${banner.banEdate}"></td>
+                        <td th:text="${banner.banStime}"></td>
+                        <td th:text="${banner.banEtime}"></td>
+                        <td th:text="${banner.banUsable}"></td>
+                        <td>
+                            <span onclick="noUsable()" style="cursor: pointer">[비활성]</span>
+                            <span onclick="yesUsable()" style="cursor: pointer">[활성]</span>
+                        </td>
+                    </tr>
+                </table>
+                <input type="button" class="btnNegative" onclick="deleteBtn()" value="선택삭제"/>
+                <input type="button" class="btnPositive btnRegister" value="등록하기"/>
+            </section>
+
+            <!-- 상품 상세보기 배너-->
+            <section id="tabs3" style="margin: 0 0 10px 0">
+                <h4>상품 상세보기 배너</h4>
+                <p>
+                    쇼핑몰 메인 슬라이더 영역에 노출되는 배너입니다.<br>
+                    이미지를 클릭하면 큰 화면으로 볼 수 있습니다.
+                </p>
+                <table>
+                    <tr>
+                        <th><input type="checkbox" name="all" onclick="allCheckBox('tabs3')"/></th>
+                        <th>배너번호</th>
+                        <th>이미지</th>
+                        <th>배너정보</th>
+                        <th>배너위치</th>
+                        <th>시작날짜</th>
+                        <th>종료날짜</th>
+                        <th>시작시간</th>
+                        <th>종료시간</th>
+                        <th>활성화</th>
+                        <th>관리</th>
+                    </tr>
+                    <tr th:each="banner : ${product1}">
+                        <td><input type="checkbox" class="banCheckBox" name="배너번호" onclick="checkBox()"/></td>
+                        <td class="banNoTd" th:text="${banner.banNo}"></td>
+                        <td onclick="bannerImgModalOpen()" style="cursor: pointer">
+                            <img th:src="@{/uploads/__${banner.banImgName}__}" class="thumb" width="30px">
+                        </td>
+                        <td>
+                            <ul>
+                                <li th:text="${banner.banName}" class="name"></li>
+                                <li class="link"><a th:href="@{http://__${banner.banLink}__}">배너링크</a></li>
+                            </ul>
+                        </td>
+                        <td th:text="${banner.banImgCate}"></td>
+                        <td th:text="${banner.banSdate}"></td>
+                        <td th:text="${banner.banEdate}"></td>
+                        <td th:text="${banner.banStime}"></td>
+                        <td th:text="${banner.banEtime}"></td>
+                        <td th:text="${banner.banUsable}"></td>
+                        <td>
+                            <span onclick="banUsable('tabs3')" id="product1" style="cursor: pointer">[활성]</span>
+                        </td>
+                    </tr>
+                </table>
+                <input type="button" class="btnNegative" onclick="deleteBtn()" value="선택삭제"/>
+                <input type="button" class="btnPositive btnRegister" value="등록하기"/>
+            </section>
+
+            <!-- 회원 로그인 배너-->
+            <section id="tabs4" style="margin: 0 0 10px 0">
+                <h4>회원 로그인 배너</h4>
+                <p>
+                    쇼핑몰 메인 슬라이더 영역에 노출되는 배너입니다.<br>
+                    이미지를 클릭하면 큰 화면으로 볼 수 있습니다.
+                </p>
+                <table>
+                    <tr>
+                        <th><input type="checkbox" name="all" onclick="allCheckBox('tabs4')"/></th>
+                        <th>배너번호</th>
+                        <th>이미지</th>
+                        <th>배너정보</th>
+                        <th>배너위치</th>
+                        <th>시작날짜</th>
+                        <th>종료날짜</th>
+                        <th>시작시간</th>
+                        <th>종료시간</th>
+                        <th>활성화</th>
+                        <th>관리</th>
+                    </tr>
+                    <tr th:each="banner : ${member1}">
+                        <td><input type="checkbox" class="banCheckBox" name="배너번호" onclick="checkBox()"/></td>
+                        <td class="banNoTd" th:text="${banner.banNo}"></td>
+                        <td onclick="bannerImgModalOpen()" style="cursor: pointer">
+                            <img th:src="@{/uploads/__${banner.banImgName}__}" class="thumb" width="30px">
+                        </td>
+                        <td>
+                            <ul>
+                                <li th:text="${banner.banName}" class="name"></li>
+                                <li class="link"><a th:href="@{http://__${banner.banLink}__}">배너링크</a></li>
+                            </ul>
+                        </td>
+                        <td th:text="${banner.banImgCate}"></td>
+                        <td th:text="${banner.banSdate}"></td>
+                        <td th:text="${banner.banEdate}"></td>
+                        <td th:text="${banner.banStime}"></td>
+                        <td th:text="${banner.banEtime}"></td>
+                        <td th:text="${banner.banUsable}"></td>
+                        <td>
+                            <span onclick="banUsable('tabs4')" id="member1" style="cursor: pointer">[활성]</span>
+                        </td>
+                    </tr>
+                </table>
+                <input type="button" class="btnNegative" onclick="deleteBtn()" value="선택삭제"/>
+                <input type="button" class="btnPositive btnRegister" value="등록하기"/>
+            </section>
+
+            <!-- 마이페이지 배너-->
+            <section id="tabs5" style="margin: 0 0 10px 0">
+                <h4>마이페이지 배너</h4>
+                <p>
+                    쇼핑몰 메인 슬라이더 영역에 노출되는 배너입니다.<br>
+                    이미지를 클릭하면 큰 화면으로 볼 수 있습니다.
+                </p>
+                <table>
+                    <tr>
+                        <th><input type="checkbox" name="all" onclick="allCheckBox('tabs5')"/></th>
+                        <th>배너번호</th>
+                        <th>이미지</th>
+                        <th>배너정보</th>
+                        <th>배너위치</th>
+                        <th>시작날짜</th>
+                        <th>종료날짜</th>
+                        <th>시작시간</th>
+                        <th>종료시간</th>
+                        <th>활성화</th>
+                        <th>관리</th>
+                    </tr>
+                    <tr th:each="banner : ${my1}">
+                        <td><input type="checkbox" class="banCheckBox" name="배너번호" onclick="checkBox()"/></td>
+                        <td class="banNoTd" th:text="${banner.banNo}"></td>
+                        <td onclick="bannerImgModalOpen()" style="cursor: pointer">
+                            <img th:src="@{/uploads/__${banner.banImgName}__}" class="thumb" width="30px">
+                        </td>
+                        <td>
+                            <ul>
+                                <li th:text="${banner.banName}" class="name"></li>
+                                <li class="link"><a th:href="@{http://__${banner.banLink}__}">배너링크</a></li>
+                            </ul>
+                        </td>
+                        <td th:text="${banner.banImgCate}"></td>
+                        <td th:text="${banner.banSdate}"></td>
+                        <td th:text="${banner.banEdate}"></td>
+                        <td th:text="${banner.banStime}"></td>
+                        <td th:text="${banner.banEtime}"></td>
+                        <td th:text="${banner.banUsable}"></td>
+                        <td>
+                            <span onclick="banUsable('tabs5')" id="my1" style="cursor: pointer">[활성]</span>
+                        </td>
+                    </tr>
+                </table>
+                <input type="button" class="btnNegative" onclick="deleteBtn()" value="선택삭제"/>
+                <input type="button" class="btnPositive btnRegister" value="등록하기"/>
+            </section>
+        </article>
+        <p class="ico info">
+            <strong>Tip!</strong>
+            전자상거래 등에서의 상품 등의 정보제공에 관한 고시에 따라 총 35개 상품군에 대해 상품 특성 등을 양식에 따라 입력할 수 있습니다.
+        </p>
+
+        <!--배너 등록 모달-->
+        <div id="bannerRegister" class="popup">
+            <div style="margin-top: 20px">
+                <nav>
+                    <h1>배너등록</h1>
+                    <button class="btnClose">X</button>
+                </nav>
+                <section>
+                    <article>
+                        <h3>배너 정보입력</h3>
+                        <form th:action="@{/admin/banner/register}" method="post" enctype="multipart/form-data">
+                            <table border="0">
+                                <tr>
+                                    <td>배너이름</td>
+                                    <td>
+                                        <p>배너명을 입력하세요.</p>
+                                        <input type="text" name="banName" placeholder="배너명 입력"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>배너파일</td>
+                                    <td>
+                                        <p>배너 이미지 파일을 추가하세요.</p>
+                                        <input type="file" name="file" placeholder="배너 이미지 파일 선택"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>배너링크</td>
+                                    <td>
+                                        <p>배너를 클릭했을 떄 이동할 페이지 링크주소를 입력하세요.</p>
+                                        <input type="text" name="banLink" placeholder="링크주소 입력"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>배너위치</td>
+                                    <td>
+                                        <p>배너가 노출되는 위치를 선택하십시요.</p>
+                                        <select name="banImgCate">
+                                            <option value="0">선택</option>
+                                            <option value="main1">메인-상단</option>
+                                            <option value="main2">메인-슬라이더</option>
+                                            <option value="product1">상품-상세보기</option>
+                                            <option value="member1">회원-로그인</option>
+                                            <option value="my1">마이페이지</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>배너 노출날짜</td>
+                                    <td>
+                                        <p>배너가 노출되는 기간을 선택하십시요.</p>
+                                        <input type="date" name="banSdate"/>
+                                        <span>~</span>
+                                        <input type="date" name="banEdate"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>배너 노출시간</td>
+                                    <td>
+                                        <p>배너가 노출되는 시간을 선택하십시요.</p>
+                                        <input type="time" name="banStime"/>
+                                        <span>~</span>
+                                        <input type="time" name="banEtime"/>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div>
+                                <input type="submit" class="btnPositive" value="등록하기"/>
+                            </div>
+
+                        </form>
+                    </article>
+                </section>
+            </div>
+        </div>
+
+        <!--등록된 배너 크게 보기 배너-->
+        <div class="bannerModalBack" onclick="closeQnaModal()">
+            <div class="bannerImgModal">
+                <div style="display:flex; justify-content: space-between; margin-bottom: 10px">
+                    <span>배너 이미지 상세</span>
+                    <span class="closeBtn" onclick="closeQnaModal()" style="cursor: pointer">X</span>
+                </div>
+                <div class="bannerImg">
+                    <img class="modalImgTag" src="">
+                </div>
+            </div>
+        </div>
+
+    </section>
+<!--내용 끝-->
+</html>

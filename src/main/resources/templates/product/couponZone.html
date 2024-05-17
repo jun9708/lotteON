@@ -1,0 +1,124 @@
+
+<!----- cartTest 기존 코드..! ------->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>롯데ON::롯데 온라인 쇼핑몰</title>
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{/images/favicon.ico}" />
+    <script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js}"></script>
+    <script th:src="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js}"></script>
+    <script th:src="@{https://kit.fontawesome.com/20962f3e4b.js}" crossorigin="anonymous"></script>
+    <script th:src="@{https://cdn.jsdelivr.net/bxslider/4.2.12/jquery.bxslider.min.js}"></script>
+    <link rel="stylesheet" th:href="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css}"/>
+    <link rel="stylesheet" th:href="@{https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css}"/>
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/bxslider/4.2.12/jquery.bxslider.css}"/>
+    <link rel="stylesheet" th:href="@{/css/common.css}" />
+    <link rel="stylesheet" th:href="@{/css/product/product.css}" />
+    <!--cart 페이지는 카테고리 탭이 없어야하므로 layout처리 안함-->
+
+    <script>
+        // top 버튼
+        function movingTop() {
+            window.scrollTo(0, 0);
+        }
+    </script>
+
+</head>
+<body>
+<div id="wrapper">
+    <header>
+        <div class="top">
+            <div th:if="${!#authorization.expression('isAuthenticated()')}">
+                <a th:href="@{/member/login}">로그인</a>
+                <a th:href="@{/member/join}">회원가입</a>
+            </div>
+            <div th:if="${#authorization.expression('isAuthenticated()')}">
+                <a th:href="@{/member/join}">[[${#authentication.principal.user.userName}]]님</a>
+                <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}">마이페이지</a>
+                <a th:href="@{/product/cart(userId=${#authentication.principal.user.userId})}">
+                    <i class="fa fa-shopping-cart" aria-hidden="true"></i>&nbsp;장바구니
+                </a>
+                <a th:href="@{/member/logout}">로그아웃</a>
+            </div>
+        </div>
+        <div class="logo">
+            <div>
+                <a th:href="@{/}"><img th:src="@{/images/header_logo.png}" alt="로고" /></a>
+                <form action="/lotteon/product/search" method="get">
+                    <input type="text" name="keyword"/>
+                    <input type="hidden" name="cateCode" id="cateCodeInput" value="">
+                    <button><i class="fa fa-search"></i></button>
+                </form>
+            </div>
+
+        </div>
+        <div class="menu">
+            <div>
+                <ul>
+                </ul>
+                <ul>
+                    <li><a th:href="@{/product/couponZone}">쿠폰존</a></li>
+                    <li><a th:href="@{/cs/index}">고객센터</a></li>
+                    <li><a th:href="@{/cs/qna/list(faqCate='user')}">FAQ</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+    <main id="product">
+
+        <!-- 장바구니 페이지 시작 -->
+        <section class="cart">
+            <div style="text-align: center">
+                <h4 style="font-size: 30px; font-weight: bold; margin: 20px 0 40px 0">[롯데온과 첫만남] 잘 오셨어요 고객님</h4>
+                <img th:src="@{/images/couponEvent_1.jpg}">
+                <img th:src="@{/images/couponEvent_2.jpg}">
+                <h4 style="font-size: 40px; font-weight: bold; margin: 50px 0 40px 0">롯데ON 웰컴 쿠폰팩</h4>
+                <img style="width: 100%" th:src="@{/images/couponEvent_3.JPG}">
+            </div>
+            <div style="border: #eee 1px solid; border-radius: 8px; padding: 17px 20px; margin-top: 20px">
+               <p style="margin: 15px 0 15px 0; font-size: 20px">
+                   &#10071; 쿠폰 유의사항 안내
+               </p>
+                <ul style="color: #757575">
+                    <li style="margin:0 0 8px 13px; font-size: 14px">&#8226; 본 쿠폰은 L.POINT 통합회원에 한하여 정상 발급됩니다.</li>
+                    <li style="margin:0 0 8px 13px; font-size: 14px">&#8226; 고객님의 구매 이력에 따라 다운로드 가능한 쿠폰만 발급됩니다.</li>
+                    <li style="margin:0 0 8px 13px; font-size: 14px">&#8226; 간편 회원에서 본인인증을 통해 통합회원으로 전환 가입하신 경우에도 이전 구매내역이 있으면 대상에서 제외될 수 있습니다.</li>
+                    <li style="margin:0 0 8px 13px; font-size: 14px">&#8226; APP에서 결제 시 사용 가능하며, 순금/e쿠폰 등을 포함한 일부 상품은 사용이 제한됩니다.</li>
+                </ul>
+            </div>
+
+
+        </section>
+        <!-- 장바구니 페이지 끝 -->
+    </main>
+    <footer>
+        <ul>
+            <li><a th:href="@{/company/index}">회사소개</a></li>
+            <li><a th:href="@{/policy/buyer}">서비스이용약관</a></li>
+            <li><a th:href="@{/policy/privacy}">개인정보처리방침</a></li>
+            <li><a th:href="@{/policy/finance}">전자금융거래약관</a></li>
+        </ul>
+        <div>
+            <p><img src="../images/footer_logo.png" alt="로고" /></p>
+            <p>
+                <strong>(주)롯데ON</strong><br />
+                서울특별시 송파구 올림픽로 300 롯데월드타워 26층 (역삼동 강남파이낸스센터)<br />
+                대표이사 : 김사무엘상현, 정준호, 강성현<br />
+                사업자등록번호 : 529-85-00774(롯데쇼핑(주) e커머스사업부)<br />
+                통신판매업 신고 : 서울송파 제0158호<br>
+                호스팅 서비스사업자 : 롯데쇼핑(주) e커머스사업부
+            </p>
+            <p>
+                <strong>고객센터</strong><br />
+                Tel : 1899-7000(유료) (평일 09:00~18:00)<br />
+                Fax : 051-123-4567 | E-mail : lotteon@lotte.net<br />
+            </p>
+        </div>
+    </footer>
+    <button type="button" id="top" onclick="movingTop()">상단이동</button>
+</div>
+</body>
+</html>
+
+
+-->

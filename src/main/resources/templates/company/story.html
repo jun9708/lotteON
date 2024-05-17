@@ -1,0 +1,92 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/companyLayout.html}">
+<!--내용 시작-->
+<div layout:fragment="content">
+    <script>
+        // 페이지가 스크롤될 때마다 호출되는 함수
+        window.addEventListener('scroll', function() {
+            var storyNav = document.querySelector('.storyNav');
+            var scrollPosition = window.scrollY; // 현재 스크롤 위치
+
+            if (scrollPosition > 300) { // 원하는 위치인 300px 이상으로 스크롤될 때
+                storyNav.style.position = 'fixed'; // 요소를 고정
+                storyNav.style.top = '0'; // 화면 상단에 고정
+            } else {
+                storyNav.style.position = 'relative'; // 스크롤 위치가 원하는 위치 미만이면 기본 위치로 복원
+            }
+        });
+
+        window.onload = function () {
+            let currentURL = window.location.href;
+            let splitURL = currentURL.split('?')[1];
+            let storyCate = ""
+            if (splitURL != null){
+                storyCate = splitURL.split('=')[1];
+            }
+            const storyNav = document.getElementsByClassName('storyNav')[0];
+            const aTag = storyNav.querySelectorAll('a');
+            switch (storyCate) {
+                case "":
+                    aTag[0].classList.add('navOn');
+                    break;
+                case 'culture':
+                    aTag[1].classList.add('navOn');
+                    break;
+                case 'interview':
+                    aTag[2].classList.add('navOn');
+                    break;
+                case 'recruit':
+                    aTag[3].classList.add('navOn');
+                    break;
+                case 'lotteon':
+                    aTag[4].classList.add('navOn');
+                    break;
+                case 'report':
+                    aTag[5].classList.add('navOn');
+                    break;
+                case 'ESG':
+                    aTag[6].classList.add('navOn');
+                    break;
+            }
+        }
+    </script>
+    <div class="headContent" >
+        <div class="logoBox">
+            <a th:href="@{/}"><img th:src="@{/images/header_logo.png}" alt="로고" style="width: 185px;"/></a>
+        </div>
+
+        <div>
+            <a th:href="@{/company/index}">HOME</a>
+            <a th:href="@{/company/culture}">기업문화</a>
+            <a class="tabOn" th:href="@{/company/story}">소식과 이야기</a>
+            <a th:href="@{/company/recruit}">채용</a>
+            <a th:href="@{/company/media}">미디어</a>
+        </div>
+    </div>
+    </header>
+        <main>
+            <div class="contentHead" style="font-size:40px; margin: 20px 0 0 0">롯데ON을 더 알고 싶다면!</div>
+
+            <div class="contentSub">우리의 다양한 이야기를 소개합니다</div>
+
+            <div class="storyNav">
+                <a th:href="@{/company/story}">전체보기</a>
+                <a th:href="@{/company/story(storyCate=culture)}">기업문화</a>
+                <a th:href="@{/company/story(storyCate=interview)}">인터뷰</a>
+                <a th:href="@{/company/story(storyCate=recruit)}">채용</a>
+                <a th:href="@{/company/story(storyCate=lotteon)}">롯데ON</a>
+                <a th:href="@{/company/story(storyCate=report)}">보도자료</a>
+                <a th:href="@{/company/story(storyCate=ESG)}">ESG</a>
+            </div>
+
+            <div class="noticeForCard">
+                <a href="#" th:each="story : ${companyStoryList}">
+                    <img th:src="@{/uploads/__${story.storyImg}__}" alt="사진">
+                    <p th:text="${story.storyName}"></p>
+                    <span th:text="${story.storyContent}"></span>
+                </a>
+            </div>
+        </main>
+    </div>
+</html>

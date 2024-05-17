@@ -1,0 +1,57 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/csLayout.html}">
+<!--내용 시작-->
+<section id="cs" layout:fragment="content">
+        <div class="qna">
+          <nav>
+            <div>
+              <p>홈<span>></span>문의하기</p>
+            </div>
+          </nav>
+          <section class="view">
+            <aside>
+              <h2>문의하기</h2>
+              <ul>
+                <li th:class="${view.qnaCate == 'user' ? 'on':''}"><a th:href="@{/cs/qna/list(qnaCate='user')}">회원</a></li>
+                <li th:class="${view.qnaCate == 'coupon' ? 'on':''}"><a th:href="@{/cs/qna/list(qnaCate='coupon')}">쿠폰/이벤트</a></li>
+                <li th:class="${view.qnaCate == 'order' ? 'on':''}"><a th:href="@{/cs/qna/list(qnaCate='order')}">주문/결제</a></li>
+                <li th:class="${view.qnaCate == 'delivery' ? 'on':''}"><a th:href="@{/cs/qna/list(qnaCate='delivery')}">배송</a></li>
+                <li th:class="${view.qnaCate == 'cancel' ? 'on':''}"><a th:href="@{/cs/qna/list(qnaCate='cancel')}">취소/반품/교환</a></li>
+                <li th:class="${view.qnaCate == 'travel' ? 'on':''}"><a th:href="@{/cs/qna/list(qnaCate='travel')}">여행/숙박/항공</a></li>
+                <li th:class="${view.qnaCate == 'safe' ? 'on':''}"><a th:href="@{/cs/qna/list(qnaCate='safe')}">안전거래</a></li>
+              </ul>
+            </aside>
+            <article>
+              <nav>
+                <!--<h2 class="title" th:text="${view.qnaCate + ' ' + view.qnaTitle}">[가입] 가입 문의내용</h2> -->
+                <h2 class="title" th:if="${view.qnaCate == 'user'}">[회원] [[${view.qnaTitle}]]</h2>
+                <h2 class="title" th:if="${view.qnaCate == 'coupon'}">[쿠폰/이벤트] [[${view.qnaTitle}]]</h2>
+                <h2 class="title" th:if="${view.qnaCate == 'order'}">[주문/결제] [[${view.qnaTitle}]]</h2>
+                <h2 class="title" th:if="${view.qnaCate == 'delivery'}">[배송] [[${view.qnaTitle}]]</h2>
+                <h2 class="title" th:if="${view.qnaCate == 'cancel'}">[취소/반품/환불] [[${view.qnaTitle}]]</h2>
+                <h2 class="title" th:if="${view.qnaCate == 'travel'}">[여행/숙박/항공] [[${view.qnaTitle}]]</h2>
+                <h2 class="title" th:if="${view.qnaCate == 'safe'}">[안전결제] [[${view.qnaTitle}]]</h2>
+                <p>
+                  <span th:text="${#strings.substring(view.userId, 0, 3)} + '****'" style="margin-right: 10px;"></span>
+                  <span th:text="${#temporals.format(view.qnaDate, 'yyyy-MM-dd')}" style="text-align: right; color: #9e9e9e" ></span>
+                </p>
+              </nav>
+              <div class="content">
+                <p th:text="${view.qnaContent}"></p>
+              </div>
+              <nav>
+                <h2 class="title2" th:text="${'☞[답변]' + ' '+ view.qnaTitle}"></h2>
+                <p class="reply"></p>
+              </nav>
+              <div style="text-align: left; font-size: 15px; margin-left: 30px">
+              <td th:if="${view.qnaReply == '' || view.qnaReply == null}">답변 대기중입니다.</td>
+              <td th:if="${view.qnaReply != '' || view.qnaReply != null}">[[${view.qnaReply}]]</td>
+              </div>
+              <a th:href="@{/cs/qna/list(qnaCate=${view.qnaCate})}" class="btnList">목록</a>
+            </article>
+          </section>
+        </div>
+      </section>
+<!--내용 끝-->
+</html>

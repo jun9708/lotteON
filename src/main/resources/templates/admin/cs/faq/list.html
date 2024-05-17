@@ -1,0 +1,413 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/adminLayout.html}">
+
+<!--내용 시작-->
+    <section id="admin-cs-list" layout:fragment="content">
+        <script>
+            window.onload = function (){
+
+                // 체크박스 선택 다중 삭제
+                const faqCheckBox = document.querySelectorAll('.faqCheckBox');
+                const faqDeleteBtn = document.getElementById('faqDeleteBtn');
+
+                faqDeleteBtn.onclick = function (e){
+                    // 삭제할 상품의 번호를 저장하는 배열
+                    let faq_faqNo = [];
+                    // forEach로 반복하며 checked된 상품 번호 찾기
+                    faqCheckBox.forEach(check => {
+                        if(check.checked){
+                            const checkBox = check;
+                            const div = checkBox.closest('tr');
+                            const faq_faqNoInput = div.querySelector('.faq_faqNo');
+                            if (faq_faqNoInput) {
+                                // faq_faqNoInput이 존재할 때만 값 추가
+                                faq_faqNo.push(faq_faqNoInput.value);
+                                console.log("FAQ faqNo:", faq_faqNo);
+                            }else{
+                                console.error('FAQ faqNo input element not found');
+                            }
+                        }
+                    })
+                    // 삭제
+                    let result = false;
+                    if(faq_faqNo.length != 0){
+                        result = confirm("선택하신 게시글을 삭제하시겠습니까?");
+                    }else{
+                        alert("선택된 글이 없습니다.");
+                    }
+                    if(result){
+                        const jsonData = {
+                            "faq_faqNo" : faq_faqNo
+                        }
+                        fetch("/lotteon/admin/cs/faq/delete", {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(jsonData)
+                        })
+                            .then(response => {
+                                if(!response.ok){
+                                    throw new Error('삭제에 실패했습니다.');
+                                }
+                                return response.json()
+                            })
+                            .then(data => {
+                                if(data.data === '삭제 성공'){
+                                        location.replace("/lotteon/admin/cs/faq/list");
+                                }
+                            })
+                            .catch(err => console.log(err))
+                    }else{
+                        faq_faqNo.length = 0;
+                        alert("취소되었습니다.");
+                    }
+                }
+                // 전체 선택
+                const totalCheckBox = document.getElementsByClassName('totalCheckBox')[0];
+                let checkedTurn = 0;
+
+                totalCheckBox.onclick = function (e){
+
+                    const faqCheckBox = Array.from(document.getElementsByClassName('faqCheckBox'));
+
+                    if(checkedTurn === 0){
+                        faqCheckBox.forEach(function(checkbox){
+                            checkbox.checked = true;
+                        });
+                        checkedTurn = 1;
+                    }else{
+                        faqCheckBox.forEach(function(checkbox){
+                            checkbox.checked = false;
+                        });
+                        checkedTurn = 0;
+                    }
+                }
+                // URL 파라미터값을 통해 1차 select 박스 value 값 지정
+                let typeValue = onloadSelectCate();
+
+                // 1차 select 박스 value 값을 바탕으로 2차 select 박스 option 생성
+                const faqCate = document.querySelector("select[name='faqCate']");
+                typeList(faqCate.value);
+
+                // 2차 select 박스 선택한 경우에만 2차 select 박스 value 값 지정
+                if (typeValue !== ""){
+                    onloadSelectType(typeValue);
+                }
+            }
+            // // 카테고리별 조회
+            function redirectToCateType() {
+                const faqCate = document.querySelector("select[name='faqCate']").value;
+                const faqType = document.querySelector("select[name='faqType']").value;
+
+                console.log("faqCate: " + faqCate);
+                console.log("faqType: " + faqType);
+
+                // URL 구성
+                let url = "/lotteon/admin/cs/faq/list?";
+                let faqCateValue = faqCate.value;
+                // faqCate 파라미터 추가
+                if (faqCate) {
+                    url += "faqCate=" + faqCate;
+                }
+                // faqType 파라미터 추가
+                if (faqType) {
+                    url += "&faqType=" + faqType;
+                }
+
+                // 페이지 이동
+                location.href = url;
+            }
+            // 타입별 카테조회
+            function firstOption() {
+                const faqCate = document.querySelector("select[name='faqCate']").value;
+
+                if (faqCate !== "1차선택") {
+                    // URL 구성
+                    let url = "/lotteon/admin/cs/faq/list?";
+                    // faqCate 파라미터 추가
+                    if (faqCate) {
+                        url += "faqCate=" + faqCate;
+                    }
+                    // 페이지 이동
+                    location.href = url;
+                }
+            }
+
+            function typeList(CateValue) {
+                console.log(CateValue)
+                const faqType = document.getElementsByName('faqType')[0];
+                if (CateValue == 'coupon'){
+                    // 원래 있던 option들 삭제
+                    const faqTypeChild = faqType.childNodes;  // name이 faqType인 select태그 안에있는 option태그 전부
+                    Array.from(faqTypeChild).forEach(function (child) {
+                        child.remove();
+                    })
+                    // 새로운 옵션 삽입
+                    const TypeOption = `<option>2차선택</option>
+                                        <option value="cpregi">등록방법</option>
+                                        <option value="cplimit">유효기간</option>
+                                        <option value="event">이벤트기간</option>
+                                        <option value="ejoin">이벤트참여</option>`;
+                    faqType.insertAdjacentHTML('beforeend', TypeOption);
+                }else if (CateValue == 'user'){
+
+                    const faqTypeChild = faqType.childNodes;  // name이 faqType인 select태그 안에있는 option태그 전부
+                    Array.from(faqTypeChild).forEach(function (child) {
+                        child.remove();
+                    })
+                    // 새로운 옵션 삽입
+                    const TypeOption = `<option>2차선택</option>
+                                        <option value="regi">가입</option>
+                                        <option value="leave">탈퇴</option>
+                                        <option value="info">회원정보</option>
+                                        <option value="login">로그인</option>`;
+                    faqType.insertAdjacentHTML('beforeend', TypeOption);
+                }else if(CateValue == 'order'){
+                    const faqTypeChild = faqType.childNodes;  // name이 faqType인 select태그 안에있는 option태그 전부
+                    Array.from(faqTypeChild).forEach(function (child) {
+                        child.remove();
+                    })
+                    // 새로운 옵션 삽입
+                    const TypeOption = `<option>2차선택</option>
+                                        <option value="list">주문내역</option>
+                                        <option value="way">결제방법</option>
+                                        <option value="payment">결제수단</option>
+                                        <option value="oway">주문방법</option>`;
+                    faqType.insertAdjacentHTML('beforeend', TypeOption);
+                }else if (CateValue == 'delivery') {
+                    const faqTypeChild = faqType.childNodes;  // name이 faqType인 select태그 안에있는 option태그 전부
+                    Array.from(faqTypeChild).forEach(function (child) {
+                        child.remove();
+                    })
+                    // 새로운 옵션 삽입
+                    const TypeOption = `<option>2차선택</option>
+                                        <option value="deldate">배송일</option>
+                                        <option value="deldelay">배송지연</option>
+                                        <option value="delchange">배송지변경</option>
+                                        <option value="delcheck">배송현황</option>`;
+                    faqType.insertAdjacentHTML('beforeend', TypeOption);
+                }else if (CateValue == 'cancel') {
+                    const faqTypeChild = faqType.childNodes;  // name이 faqType인 select태그 안에있는 option태그 전부
+                    Array.from(faqTypeChild).forEach(function (child) {
+                        child.remove();
+                    })
+                    // 새로운 옵션 삽입
+                    const TypeOption = `<option>2차선택</option>
+                                        <option value="return">반품신청</option>
+                                        <option value="ocancel">주문취소</option>
+                                        <option value="refund">환불신청</option>
+                                        <option value="coption">환불조건</option>`;
+                    faqType.insertAdjacentHTML('beforeend', TypeOption);
+                }else if (CateValue == 'travel') {
+                    const faqTypeChild = faqType.childNodes;  // name이 faqType인 select태그 안에있는 option태그 전부
+                    Array.from(faqTypeChild).forEach(function (child) {
+                        child.remove();
+                    })
+                    // 새로운 옵션 삽입
+                    const TypeOption = `<option>2차선택</option>
+                                        <option value="tlist">숙박시설</option>
+                                        <option value="treco">여행지추천</option>
+                                        <option value="tway">결제방법</option>
+                                        <option value="ttime">비행시간</option>`;
+                    faqType.insertAdjacentHTML('beforeend', TypeOption);
+                }else if(CateValue == 'safe') {
+                    const faqTypeChild = faqType.childNodes;  // name이 faqType인 select태그 안에있는 option태그 전부
+                    Array.from(faqTypeChild).forEach(function (child) {
+                        child.remove();
+                    })
+                    // 새로운 옵션 삽입
+                    const TypeOption = `<option>2차선택</option>
+                                        <option value="care">주의사항</option>
+                                        <option value="sway">결제방법</option>
+                                        <option value="sacc">입금계좌</option>
+                                        <option value="sfee">수수료</option>`;
+                    faqType.insertAdjacentHTML('beforeend', TypeOption);
+                }
+            }
+            //1차 카테 URL로 이동된 후 기준으로 시작
+            function onloadSelectCate() {
+                // 카테별 타입 옵션 띄우기
+                let currentURL = window.location.href;
+                // splitValue은 faqCate=delivery
+                let splitValue = currentURL.split('?')[1];
+                let cateValue = ""
+                let typeValue = ""
+                if (splitValue != null) {
+                    // splitURL2 = [faqCate, coupon]
+                    // [faqCate, user&faqType, regi]
+                    let splitValue2 = splitValue.split('=');
+                    //2차 카테를 선택했으면 발동
+                    if (splitValue2.length > 2) {
+                        // 2차 선택을 함
+                        // [user, faqType]
+                        cateValue = splitValue2[1].split('&')[0];
+                        // [regi]
+                        // [faqCate, delivery&faqType, deldate] 이상태에서 splitValue2[2]=deldate &가 없어서 그냥 반영
+                        let value = splitValue2[2].split('&')[0];
+                        if (isNaN(value)) {
+                            typeValue = value;
+                        }
+                    }else {
+                        // 1차 선택일때 value엔 pg 넘버가 들어감
+                        let value2 = splitValue.split('=')[1];
+                        // isNaN은 변수가 숫자인지 문자인지 검사하고 문자이면 true반환 숫자이면 false반환 value값이 숫자면 cateValue가 null
+                        if(isNaN(value2)){
+                            cateValue = value2;
+                        }
+                    }
+                }
+                // 1차 카테고리 선택
+                const faqCate = document.querySelector("select[name='faqCate']");
+                if (cateValue !== "") {
+                    faqCate.value = cateValue;
+                }
+                return typeValue;
+            }
+
+            function onloadSelectType(typeValue) {
+                // 2차 카테고리 선택
+                const faqType = document.querySelector("select[name='faqType']");
+                if (typeValue !== "") {
+                    faqType.value = typeValue;
+                }
+            }
+            //삭제 메시지 띄우기
+            function deleteNotice(event){
+                const chk = confirm("정말 삭제하시겠습니까?");
+                if(!chk){
+                    event.preventDefault();
+                }
+            }
+
+        </script>
+
+        <nav>
+            <h3>자주묻는질문 목록</h3>
+            <p>
+                HOME > 고객센터 > <strong>자주묻는질문</strong>
+            </p>
+        </nav>
+        <!-- 상품목록 컨텐츠 시작 -->
+        <section class="sectionBox">
+            <div>
+                <select name="faqCate" onchange="firstOption()">
+                    <option>1차선택</option>
+                    <option value="user">회원</option>
+                    <option value="coupon">쿠폰/이벤트</option>
+                    <option value="order">주문/결제</option>
+                    <option value="delivery">배송</option>
+                    <option value="cancel">취소/반품/환불</option>
+                    <option value="travel">여행/숙박/항공</option>
+                    <option value="safe">안전결제</option>
+                </select>
+                <select name="faqType" onchange="redirectToCateType()">
+                    <option>2차선택</option>
+                    <option value="regi">가입</option>
+                    <option value="leave">탈퇴</option>
+                    <option value="info">회원정보</option>
+                    <option value="login">로그인</option>
+                </select>
+            </div>
+            <table class="">
+                <tr>
+                    <th><input type="checkbox" class="totalCheckBox" name="all"/></th>
+                    <th>번호</th>
+                    <th style="width: 70px">1차유형</th>
+                    <th style="width: 70px">2차유형</th>
+                    <th style="width: 400px">제목</th>
+                    <th>조회</th>
+                    <th>날짜</th>
+                    <th>관리</th>
+                </tr>
+
+                <tr th:each="faq, index:${pageResponseDTO.dtoList}">
+                    <td><input type="checkbox" class="faqCheckBox" name="글번호"/></td>
+                    <td>
+                        <input type="hidden" class="faq_faqNo" th:value="${faq.faqNo}">
+                        <span th:text="${pageResponseDTO.startNo - index.index}"></span>
+                    </td>
+                    <td th:if="${faq.faqCate == 'user'}" style="white-space: nowrap;">[회원]</td>
+                    <td th:if="${faq.faqCate == 'coupon'}" style="white-space: nowrap;">[쿠폰/이벤트]</td>
+                    <td th:if="${faq.faqCate == 'order'}" style="white-space: nowrap;">[주문/결제]</td>
+                    <td th:if="${faq.faqCate == 'delivery'}" style="white-space: nowrap;">[배송]</td>
+                    <td th:if="${faq.faqCate == 'cancel'}" style="white-space: nowrap;">[취소/반품/환불]</td>
+                    <td th:if="${faq.faqCate == 'travel'}" style="white-space: nowrap;">[여행/숙박/항공]</td>
+                    <td th:if="${faq.faqCate == 'safe'}" style="white-space: nowrap;">[안전결제]</td>
+
+                    <td th:if="${faq.faqType == 'regi'}" style="white-space: nowrap;">[가입]</td>
+                    <td th:if="${faq.faqType == 'leave'}" style="white-space: nowrap;">[탈퇴]</td>
+                    <td th:if="${faq.faqType == 'info'}" style="white-space: nowrap;">[회원정보]</td>
+                    <td th:if="${faq.faqType == 'login'}" style="white-space: nowrap;">[로그인]</td>
+
+                    <td th:if="${faq.faqType == 'cpregi'}" style="white-space: nowrap;">[등록방법]</td>
+                    <td th:if="${faq.faqType == 'cplimit'}" style="white-space: nowrap;">[유효기간]</td>
+                    <td th:if="${faq.faqType == 'event'}" style="white-space: nowrap;">[이벤트기간]</td>
+                    <td th:if="${faq.faqType == 'ejoin'}" style="white-space: nowrap;">[이벤트참여]</td>
+
+                    <td th:if="${faq.faqType == 'list'}" style="white-space: nowrap;">[주문내역]</td>
+                    <td th:if="${faq.faqType == 'way'}" style="white-space: nowrap;">[결제방법]</td>
+                    <td th:if="${faq.faqType == 'payment'}" style="white-space: nowrap;">[결제수단]</td>
+                    <td th:if="${faq.faqType == 'oway'}" style="white-space: nowrap;">[주문방법]</td>
+
+                    <td th:if="${faq.faqType == 'deldate'}" style="white-space: nowrap;">[배송일]</td>
+                    <td th:if="${faq.faqType == 'deldelay'}" style="white-space: nowrap;">[배송지연]</td>
+                    <td th:if="${faq.faqType == 'delchange'}" style="white-space: nowrap;">[배송지변경]</td>
+                    <td th:if="${faq.faqType == 'delcheck'}" style="white-space: nowrap;">[배송현황]</td>
+
+                    <td th:if="${faq.faqType == 'return'}" style="white-space: nowrap;">[반품신청]</td>
+                    <td th:if="${faq.faqType == 'ocancel'}" style="white-space: nowrap;">[주문취소]/td>
+                    <td th:if="${faq.faqType == 'refund'}" style="white-space: nowrap;">[환불신청]</td>
+                    <td th:if="${faq.faqType == 'coption'}" style="white-space: nowrap;">[환불조건]</td>
+
+                    <td th:if="${faq.faqType == 'tlist'}" style="white-space: nowrap;">[숙박시설]</td>
+                    <td th:if="${faq.faqType == 'treco'}" style="white-space: nowrap;">[여행지추천]</td>
+                    <td th:if="${faq.faqType == 'tway'}" style="white-space: nowrap;">[결제방법]</td>
+                    <td th:if="${faq.faqType == 'ttime'}" style="white-space: nowrap;">[비행시간]</td>
+
+                    <td th:if="${faq.faqType == 'care'}" style="white-space: nowrap;">[주의사항]</td>
+                    <td th:if="${faq.faqType == 'sway'}" style="white-space: nowrap;">[결제방법]</td>
+                    <td th:if="${faq.faqType == 'sacc'}" style="white-space: nowrap;">[입금계좌]</td>
+                    <td th:if="${faq.faqType == 'sfee'}" style="white-space: nowrap;">[수수료]</td>
+
+                    <td style="text-align: left;">
+                        <span>
+                            <a th:href="@{/admin/cs/faq/view(faqNo=${faq.faqNo})}">
+                                <span th:text="${faq.faqTitle}"></span>
+                            </a>
+                        </span>
+                    </td>
+                    <td th:text="${faq.faqHit}"></td>
+                    <td th:if="${faq.faqDate != null}" th:text="${#temporals.format(faq.faqDate, 'yyyy-MM-dd')}" style="white-space: nowrap;" ></td>
+                    <td>
+                        <a th:href="@{/admin/cs/faq/delete(faqNo=${faq.faqNo})}" onclick="deleteNotice(event);">[삭제]</a>
+                        <a th:href="@{/admin/cs/faq/modify(faqNo=${faq.faqNo})}">[수정]</a>
+                    </td>
+                </tr>
+            </table>
+
+            <div style="display: flex; justify-content: space-between; margin-top: 10px">
+                <a class="btn" id="faqDeleteBtn" style="background-color: #D04848">선택삭제</a>
+                <a class="btn" th:href="@{/admin/cs/faq/write}" style="background-color: #6895D2">작성하기</a>
+            </div>
+
+            <div class="pagingBox">
+                <div class="pagingList">
+                    <a th:if="${pageResponseDTO.prev && faqCate == null && faqType == null}" th:href="@{/admin/cs/faq/list(pg=${pageResponseDTO.start - 1})}">이전</a>
+                    <a th:if="${pageResponseDTO.prev && faqCate != null && faqType != null}" th:href="@{/admin/cs/faq/list(faqCate=${faqCate}, faqType=${faqType}, pg=${pageResponseDTO.start - 1})}">이전</a>
+
+                    <th:block th:each="num:${#numbers.sequence(pageResponseDTO.start, pageResponseDTO.end)}">
+                        <a class="pageNum" th:if="${faqCate == null && faqType == null}" th:href="@{/admin/cs/faq/list(pg=${num})}" th:class="${num == pageResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                        <a class="pageNum" th:if="${faqCate != null && faqType == null}" th:href="@{/admin/cs/faq/list(faqCate=${faqCate},pg=${num})}" th:class="${num == pageResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                        <a class="pageNum" th:if="${faqCate != null && faqType != null}" th:href="@{/admin/cs/faq/list(faqCate=${faqCate}, faqType=${faqType}, pg=${num})}" th:class="${num == pageResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                    </th:block>
+
+                    <a th:if="${pageResponseDTO.next && faqCate == null && faqType == null}" th:href="@{/admin/cs/faq/list(pg=${pageResponseDTO.end + 1})}">다음</a>
+                    <a th:if="${pageResponseDTO.next && faqCate != null && faqType != null}" th:href="@{/admin/cs/faq/list(faqCate=${faqCate}, faqType=${faqType}, pg=${pageResponseDTO.end + 1})}">다음</a>
+                </div>
+            </div>
+
+        </section>
+        <!-- 상품목록 컨텐츠 끝 -->
+    </section>
+<!--내용 끝-->
+</html>

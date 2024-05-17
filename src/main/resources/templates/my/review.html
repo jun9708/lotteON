@@ -1,0 +1,134 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/myLayout.html}">
+<!--내용 시작-->
+    <div id="my" layout:fragment="content">
+        <script>
+            // 리뷰 별점 이미지 출력
+            window.onload = function () {
+                highlight();
+                let rating = document.getElementsByClassName("rating");
+                Array.from(rating).forEach(function (element) {
+                    const revScore = parseInt(element.innerText);
+                    switch (revScore){
+                        case 1:
+                            element.classList.add('star1');
+                            break;
+                        case 2:
+                            element.classList.add('star2');
+                            break;
+                        case 3:
+                            element.classList.add('star3');
+                            break;
+                        case 4:
+                            element.classList.add('star4');
+                            break;
+                        case 5:
+                            element.classList.add('star5');
+                            break;
+                    }
+                });
+            }
+        </script>
+
+        <!--마이페이지 상단 회원 정보-->
+        <nav>
+            <div>
+                <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}"><img th:src="@{/images/my/my_logo.jpg}" alt="나의쇼핑정보"></a>
+
+                <div class="UserInfo">
+                    <p th:text="${#authentication.principal.user.userName}"></p>
+                    <p th:text="${#authentication.principal.user.userGrade}"></p>
+                </div>
+                <ol>
+                    <li><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">주문·배송<span class="delivery" th:text="${session.countOrder}"></span></a></li>
+                    <li><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">할인쿠폰<span class="coupon" th:text="${session.couponCount}"></span></a></li>
+                    <li><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트<span class="point" th:text="${#numbers.formatInteger(session.pointBalance,3,'COMMA')}"></span></a></li>
+                    <li><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의내역<span class="qna" th:text="${session.myQnaCount}"></span></a></li>
+                </ol>
+            </div>
+        </nav>
+
+        <div class="review">
+            <!--마이페이지 사이드바-->
+            <ul class="myCate">
+                <span class="menu_else"></span>
+                <li class=""><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">전체주문내역</a></li>
+                <li class=""><a th:href="@{/my/wish(userId=${#authentication.principal.user.userId})}">관심상품</a></li>
+                <li class=""><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트내역</a></li>
+                <li class=""><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">쿠폰</a></li>
+                <li class=""><a th:href="@{/my/review(userId=${#authentication.principal.user.userId})}">나의리뷰</a></li>
+                <li class=""><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의하기</a></li>
+                <li class=""><a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}">나의설정</a></li>
+            </ul>
+
+            <section>
+                <th:block th:each="banner : ${banMyOrderList}" >
+                    <a th:href="@{http://__${banner.banLink}__}"><img th:src="@{/uploads/__${banner.banImgName}__}" alt="패션, 타운 하나로 끝" class="banner"></a>
+                </th:block>
+                <article>
+                    <h3>나의리뷰</h3>
+
+                    <!--나의 리뷰 출력-->
+
+                    <!--나의 리뷰가 없을떄-->
+                    <div class="myTableStyle" th:if="${myReviewPage.dtoList.size()} == 0">
+                        <div class="myTableHead myReviewRow">
+                            <div>번호</div>
+                            <div>이미지</div>
+                            <div>상품명</div>
+                            <div>내용</div>
+                            <div>평점</div>
+                            <div>작성일</div>
+                        </div>
+                        <div class="myTableBody myReviewRow">
+                            <div style="border: 0; width: 100%; text-align: -webkit-center;">
+                                <p style="font-size : 18px;" >작성한 리뷰가 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--나의 리뷰가 있을떄-->
+                    <div class="myTableStyle" th:if="${myReviewPage.dtoList.size()} > 0">
+                        <div class="myTableHead myReviewRow">
+                            <div>번호</div>
+                            <div>이미지</div>
+                            <div>상품명</div>
+                            <div>내용</div>
+                            <div>평점</div>
+                            <div>작성일</div>
+                        </div>
+                        <div class="myTableBody myReviewRow" th:each="eachReviewPage, index : ${myReviewPage.dtoList}">
+                            <div th:with="reversedIndex=${#lists.size(myReviewPage.dtoList) - index.index}" th:text="${reversedIndex}"></div>
+                            <div>
+                                <img th:src="@{/uploads/__${eachReviewPage.revThumb}__}" style="width: 90px;">
+                            </div>
+                            <div>
+                                <a th:href="@{'/product/view?prodNo='+${eachReviewPage.prodNo}+'&cateCode='+${eachReviewPage.cateCode}}" th:text="${eachReviewPage.prodName}"></a>
+                            </div>
+                            <div th:text="${eachReviewPage.revContent}"></div>
+                            <div class="score">
+                                <span class="rating" th:text="${eachReviewPage.revScore}"></span>
+                            </div>
+                            <div th:text="${#temporals.format(eachReviewPage.revAddDate, 'yyyy-MM-dd')}"></div>
+                        </div>
+
+                        <p class="page">
+                            <a th:if="${myReviewPage.prev && myReviewPage.cate == null}" th:href="@{/my/review(pg=${myReviewPage.start -1}, userId=${#authentication.principal.user.userId})}">이전</a>
+                            <a th:if="${myReviewPage.prev && myReviewPage.cate != null}" th:href="@{/my/review(pg=${myReviewPage.start -1}, type=${myReviewPage.type}, keyword=${myReviewPage.keyword}, userId=${#authentication.principal.user.userId})}">이전</a>
+
+                            <th:block th:each="num:${#numbers.sequence(myReviewPage.start, myReviewPage.end)}">
+                                <a class="pageNum" th:if="${myReviewPage.cate == null}" th:href="@{/my/review(pg=${num}, userId=${#authentication.principal.user.userId})}" th:class="${num == myReviewPage.pg} ? 'on' : ''">[[${num}]]</a>
+                                <a class="pageNum" th:if="${myReviewPage.cate != null}" th:href="@{/my/review(pg=${num}, type=${myReviewPage.type}, cate=${myReviewPage.cate}, keyword=${myReviewPage.keyword}, userId=${#authentication.principal.user.userId})}" th:class="${num == myReviewPage.pg} ? 'on' : ''">[[${num}]]</a>
+                            </th:block>
+
+                            <a th:if="${myReviewPage.next && myReviewPage.cate == null}" th:href="@{/my/review(pg=${myReviewPage.end + 1}, userId=${#authentication.principal.user.userId})}">다음</a>
+                            <a th:if="${myReviewPage.next && myReviewPage.cate != null}" th:href="@{/my/review(pg=${myReviewPage.end + 1}, type=${myReviewPage.type}, keyword=${myReviewPage.keyword}, userId=${#authentication.principal.user.userId})}">다음</a>
+                        </p>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </div>
+<!--내용 끝-->
+</html>

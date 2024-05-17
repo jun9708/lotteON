@@ -1,0 +1,216 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/sellerLayout.html}">
+<!--내용 시작-->
+    <section id="admin-product-list" layout:fragment="content">
+
+        <script th:inline="javascript">
+            window.onload = function () {
+                const orderByDate = [[${orderByDate}]];
+                const dateArray = [];
+                const countArray = [];
+
+                const keys = Object.keys(orderByDate);
+                for (let i = keys.length - 1; i >= 0; i--) {
+                    const key = keys[i];
+                    const value = orderByDate[key];
+                    dateArray.push(key);
+                    countArray.push(value);
+                }
+
+                // 그래프
+                const ctx = document.getElementById('line-chart');
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dateArray,
+                        datasets: [{
+                            data: countArray,
+                            borderWidth: 1,
+                            backgroundColor: '#36AE7C',
+                            borderColor: '#36AE7C'
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        title: {
+                            display: true,
+                            text: '최근 한달 주문 건수',
+                            fontSize: 20,
+                            color: '#111',
+                        },
+                        plugins: {
+                            legend: {
+                                display: false // 라벨 숨기기
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    stepSize: 1 // 눈금의 간격
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+
+                // 주문 상세정보 drop 버튼
+                function createDetailInfo() {
+                    const click = event.target;
+                    const index = click.className;
+                    const orderInfo = click.parentNode;
+                    const orderListBody = orderInfo.parentNode;
+                    const detailInfo = orderListBody.querySelector('.detailInfo');
+                    console.log(detailInfo)
+                    if (detailInfo != null) {
+                        orderInfo.style.backgroundColor = "#fafafa";
+                        detailInfo.remove();
+                        click.innerText = "자세히"
+                    } else {
+                        orderInfo.style.backgroundColor = "#ececec";
+                        createDetailInfoTag(orderListBody, index);
+                        click.innerText = "접기"
+                    }
+                }
+
+            function createDetailInfoTag(orderListBody, index) {
+                const dtoList = [[${selectOrder.dtoList}]]
+                const orders = dtoList[index];
+
+                let memo = orders.orderMemo;
+                if (orders.orderMemo === null) {
+                    memo = "배송메모가 없습니다.";
+                }
+                const price = new Intl.NumberFormat('ko-KR').format(orders.detailPrice) + '원';
+                const userId = (orders.userId).substring(0, 6) + "****";
+                const newTag = `<div class="detailInfo">
+                                <div class="detailInfoRow">
+                                    <div>구매자</div>
+                                    <div>${userId}</div>
+                                    <div>결제금액</div>
+                                    <div>${price}</div>
+                                </div>
+                                <div class="detailInfoRow">
+                                    <div>받는사람</div>
+                                    <div>${orders.orderReceiver}</div>
+                                    <div>연락처</div>
+                                    <div>${orders.orderHp}</div>
+                                </div>
+                                <div class="detailInfoRow">
+                                    <div>결제수단</div>
+                                    <div>${orders.orderPay}</div>
+                                    <div>주문상태</div>
+                                    <div>${orders.detailStatus}</div>
+                                </div>
+                                <div class="detailInfoAddr">
+                                    <div>배송주소</div>
+                                    <div>${orders.orderAddr}</div>
+                                </div>
+                                <div class="detailInfoAddr">
+                                    <div>배송메모</div>
+                                    <div>${memo}</div>
+                                </div>
+                            </div>`
+                orderListBody.insertAdjacentHTML('beforeend', newTag);
+            }
+
+            function filterDrop() {
+                const button = event.target;
+                const filterList = button.nextElementSibling;
+                if (filterList.style.display === "block") {
+                    filterList.style.display = "none";
+                } else {
+                    filterList.style.display = "block";
+                }
+            }
+
+        </script>
+
+        <nav>
+            <h3>주문현황</h3>
+            <p>
+                HOME > 주문관리 > <strong>주문현황</strong>
+            </p>
+        </nav>
+        <!-- 상품목록 컨텐츠 시작 -->
+        <section>
+            <div class="orderListInfo">
+                <h4 style="font-weight: bold; font-size: 15px; margin: 10px 0; text-align: center">한달 주문 건수</h4>
+
+                <div id="data" class="orderListChart">
+                    <canvas id="line-chart" width="1000" height="250"></canvas>
+                </div>
+            </div>
+
+            <div class="orderListTable">
+                <div class="filterBox">
+                    <span onclick="filterDrop()">정렬 ∨</span>
+                    <ul class="filterList">
+                        <li><a th:href="@{/seller/order/orderList(prodSeller=${session.prodSeller})}">전체</a></li>
+                        <li><a th:href="@{/seller/order/orderList(keyword='waiting', prodSeller=${session.prodSeller})}">입금대기</a></li>
+                        <li><a th:href="@{/seller/order/orderList(keyword='ready', prodSeller=${session.prodSeller})}">배송준비</a></li>
+                        <li><a th:href="@{/seller/order/orderList(keyword='doing', prodSeller=${session.prodSeller})}">배송중</a></li>
+                        <li><a th:href="@{/seller/order/orderList(keyword='finish', prodSeller=${session.prodSeller})}">배송완료</a></li>
+                        <li><a th:href="@{/seller/order/orderList(keyword='cancel', prodSeller=${session.prodSeller})}">취소요청</a></li>
+                        <li><a th:href="@{/seller/order/orderList(keyword='exchange', prodSeller=${session.prodSeller})}">교환요청</a></li>
+                        <li><a th:href="@{/seller/order/orderList(keyword='refund', prodSeller=${session.prodSeller})}">환불요청</a></li>
+                    </ul>
+                </div>
+                <div class="orderListHead">
+                    <div>구분</div>
+                    <div>주문 번호</div>
+                    <div>상품 이름</div>
+                    <div>수량</div>
+                    <div>주문 상태</div>
+                    <div>구매 날짜</div>
+                    <div></div>
+                </div>
+                <div class="orderListBody" th:each="orders,index : ${selectOrder.dtoList}">
+                    <div class="orderInfo">
+                        <div th:text="${selectOrder.startNo - index.index}"></div>
+                        <div th:text="${orders.detailNo}"></div>
+                        <div th:text="${orders.prodName}" style="text-align: left"></div>
+                        <div th:text="${orders.count}"></div>
+
+                        <div th:if="${orders.detailStatus == '입금대기'}" th:text="${orders.detailStatus}" style="color: #5E1675"></div>
+                        <div th:if="${orders.detailStatus == '배송준비'}" th:text="${orders.detailStatus}" style="color: #2C4E80"></div>
+                        <div th:if="${orders.detailStatus == '배송중'}" th:text="${orders.detailStatus}" style="color: #0079FF"></div>
+                        <div th:if="${orders.detailStatus == '배송완료'}" th:text="${orders.detailStatus}" style="color: #36AE7C"></div>
+                        <div th:if="${orders.detailStatus == '취소요청'}" th:text="${orders.detailStatus}" style="color: #FFA900"></div>
+                        <div th:if="${orders.detailStatus == '교환요청'}" th:text="${orders.detailStatus}" style="color: #F94A29"></div>
+                        <div th:if="${orders.detailStatus == '환불요청'}" th:text="${orders.detailStatus}" style="color: #D61355"></div>
+                        <div th:if="${orders.detailStatus == '취소완료'}" th:text="${orders.detailStatus}" style="color: #FFA900"></div>
+                        <div th:if="${orders.detailStatus == '교환완료'}" th:text="${orders.detailStatus}" style="color: #F94A29"></div>
+                        <div th:if="${orders.detailStatus == '환불완료'}" th:text="${orders.detailStatus}" style="color: #D61355"></div>
+                        <div th:if="${orders.detailStatus == '구매확정'}" th:text="${orders.detailStatus}" style="color: #36AE7C"></div>
+
+                        <div th:text="${orders.detailDate}"></div>
+                        <div onclick="createDetailInfo()" th:class="${index.index}">자세히</div>
+                    </div>
+                </div>
+
+                <div class="pagingBox">
+                    <div class="pagingList">
+                        <a th:if="${selectOrder.prev && selectOrder.keyword == null}" th:href="@{/seller/order/orderList(pg=${selectOrder.start - 1}, prodSeller=${session.prodSeller})}">이전</a>
+                        <a th:if="${selectOrder.prev && selectOrder.keyword != null}" th:href="@{/seller/order/orderList(pg=${selectOrder.start - 1}, prodSeller=${session.prodSeller}, keyword=${selectOrder.keyword})}">이전</a>
+
+                        <th:block th:each="num:${#numbers.sequence(selectOrder.start, selectOrder.end)}">
+                            <a class="pageNum" th:if="${selectOrder.keyword == null}" th:href="@{/seller/order/orderList(pg=${num}, prodSeller=${session.prodSeller})}" th:class="${num == selectOrder.pg} ? 'on' : ''">[[${num}]]</a>
+                            <a class="pageNum" th:if="${selectOrder.keyword != null}" th:href="@{/seller/order/orderList(pg=${num}, prodSeller=${session.prodSeller}, keyword=${selectOrder.keyword})}" th:class="${num == selectOrder.pg} ? 'on' : ''">[[${num}]]</a>
+                        </th:block>
+
+                        <a th:if="${selectOrder.next && selectOrder.keyword == null}" th:href="@{/seller/order/orderList(pg=${selectOrder.start + 1}, prodSeller=${session.prodSeller})}">다음</a>
+                        <a th:if="${selectOrder.next && selectOrder.keyword != null}" th:href="@{/seller/order/orderList(pg=${selectOrder.start + 1}, prodSeller=${session.prodSeller}, keyword=${selectOrder.keyword})}">다음</a>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+        <!-- 상품목록 컨텐츠 끝 -->
+    </section>
+<!--내용 끝-->
+</html>

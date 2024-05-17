@@ -1,0 +1,62 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/adminLayout.html}">
+<!--내용 시작-->
+<section id="admin-product-list" layout:fragment="content">
+  <script>
+    function goBack(){
+      window.history.back();
+    }
+    function deleteNotice(event){
+      const chk = confirm("정말 삭제하시겠습니까?");
+      if(!chk){
+        event.preventDefault();
+      }
+    }
+  </script>
+  <nav>
+    <h3>자주묻는질문 보기</h3>
+    <p>
+      HOME > 고객센터 > <strong>자주묻는질문</strong>
+    </p>
+  </nav>
+  <!-- 상품목록 컨텐츠 시작 -->
+    <article class="sectionBox">
+        <table>
+          <tbody>
+          <input type="hidden" name="faqHit" th:value="${view.faqHit}"/>
+          <tr>
+            <td>유형</td>
+            <td th:if="${view.faqCate == 'user'}" style="white-space: nowrap; text-align: left">회원</td>
+            <td th:if="${view.faqCate == 'coupon'}" style="white-space: nowrap; text-align: left">쿠폰/이벤트</td>
+            <td th:if="${view.faqCate == 'order'}" style="white-space: nowrap; text-align: left">주문/결제</td>
+            <td th:if="${view.faqCate == 'delivery'}" style="white-space: nowrap; text-align: left">배송</td>
+            <td th:if="${view.faqCate == 'cancel'}" style="white-space: nowrap; text-align: left">취소/반품/환불</td>
+            <td th:if="${view.faqCate == 'travel'}" style="white-space: nowrap; text-align: left">여행/숙박/항공</td>
+            <td th:if="${view.faqCate == 'safe'}" style="white-space: nowrap; text-align: left">안전결제</td>
+          </tr>
+          <tr>
+            <td>제목</td>
+            <td th:text="${view.faqTitle}" style="text-align: left"></td>
+          </tr>
+          <tr>
+            <td>내용</td>
+            <td th:text="${view.faqContent}" style="width: 90%; height: 250px; text-align: left"></td>
+          </tr>
+          </tbody>
+        </table>
+        <div style="text-align: right; margin-top: 50px">
+          <a th:href="@{/admin/cs/faq/delete(faqNo=${view.faqNo})}" onclick="deleteNotice(event);">
+            <input type="button" value="삭제" style="background-color: #9e9e9e; color: white; border: none; padding: 8px 12px; margin-right: 10px; cursor: pointer;">
+          </a>
+          <a th:href="@{/admin/cs/faq/modify(faqNo=${view.faqNo})}"><input type="button" value="수정" style="background-color: #9e9e9e; color: white; border: none; padding: 8px 12px; margin-right: 10px; cursor: pointer;" /></a>
+          <a href="#"><input onclick="goBack();" type="button" value="목록" style="background-color: #4291e9; color: white; border: none; padding: 8px 12px; cursor: pointer;" /></a>
+        </div>
+    </article>
+
+
+
+  <!-- 상품목록 컨텐츠 끝 -->
+</section>
+<!--내용 끝-->
+</html>

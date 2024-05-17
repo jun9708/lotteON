@@ -1,0 +1,522 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>롯데ON::롯데 온라인 쇼핑몰</title>
+  <link rel="shortcut icon" type="image/x-icon" th:href="@{/images/favicon.ico}" />
+  <script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js}"></script>
+  <script th:src="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js}"></script>
+  <script th:src="@{https://kit.fontawesome.com/20962f3e4b.js}" crossorigin="anonymous"></script>
+  <script th:src="@{https://cdn.jsdelivr.net/bxslider/4.2.12/jquery.bxslider.min.js}"></script>
+  <link rel="stylesheet" th:href="@{https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css}"/>
+  <link rel="stylesheet" th:href="@{https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css}"/>
+  <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/bxslider/4.2.12/jquery.bxslider.css}"/>
+  <link rel="stylesheet" th:href="@{/css/common.css}" />
+  <link rel="stylesheet" th:href="@{/css/product/product.css}" />
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script th:src="@{/js/util.js}"></script>
+  <script>
+    window.onload = function (){
+      const companyPrice= document.querySelector('.companyPrice');
+      const orderProducts = document.querySelectorAll('.orderProducts');
+
+      const totalItems = document.getElementById('prodCount');
+      const totalAmount = document.getElementById('prodCost');
+      const totalDisAmount = document.getElementById('prodDis');
+      const totalFee = document.getElementById('prodFee');
+      const pointDis = document.getElementById('prodPoint');
+      const orderCost = document.getElementById('prodAll');
+
+
+      // 최종 결제 정보
+      let itemsValue = 0;
+      let amountValue = 0;
+      let disAmountValue = 0;
+      let feeValue = 0;
+      let costValue = 0;
+
+      Array.from(orderProducts).forEach(function (eachOrder){
+        const companyPrice = eachOrder.querySelector('.companyPrice');
+        const eachCost = companyPrice.querySelectorAll('span');
+        const orgValue = eachOrder.querySelectorAll('.org_price_value');
+        const disValue = eachOrder.querySelectorAll('.dis_price');
+        const totalPrice = eachOrder.querySelectorAll('.total_price');
+        const delFee = eachOrder.querySelectorAll('.delivery_fee');
+        const counts = eachOrder.querySelectorAll('.prodCount');
+
+        //회사 별 금액
+        let totalCost = 0;
+        let totalDis = 0;
+        let maxDeliveryFee = 0;
+        let deliveryFeeList = [];
+
+        for (let i=0; i < orgValue.length; i++) {
+          const count = counts[i]
+          const fee = delFee[i]
+          const cost = orgValue[i]
+          const bb = disValue[i]
+          const cc = totalPrice[i]
+          totalCost += parseFloat(cost.innerText.replace(',', ''))*count.innerHTML;
+          totalDis +=  parseFloat(bb.innerText.replace(',',''))*count.innerHTML;
+
+          if (fee.value){
+            deliveryFeeList.push(fee.value);
+          }
+          console.log(totalCost, cost, bb, cc, fee);
+          console.log('count:' + count.innerHTML);
+          // 여기서 포멧팅 + 거기에.. 더하기
+        }
+
+        maxDeliveryFee = Math.max(...deliveryFeeList);
+        let totalDisValue = totalCost - totalDis;
+        let allCost = totalCost - totalDisValue;
+        if (allCost >= 50000){
+          maxDeliveryFee = 0;
+          allCost = totalCost - totalDisValue + maxDeliveryFee;
+        }else {
+          allCost = totalCost - totalDisValue + maxDeliveryFee;
+        }
+
+        eachCost[0].textContent = '상품' + totalCost.toLocaleString() + '원 ';
+        eachCost[1].textContent = '할인' + totalDisValue.toLocaleString() + '원';
+        eachCost[2].textContent = '배송비' + maxDeliveryFee.toLocaleString() + '원';
+        eachCost[3].textContent = '총' + allCost.toLocaleString() + '원';
+
+        itemsValue += 1;
+        amountValue += totalCost;
+        disAmountValue += totalDisValue;
+        feeValue += maxDeliveryFee;
+        costValue += allCost;
+      });
+      totalItems. textContent = itemsValue.toLocaleString() + '건';
+      totalAmount.textContent = amountValue.toLocaleString();
+      totalDisAmount.textContent = '-' +disAmountValue.toLocaleString();
+      totalFee.textContent = feeValue.toLocaleString();
+      orderCost.textContent = costValue.toLocaleString();
+      orderCost.value = costValue;
+
+
+      const btnPoint = document.getElementById('btnPoint');
+      const inputPoint = document.getElementById('inputPoint');
+      const userPoint = parseInt(document.getElementById('userPoint').innerHTML);
+
+      inputPoint.disabled = userPoint < 5000;
+      btnPoint.disabled = userPoint < 5000;
+
+      btnPoint.onclick=function (e){
+        e.preventDefault();
+
+        console.log("point1 :" + userPoint);
+        console.log("point2 :"+ inputPoint.value);
+
+        if (userPoint < parseInt(inputPoint.value)){
+          alert('보유한 포인트를 초과할 수 없습니다.');
+          inputPoint.value = 0;
+        }
+        let allTotalCost = costValue - parseInt(inputPoint.value);
+        pointDis.textContent = '-' +parseInt(inputPoint.value).toLocaleString();
+        orderCost.textContent = allTotalCost.toLocaleString();
+
+      }
+
+      // 주문 버튼 클릭
+      const order = document.getElementById('btnOrder');
+
+      order.onclick = function (e){
+
+        e.preventDefault();
+
+        // 필수 입력란을 가져옵니다.
+        const userOrder = document.getElementById('userOrder').value.trim();
+        const hp = document.getElementById('userHp').value.trim();
+        const zip = document.getElementById('userZip').value.trim();
+        const addr1 = document.getElementById('userAddr1').value.trim();
+        const addr2 = document.getElementById('userAddr2').value.trim();
+
+        // 필수 입력란이 비어있는지 확인합니다.
+        if (!userOrder || !hp || !zip || !addr1 || !addr2) {
+          alert('주문자 정보를 모두 입력해주세요.');
+          return;
+        }
+
+        // 결제 방법이 선택되었는지 확인합니다.
+        const paymentRadios = document.querySelectorAll('input[name="orderPay"]');
+        let paymentChecked = false;
+        for (const radio of paymentRadios) {
+          if (radio.checked) {
+            paymentChecked = true;
+            break;
+          }
+        }
+
+        if (!paymentChecked) {
+          alert('결제 방법을 선택해주세요.');
+          return;
+        }
+
+
+        const items = [];
+        const orderItems = document.querySelectorAll('.orderItems');
+        var result = confirm("상품을 결제하시겠습니까?");
+        if (result){
+
+          orderItems.forEach(orderItem => {
+            const cartProdNo = orderItem.querySelector('#cartProdNo').value;
+            const prodNo = orderItem.querySelector('#prodNo').value;
+            const prodSeller = orderItem.querySelector('#prodSeller').value;
+            const optNo = orderItem.querySelector('#optNo').value;
+            const prodName = orderItem.querySelector('h2 a[name="prodName"]').innerText;
+            const count = orderItem.querySelector('.prodCount').innerText;
+            const detailPriceText = orderItem.querySelector('.total_price').innerText;
+            const detailPrice = parseInt(detailPriceText.replace(/[^0-9]/g, ''), 10);
+
+            items.push({
+              cartProdNo: cartProdNo,
+              prodNo: prodNo,
+              prodSeller: prodSeller,
+              optNo: optNo,
+              prodName: prodName,
+              count: count,
+              detailPrice: detailPrice
+            });
+
+          });
+
+          // 최종결제 정보
+          const prodAll = document.getElementById('prodAll').innerText;
+          const prodAllWithoutComma = prodAll.replace(/,/g, '');
+          console.log(prodAll);
+
+          // 배송정보
+          const orderReceiver = document.getElementById('userOrder').value;
+          const userId = document.getElementById('userId').value;
+          const orderHp = document.getElementById('userHp').value;
+          const userZip = document.getElementById('userZip').value;
+          const userAddr1 = document.getElementById('userAddr1').value;
+          const userAddr2 = document.getElementById('userAddr2').value;
+          const orderMemo = document.getElementById('orderMemo').value;
+
+          // 할인정보
+          const userUsedPoint = document.getElementById('inputPoint').value;
+
+          // 결제방법
+          const orderPay = document.querySelector('input[name="orderPay"]:checked').value;
+
+          const paymentData = {
+            orderDetails : items,
+            orders: {
+              userId: userId,
+              orderReceiver: orderReceiver,
+              orderHp: orderHp,
+              orderAddr: userZip+', '+userAddr1+', '+userAddr2,
+              orderPay: orderPay,
+              orderPrice: prodAllWithoutComma,
+              userUsedPoint: userUsedPoint,
+              orderMemo: orderMemo
+            }
+          };
+          console.log(paymentData);
+
+          fetchPost(`/lotteon/product/order/checkout`, paymentData)
+          .then(data => {
+            console.log(data);
+            alert("주문이 완료되었습니다.");
+            window.location.href = "/lotteon/product/complete?orders="+data;
+          })
+          .catch(error => {
+            console.error('주문 처리 중 에러 발생:', error); // 오류가 발생한 경우 콘솔에 에러를 출력합니다.
+            alert("주문 처리 중 오류가 발생했습니다. 다시 시도해주세요."); // 사용자에게 오류 메시지를 알림 창으로 표시합니다.
+          });
+
+
+
+        }
+
+
+      }
+
+
+      // 우편번호
+      const inputZip = document.getElementById('btnZip');
+      inputZip.onclick = function () {
+        postcode();
+      }
+
+
+    }
+
+    function removeValue(event){
+      var clickedElement = event.target;
+      if (clickedElement.classList.contains('deliveryInfo')) {
+        clickedElement.value = '';
+      }
+    }
+
+
+  </script>
+  <!--cart 페이지는 카테고리 탭이 없어야하므로 layout처리 안함-->
+</head>
+<body>
+<div id="wrapper">
+  <header>
+    <div class="top">
+      <div th:if="${!#authorization.expression('isAuthenticated()')}">
+        <a th:href="@{/member/login}">로그인</a>
+        <a th:href="@{/member/join}">회원가입</a>
+      </div>
+      <div th:if="${#authorization.expression('isAuthenticated()')}">
+        <a th:href="@{/member/join}">[[${#authentication.principal.user.userName}]]님</a>
+        <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}">마이페이지</a>
+        <a th:href="@{/product/cart(userId=${#authentication.principal.user.userId})}">
+          <i class="fa fa-shopping-cart" aria-hidden="true"></i>&nbsp;장바구니
+        </a>
+        <a th:href="@{/member/logout}">로그아웃</a>
+      </div>
+    </div>
+    <div class="logo">
+      <div>
+        <a th:href="@{/}"><img th:src="@{/images/header_logo.png}" alt="로고" /></a>
+        <form action="#">
+          <input type="text" name="search"/>
+          <button><i class="fa fa-search"></i></button>
+        </form>
+      </div>
+
+    </div>
+    <div class="menu">
+      <div>
+        <ul>
+          <li><a th:href="@{'/product/list?cateCode='+'&sort=prodHit'}">히트상품</a></li>
+          <li><a th:href="@{'/product/list?cateCode='+'&sort=prodScore'}">추천상품</a></li>
+          <li><a th:href="@{'/product/list?cateCode='+'&sort=prodRdate'}">최신상품</a></li>
+          <li><a th:href="@{'/product/list?cateCode='+'&sort=prodSold'}">인기상품</a></li>
+          <li><a th:href="@{'/product/list?cateCode='+'&sort=prodDiscount'}">할인상품</a></li>
+        </ul>
+        <ul>
+          <li><a th:href="@{/product/couponZone}">쿠폰존</a></li>
+          <li><a th:href="@{/cs/index}">고객센터</a></li>
+          <li><a th:href="@{/cs/faq/list(faqCate='user')}">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+  <main id="product">
+
+    <!-- 장바구니 페이지 시작 -->
+    <section class="order">
+
+      <!-- 제목, 페이지 네비게이션 -->
+      <nav>
+        <h1>주문결제</h1>
+        <p>
+          HOME > 장바구니 > <strong>주문결제</strong>
+        </p>
+      </nav>
+
+      <form id="buyForm" action="#">
+        <!-- 주문 상품 목록 -->
+        <table>
+          <thead>
+            <tr>
+              <th>상품명</th>
+              <th>총수량</th>
+              <th>판매가</th>
+              <th>할인가</th>
+              <th>소계</th>
+            </tr>
+          </thead>
+          <tbody th:each="map : ${orderProducts}" class="orderProducts"> <!-- tbody를 반복-->
+            <tr class="empty">
+              <td colspan="7">장바구니에 상품이 없습니다.</td>
+            </tr>
+            <tr class="orderItems" th:each="orderProduct, index:${map.value}">
+              <td>
+                <article>
+                  <a href="#"><img name="thumb190" th:src="@{/uploads/__${orderProduct.thumb190}__}" alt=""></a>
+                  <div>
+                    <input type="hidden" id="cartProdNo" th:value="${orderProduct.cartProdNo}">
+                    <input type="hidden" id="prodNo" th:value="${orderProduct.prodNo}">
+                    <input type="hidden" id="prodSeller" th:value="${orderProduct.prodSeller}">
+                    <input type="hidden" id="optNo" th:value="${orderProduct.optDetailNo}">
+                    <input type="hidden" id="prodCompany" th:value="${orderProduct.prodCompany}">
+                    <h2><a href="#" name="prodName" th:text="${orderProduct.prodName}"></a></h2>
+                    <p>[[${orderProduct.prodInfo}]]</p>
+                    <p id="prodOpt" th:if="${orderProduct.optValue1 != null}">
+                      <span th:text="'옵션: ' + ${orderProduct.optValue1}"></span>
+                      <span th:if="${orderProduct.optValue2 != null}">
+                                        <span th:text="' ) ' + ${orderProduct.optValue2}"></span>
+                                        <span th:if="${orderProduct.optValue3 != null}">
+                                        <span th:text="' / ' + ${orderProduct.optValue3}"></span>
+                                    </span>
+                                </span>
+                    </p>
+                  </div>
+                </article>
+              </td>
+              <td class="prodCount" name="count">[[${orderProduct.count}]]</td>
+              <td>
+                <p class="org_price" th:if="${orderProduct.optValue1}!= null">
+                  <span class="org_price_value"  th:text="${#numbers.formatInteger(orderProduct.optPrice, 3, 'COMMA')+'원'}"></span>
+                  <input class="price" type="hidden" th:value="${orderProduct.optPrice}">
+                </p>
+                <p class="org_price" th:if="${orderProduct.optValue1}== null">
+                  <span class="org_price_value" th:text="${#numbers.formatInteger(orderProduct.prodPrice, 3, 'COMMA')+'원'}"></span>
+                </p>
+              </td>
+              <td>
+                <p class="dis_price" th:if="${orderProduct.optValue1} == null" th:text="${#numbers.formatInteger((orderProduct.prodPrice * (100 - orderProduct.prodDiscount)* 0.01), 3, 'COMMA')+'원'}"></p>
+                <p class="dis_price" th:if="${orderProduct.optValue1} != null" th:text="${#numbers.formatInteger((orderProduct.optPrice * (100 - orderProduct.prodDiscount) * 0.01), 3, 'COMMA')+'원'}"></p>
+                <input class="dis_prod" type="hidden" th:value="${orderProduct.prodDiscount}">
+                <input class="delivery_fee" type="hidden" th:value="${orderProduct.prodDeliveryFee}">
+              </td>
+              <td>
+                <p class="total_price" name="detailPrice" th:if="${orderProduct.optValue1} == null" th:text="${#numbers.formatInteger((orderProduct.prodPrice * (100 - orderProduct.prodDiscount) * orderProduct.count * 0.01), 3, 'COMMA')+'원'}"></p>
+                <p class="total_price" name="detailPrice" th:if="${orderProduct.optValue1} != null" th:text="${#numbers.formatInteger((orderProduct.optPrice * (100 - orderProduct.prodDiscount) * orderProduct.count * 0.01), 3, 'COMMA')+'원'}"></p>
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="companyPrice">
+                <span class="cost" >상품 0원</span>-
+                <span class="cost">할인 0원</span>+
+                <span class="cost">배송비 0원</span>=
+                <span class="cost">총 0원</span>
+              </td>
+            </tr>
+          </tbody>
+
+        </table>
+
+        <!-- 최종 결제 정보 -->
+        <div class="final">
+          <h2>최종결제 정보</h2>
+          <table border="0">
+            <tr>
+              <td>총</td>
+              <td id="prodCount">2 건</td>
+            </tr>
+            <tr>
+              <td>상품금액</td>
+              <td id="prodCost">0</td>
+            </tr>
+            <tr>
+              <td>할인금액</td>
+              <td id="prodDis">0</td>
+            </tr>
+            <tr>
+              <td>배송비</td>
+              <td id="prodFee">0</td>
+            </tr>
+            <tr>
+              <td>포인트 할인</td>
+              <td id="prodPoint">0</td>
+            </tr>
+            <tr>
+              <td>전체주문금액</td>
+              <td id="prodAll" name="orderPrice">0</td>
+            </tr>
+          </table>
+          <input type="button" id="btnOrder" value="결제하기">
+        </div>
+
+        <!-- 배송정보 -->
+        <article class="delivery">
+          <h1>배송정보</h1>
+          <table>
+            <tr>
+              <td>주문자</td>
+              <td><input type="text" class="deliveryInfo" name="orderReceiver" id="userOrder" onfocus="removeValue(event)" th:value="${user.userName}"/> </td>
+              <td><input type="hidden" class="deliveryInfo" name="userId" id="userId" onfocus="removeValue(event)" th:value="${user.userId}"/> </td>
+            </tr>
+            <tr>
+              <td>휴대폰</td>
+              <td>
+                <input type="text" class="deliveryInfo" name="orderHp" id="userHp" onfocus="removeValue(event)" th:value="${user.userHp}"/>
+                <span>- 포함 입력</span>
+              </td>
+            </tr>
+            <tr>
+              <td>우편번호</td>
+              <td>
+                <input type="text" name="orderAddr" id="userZip" th:value="${user.userZip}"/>
+                <input type="button" id="btnZip" value="검색"/>
+              </td>
+            </tr>
+            <tr>
+              <td>기본주소</td>
+              <td>
+                <input type="text" name="orderAddr" id="userAddr1" th:value="${user.userAddr1}"/>
+              </td>
+            </tr>
+            <tr>
+              <td>상세주소</td>
+              <td>
+                <input type="text" name="orderAddr" id="userAddr2" th:value="${user.userAddr2}"/>
+              </td>
+            </tr>
+            <tr>
+              <td>배송 메세지</td>
+              <td>
+                <input type="text" name="orderMemo" id="orderMemo"/>
+              </td>
+            </tr>
+          </table>
+        </article>
+
+        <!-- 할인정보 -->
+        <article class="discount">
+          <h1>할인정보</h1>
+
+          <div>
+            <p>현재 포인트 : <span id="userPoint">[[${user.pointBalance}]]</span>점</p>
+            <label>
+                <input type="text" name="userUsedPoint" id="inputPoint" oninput="validateNumber(this)"/>점
+                <input type="button" value="적용" id="btnPoint"/>
+            </label>
+            <span>포인트 5,000점 이상이면 현금처럼 사용 가능합니다.</span>
+          </div>
+        </article>
+
+        <!-- 결제방법 -->
+        <article class="payment">
+            <h1>결제방법</h1>
+            <div>
+                <span>신용카드</span>
+                <p>
+                    <label><input type="radio" name="orderPay" value="type1"/>신용카드 결제</label>
+                    <label><input type="radio" name="orderPay" value="type2"/>체크카드 결제</label>
+                </p>
+            </div>
+            <div>
+                <span>계좌이체</span>
+                <p>
+                    <label><input type="radio" name="orderPay" value="type3"/>실시간 계좌이체</label>
+                    <label><input type="radio" name="orderPay" value="type4"/>무통장 입금</label>
+                </p>
+            </div>
+            <div>
+                <span>기타</span>
+                <p>
+                    <label><input type="radio" name="orderPay" value="type5"/>휴대폰결제</label>
+                    <label>
+                        <input type="radio" name="orderPay" value="type6"/>카카오페이
+                        <img src="../images/ico_kakaopay.gif" alt="카카오페이"/>
+                    </label>
+                </p>
+            </div>
+        </article>
+
+        <!-- 경고 -->
+        <article class="alert">
+          <ul>
+              <li><span>롯데ON의 모든 판매자는 안전거래를 위해 구매금액, 결제수단에 상관없이 모든거래에 대하여 롯데ON 유한책임회사의 구매안전서비스(에스크로)를 제공하고 있습니다.</span></li>
+              <li><span>롯데ON 유한책임회사의 전자금융거래법에 의해 결제대금예치업 등록번호는 02-006-00008 입니다.</span></li>
+              <li><span>등록여부는 금융감독원 홈페이지(www.fss.or.kr)의 업무자료>인허가업무안내>전자금융업등록현황에서 확인하실수 있습니다.</span></li>
+          </ul>
+        </article>
+
+      </form>
+
+    </section>
+    <!-- 주문 페이지 끝-->
+<!--내용 끝-->
+</html>

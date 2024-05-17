@@ -1,0 +1,958 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/productLayout.html}">
+<!--내용 시작-->
+    <!-- 상품 상세페이지 시작 -->
+    <section class="view" layout:fragment="content">
+        <script th:inline="javascript">
+
+            // 옵션 항목 출력 버튼
+            // 옵션이 여러개인 경우 이전 옵션을 선택하지 않으면 다음 옵션창 drop 안됨
+            function dropOption() {
+                const optionList = event.target.nextElementSibling;
+                const prodOption = event.target.parentNode; // 현재 옵션 버튼
+                const prodOptionFirst = document.getElementsByClassName('prodOption')[0];
+                if (prodOption !== prodOptionFirst){
+
+                    if (prodOption.previousElementSibling.querySelector('.selectOptionNo').value !== ""){
+
+                        if (optionList.style.display === "block") {
+                            optionList.style.display = "none"; // 옵션 박스 숨기기
+                        } else {
+                            optionList.style.display = "block"; // 옵션 박스 보이기
+                        }
+                    }
+                }else {
+                    if (optionList.style.display === "block") {
+                        optionList.style.display = "none"; // 옵션 박스 숨기기
+                    } else {
+                        optionList.style.display = "block"; // 옵션 박스 보이기
+                    }
+                }
+            }
+
+            // 옵션 선택
+            function selectOption() {
+                const label = event.target.parentNode // 버튼의 부모
+                const SelectOption = label.parentNode // 버튼의 부모의 부모
+                const prodOption = SelectOption.parentNode // 버튼의 부모의 부모의 부모
+                const selectedOption = prodOption.parentNode.querySelector('.selectedOption');
+                const selectOptionNo = prodOption.querySelector('.selectOptionNo'); // 선택한 옵션 번호
+                const btnSelectOption = prodOption.querySelector('.btnSelectOption'); // 옵션 선택 버튼
+                const btnSelectOptionAll = prodOption.parentNode.querySelectorAll('.btnSelectOption'); // 옵션 선택 버튼 전부
+
+
+                const optNo = label.querySelector('.optionNo').value; // 옵션 번호
+                const optionList = event.target.parentNode.parentNode;
+                const optionName = event.target.innerText; // 옵션 이름
+                const optionValue = event.target.nextElementSibling.value; // 옵션 가격
+                const selectedOptionName = selectedOption.querySelectorAll('h4'); // 선택된 옵션 이름들
+
+                // 마지막 옵션인지 체크
+                if (prodOption.nextElementSibling.className !== "prodOption") {
+                    // 마지막 옵션일 경우 선택한 옵션 정보 출력 & 옵션 선택박스 초기화
+                    selectOptionNo.value = optNo;
+                    btnSelectOption.innerText = optionName;
+                    SelectOption.style.display = "none";
+
+                    // 사용자가 선택한 옵션 이름과 옵션 번호를 문자열로 합치기
+                    const prodOptions = prodOption.parentNode.querySelectorAll('.prodOption');
+                    let selectedOptName = "";
+                    let selectedOptNo = "";
+                    Array.from(prodOptions).forEach(function (option, index) {
+                        const optName = option.querySelector('.btnSelectOption').innerText;
+                        const optNo = option.querySelector('.selectOptionNo').value;
+                        if (index > 0) {
+                            selectedOptName += "_";
+                        }
+                        if (index > 0) {
+                            selectedOptNo += "_";
+                        }
+                        selectedOptName += optName;
+                        selectedOptNo += optNo;
+                    })
+
+                    const countUnderscore = selectedOptNo.split('_').length - 1;
+                    if (countUnderscore === 0) {
+                        selectedOptNo += "_0_0";
+                    } else if (countUnderscore === 1) {
+                        selectedOptNo += "_0";
+                    }
+
+                    // 이미 선택된 옵션인지 체크
+                    let optionCheck = 0;
+                    const selectedOption = document.getElementsByClassName("selectedOption")[0];
+                    const selectedOptionName = selectedOption.querySelectorAll('h4');
+
+                    Array.from(selectedOptionName).forEach(function (h4) {
+                        if (h4.innerText === selectedOptName) {
+                            optionCheck = 1;
+                            alert("이미 선택된 옵션입니다.");
+                            let optionMap = [[${OptionDTOs.optionMap}]];
+                            const optionName = Object.keys(optionMap)
+                            Array.from(btnSelectOptionAll).forEach(function (optionBtn, index) {
+                                optionBtn.innerText = optionName[index];
+                            })
+                        } else {
+                            optionCheck = 0;
+                        }
+                    })
+
+                    // 이미 선택된 옵션이 아닐경우
+                    if (optionCheck === 0) {
+
+                        const matchingDTOs = findOptionInfo(selectedOptNo);
+
+                        if (matchingDTOs.length === 0) {
+                            alert("해당 옵션은 현재 구매 불가능합니다.");
+                            let optionMap = [[${OptionDTOs.optionMap}]];
+                            const optionName = Object.keys(optionMap)
+                            Array.from(btnSelectOptionAll).forEach(function (optionBtn, index) {
+                                optionBtn.innerText = optionName[index];
+                            })
+                        } else {
+                            const selected = `<div class="selectedValue">
+                                            <h4>${selectedOptName}</h4>
+                                            <div class="count">
+                                                <button class="decrease" onclick="changeNum(-1)">-</button>
+                                                <input type="text" name="num" class="numInput" value="1" oninput="changeNum(0)"/>
+                                                <button class="increase" onclick="changeNum(1)">+</button>
+                                            </div>
+                                            <div class="optionPrice">
+                                                <span id="optProdPrice">원</span>
+                                                <input type="hidden" id="saveOptProdPrice"/>
+                                                <input type="hidden" name="optDetailNo" value="${matchingDTOs.optDetailNo}"/>
+                                                <span onclick="delSelectedOption()" style="cursor: pointer">x</span>
+                                            </div>
+                                        </div>`;
+                            selectedOption.insertAdjacentHTML('beforeend', selected);
+                            const optionPrices = document.querySelectorAll('.optionPrice');
+                            let disValueHtml = document.getElementById('disCount');
+                            let disValue = 0;
+                            if (disValueHtml === null){
+                                disValueHtml = 0
+                            }else {
+                                disValue = parseInt(disValueHtml.innerHTML.replace('%', ''));
+                            }
+
+                            console.log(optionPrices);
+                            const newOptionPrices = document.querySelectorAll('.optionPrice:not(.processed)');
+
+                            newOptionPrices.forEach(function(optionPrice){
+                                const pricePlace = optionPrice.querySelector('#optProdPrice');
+                                let savePricePlace = optionPrice.querySelector('#saveOptProdPrice');
+                                let optValue = matchingDTOs.optPrice;
+                                let optDisValue = optValue * (100 - disValue) * 0.01;
+                                console.log("optValue" + optDisValue);
+                                pricePlace.textContent = optDisValue.toLocaleString() + '원';
+                                savePricePlace.value = optDisValue;
+                                // 처리가 완료된 항목에 클래스를 추가하여 다음에는 처리되지 않도록 합니다.
+                                optionPrice.classList.add('processed');
+
+                                // 추가된 옵션 합계에 합산
+                                var inputPrice = document.querySelector('[name="totalPrice"]');
+                                let totalPrice = parseInt((inputPrice.innerText.replace(',','')));
+                                console.log("totalPrice...1 : " + totalPrice);
+                                totalPrice += parseInt(savePricePlace.value);
+                                console.log("totalPrice : " + totalPrice);
+                                var formattedTotalPrice = new Intl.NumberFormat('ko-KR').format(totalPrice);
+                                inputPrice.innerText = formattedTotalPrice;
+                            });
+
+                            let optionMap = [[${OptionDTOs.optionMap}]];
+                            const optionName = Object.keys(optionMap)
+                            Array.from(btnSelectOptionAll).forEach(function (optionBtn, index) {
+                                optionBtn.innerText = optionName[index];
+                            })
+                        }
+
+                    }
+                } else {
+                    // 마지막 옵션이 아닌 경우
+                    selectOptionNo.value = optNo;
+                    btnSelectOption.innerText = optionName;
+                    SelectOption.style.display = "none";
+                }
+            }
+
+            // 선택한 옵션 삭제 버튼
+            function delSelectedOption() {
+                const delSelected = event.target // 버튼
+                const optionPrice = delSelected.parentNode // 버튼의 부모
+                const SelectedOptDiv = optionPrice.parentNode // 버튼의 부모의 부모
+
+                SelectedOptDiv.remove();
+                inputTotalCost();
+            }
+
+            /*
+                사용자가 선택한 옵션에 알맞은 재고와 가격 찾는 함수
+                - model 참조로 받아온 DTO에서 상품 옵션 조회
+                - 사용자가 옵션들을 선택하면 optNo값을 받아와서 일치하는 상품 가격과 재고 조회 가능
+             */
+            let OptionDetailDTOs = [[${OptionDTOs.prodOptDetailDTOS}]];
+
+            function findOptionInfo(optionNos) {
+                const optionNosArray = optionNos.split('_');
+                let optNo1 = optionNosArray[0];
+                let optNo2 = optionNosArray[1];
+                let optNo3 = optionNosArray[2];
+
+                // OptionDetailDTOs 배열 해체하여 단일 배열로 만들기
+                const flatDTOs = OptionDetailDTOs.flat();
+                console.log(flatDTOs);
+
+                // 사용자 입력과 DTO의 값 비교하여 일치하는 DTO 반환
+                // 숫자라서 == 써야함..
+                const matchingDTO = flatDTOs.find(dto =>
+                    dto.optNo1 == optNo1 && dto.optNo2 == optNo2 && dto.optNo3 == optNo3
+                );
+                return matchingDTO;
+            }
+
+
+            /* 3일후 계산하여 배송예정일에 출력 */
+            document.addEventListener('DOMContentLoaded', function () {
+                // 오늘 날짜 구하기
+                var today = new Date();
+
+                // 3일 후의 날짜 계산
+                var deliveryDate = new Date(today);
+                deliveryDate.setDate(today.getDate() + 3); // 오늘 날짜에 3일을 더함
+
+                // 도착 예정 날짜 형식 지정
+                var dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+                var dayOfWeek = dayNames[deliveryDate.getDay()]; // 요일
+                var month = deliveryDate.getMonth() + 1; // 월 (0부터 시작하므로 +1 필요)
+                var dayOfMonth = deliveryDate.getDate(); // 일
+
+                // 도착 예정 날짜 문자열 생성 (예: "모레(금) 7/8 도착예정")
+                var arrivalDateString = `모레(${dayOfWeek}) ${month}/${dayOfMonth} 도착예정`;
+
+                // 도착 예정 날짜 출력
+                var arrivalElement = document.getElementById('arrivalDate');
+                arrivalElement.textContent = arrivalDateString;
+            });
+
+            /* +, - 버튼 눌렀을 때 동작하며 할인 금액 계산하여 총 액에나타나게함 */
+            function changeNum(change) {
+                var numInput = event.target.parentNode.querySelector('input');
+                var inputPrice = document.querySelector('[name="totalPrice"]');
+                var optValue = event.target.closest('.selectedValue');
+                var selectOptPrice = optValue.querySelector('[id="optProdPrice"]');
+                var saveOptPrice = optValue.querySelector('[id = "saveOptProdPrice"]').value;
+                console.log("표시되는 가격: " + selectOptPrice);
+                //파싱된 형태 그대로 가져와서 ',' 쉼표를 제거하여 사용함.
+                //var priceText = document.getElementById("disPrice").innerText;
+                //var price = parseFloat(priceText.replace(',', ''));
+
+                var currentValue = parseInt(numInput.value) + change;
+                // 최소값은 1, 최대값은 99로 제한
+                if (currentValue < 1) {
+                    currentValue = 1;
+                } else if (currentValue > 99) {
+                    currentValue = 99;
+                }
+
+                numInput.value = currentValue; // 변경된 값 적용
+
+                var totalPriceText = inputPrice.innerText;
+                var totalPrice = parseInt(totalPriceText.replace(',', ''));
+                console.log(" 총 상품 금액 : "+ totalPrice);
+                totalPrice = saveOptPrice * currentValue;
+                console.log("선택된 가격 :"+ saveOptPrice + " 갯수 :" + currentValue);
+                if (!isNaN(totalPrice)) {
+                    // 금액 콤마 표시를 위해 포멧팅
+                    //var formattedTotalPrice = new Intl.NumberFormat('ko-KR').format(totalPrice);
+                    selectOptPrice.textContent = totalPrice.toLocaleString() + '원';
+                    //inputPrice.innerText = formattedTotalPrice;
+                } else {
+                    inputPrice.innerText = "0";
+                }
+                inputTotalCost();
+            }
+
+            function inputTotalCost() {
+                var totalCost = 0;
+                var selectOptPrices = document.querySelectorAll('[id="optProdPrice"]');
+                selectOptPrices.forEach(function (optPrice){
+                   var priceText =  optPrice.textContent;
+                    var price = parseInt(priceText.replace('원', '').replace(/,/g, ''));
+                    totalCost += price;
+                });
+                var inputPrice = document.querySelector('[name="totalPrice"]');
+                inputPrice.textContent = totalCost.toLocaleString();
+            }
+
+            /* +, - 버튼 눌렀을 때 동작하며 할인 금액 계산하여 총 액에나타나게함 - 옵션 업는 경우 */
+            function changeNumNoOpt(change) {
+                var numInput = document.getElementById("numInput");
+                var totalPriceElements  = document.getElementsByName('totalPrice');
+                var priceText = document.getElementById("disPrice");
+                var selectProdPrice = document.getElementById("selectProdPrice");
+                var saveProdPrice = document.getElementById('saveProdPrice').value;
+                console.log(saveProdPrice);
+
+                var currentValue = parseInt(numInput.value) + change;
+                console.log("currentValue: " + currentValue);
+
+                // 최소값은 1, 최대값은 99로 제한
+                if (currentValue < 1) {
+                    currentValue = 1;
+                } else if (currentValue > 99) {
+                    currentValue = 99;
+                } else if (isNaN(currentValue)){
+                    currentValue = 1;
+                }
+
+                numInput.value = currentValue; // 변경된 값 적용
+
+                var totalPrice = saveProdPrice * currentValue;
+                if (!isNaN(totalPrice)) {
+                    // 금액 콤마 표시를 위해 포멧팅
+                    var formattedTotalPrice = new Intl.NumberFormat('ko-KR').format(totalPrice);
+                    selectProdPrice.innerText = formattedTotalPrice;
+
+                    // totalPrice 요소의 값을 설정
+                    if (totalPriceElements.length > 0) {
+                        totalPriceElements[0].innerText = formattedTotalPrice;
+                    }
+                } else {
+                    // totalPrice 요소의 값을 0으로 설정
+                    if (totalPriceElements.length > 0) {
+                        totalPriceElements[0].innerText = "0";
+                    }
+                }
+            }
+
+
+            /*
+                구매하기 버튼 누를시 넘겨야하는 정보
+                - prodNo
+                - optDetailNo // 선택된 상품 옵션 수량조절 태그쪽에 input의 value값으로 숨겨둠
+                - 상품 수량
+                - 회원 아이디
+             */
+
+            // 찜하기(wish) 버튼 눌렀을 때 호출되는 함수
+            function btnWish(){
+
+                const userIdElement = document.getElementById('userForDirect');
+                if (!userIdElement) {
+                    alert("로그인 후 이용 가능합니다.");
+                    window.location.href = "/lotteon/member/login";
+                }else {
+                    const userId = userIdElement.value;
+                    const prodNoValue = document.getElementById('prodNo');
+                    const prodNo = prodNoValue.innerText;
+                    console.log(userId);
+                    console.log(prodNo);
+                    // 카운터 문서객체 생성
+                    const prodCounts = document.querySelectorAll('input[name="num"]');
+                    console.log("prodCounts"+prodCounts);
+                    // 옵션 문서객체 생성
+                    const optDetailsNo = document.querySelectorAll('input[name="optDetailNo"]');
+                    // 옵션과 갯수 리스트 저장할 배열 선언
+                    const jsonDataArray = [];
+
+                    if (optDetailsNo.length!==0){
+                        optDetailsNo.forEach((optDetailsNo, index) => {
+                            const optNoValue = optDetailsNo.value;
+                            const prodCountValue = prodCounts[index].value;
+
+                            console.log("prodOpt : " + optNoValue);
+                            console.log("count : " + prodCountValue);
+
+                            const jsonData = {
+                                "userId" : userId,
+                                "prodNo" : prodNo,
+                                "optNo" : optNoValue,
+                                "wishCount" : prodCountValue
+                            };
+                            jsonDataArray.push(jsonData);
+                        });
+                        console.log(jsonDataArray);
+                    }else {
+                        const prodCountValue = prodCounts[0].value;
+                        console.log("count : " + prodCountValue);
+                        const jsonData = {
+                            "userId" : userId,
+                            "prodNo" : prodNo,
+                            "optDetailNo" : 0,
+                            "wishCount" : prodCountValue
+                        }
+                        jsonDataArray.push(jsonData);
+                    }
+
+
+                    const data = fetchPost(`/lotteon/product/view/insertWish`, jsonDataArray)
+                        .then(response => {
+                            console.log(response);
+
+                            if (confirm("찜하기로 이동하시겠습니까?")){
+                                window.location.href = `/lotteon/my/wish?userId=${userId}`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error("추가에 실패했습니다.",error);
+                            alert("추가에 실패했습니다.");
+                        });
+                }
+            }
+
+            // 주문(order) 버튼 눌렀을 때 호출되는 함수
+            function btnOrder(){
+                console.log('order');
+                const userIdElement = document.getElementById('userForDirect');
+                if (!userIdElement) {
+                    alert("로그인 후 이용 가능합니다.");
+                    window.location.href = "/lotteon/member/login";
+                }else {
+                    const userId = userIdElement.value;
+                    const prodNoValue = document.getElementById('prodNo');
+                    const prodNo = prodNoValue.innerText;
+                    console.log(userId);
+                    console.log(prodNo);
+                    // 카운터 문서객체 생성
+                    const prodCounts = document.querySelectorAll('input[name="num"]');
+                    // 옵션 문서객체 생성
+                    const optDetailsNo = document.querySelectorAll('input[name="optDetailNo"]');
+                    // 옵션과 갯수 리스트 저장할 배열 선언
+                    const jsonDataArray = [];
+
+                    // optDetailNo 갯수만큼 반복하며 jsonData 를 저장함
+                    if (optDetailsNo.length!==0){
+                        optDetailsNo.forEach((optDetailsNo, index) => {
+                            const optNoValue = optDetailsNo.value;
+                            const prodCountValue = prodCounts[index].value;
+
+                            const jsonData = {
+                                "userId" : userId,
+                                "prodNo" : prodNo,
+                                "optDetailNo" : optNoValue,
+                                "count" : prodCountValue
+                            };
+                            jsonDataArray.push(jsonData);
+                            console.log(jsonDataArray);
+                        });
+                        console.log(jsonDataArray);
+                    }else {
+                        const prodCountValue = prodCounts[0].value;
+                        const jsonData = {
+                            "userId" : userId,
+                            "prodNo" : prodNo,
+                            "optDetailNo" : 0,
+                            "count" : prodCountValue
+                        }
+                        jsonDataArray.push(jsonData);
+                    }
+
+
+                    const data = fetchPost(`/lotteon/product/orderView`, jsonDataArray)
+                        .then(response => {
+                            console.log(response);
+                            window.location.href = "/lotteon/product/orderDirect";
+                        })
+                        .catch(error => {
+                            console.error("주문창 이동에 실패했습니다.",error);
+                            alert("잠시후에 다시 시도해 주세요.");
+                        });
+                }
+            }
+
+            // 장바구니(cart) 버튼 눌렀을 때 호출되는 함수
+            function btnCart(){
+                const userIdElement = document.getElementById('userForDirect');
+                if (!userIdElement) {
+                    alert("로그인 후 이용 가능합니다.");
+                    window.location.href = "/lotteon/member/login";
+                }else {
+                    const userId = userIdElement.value;
+                    const prodNoValue = document.getElementById('prodNo');
+                    const prodNo = prodNoValue.innerText;
+                    console.log(userId);
+                    console.log(prodNo);
+                    // 카운터 문서객체 생성
+                    const prodCounts = document.querySelectorAll('input[name="num"]');
+                    // 옵션 문서객체 생성
+                    const optDetailsNo = document.querySelectorAll('input[name="optDetailNo"]');
+                    // 옵션과 갯수 리스트 저장할 배열 선언
+                    const jsonDataArray = [];
+
+                    // optDetailNo 갯수만큼 반복하며 jsonData 를 저장함
+                    if (optDetailsNo.length!==0){
+                        optDetailsNo.forEach((optDetailsNo, index) => {
+                            const optNoValue = optDetailsNo.value;
+                            const prodCountValue = prodCounts[index].value;
+
+                            const jsonData = {
+                                "userId" : userId,
+                                "prodNo" : prodNo,
+                                "optNo" : optNoValue,
+                                "count" : prodCountValue
+                            };
+                            jsonDataArray.push(jsonData);
+                        });
+                        console.log(jsonDataArray);
+                    }else {
+                        const prodCountValue = prodCounts[0].value;
+                        const jsonData = {
+                            "userId" : userId,
+                            "prodNo" : prodNo,
+                            "optDetailNo" : 0,
+                            "count" : prodCountValue
+                        }
+                        jsonDataArray.push(jsonData);
+                    }
+
+
+                    const data = fetchPost(`/lotteon/product/view/insertCart?userId=${userId}`, jsonDataArray)
+                        .then(response => {
+                            console.log(response);
+
+                            if (confirm("장바구니로 이동하시겠습니까?")){
+                                window.location.href = "/lotteon/product/cart?userId=" + userId;
+                            }
+                        })
+                        .catch(error => {
+                            console.error("장바구니 추가에 실패했습니다.",error);
+                            alert("장바구니 추가에 실패했습니다.");
+                        });
+                }
+            }
+
+            window.onload = function () {
+                // 화면이동
+                checkUrl();
+                // 별점 이미지 계산
+                let rating = document.getElementsByClassName("rating");
+                Array.from(rating).forEach(function (element) {
+                    const revScore = parseInt(element.innerText);
+                    switch (revScore){
+                        case 1:
+                            element.classList.add('star1');
+                            break;
+                        case 2:
+                            element.classList.add('star2');
+                            break;
+                        case 3:
+                            element.classList.add('star3');
+                            break;
+                        case 4:
+                            element.classList.add('star4');
+                            break;
+                        case 5:
+                            element.classList.add('star5');
+                            break;
+                    }
+                });
+            }
+
+            // 리뷰 & 문의 활성화 탭
+            function changeTab() {
+                const button = event.target;
+                if (button.classList.value === "btnProdReview") {
+                    const prodReview = document.getElementById('prodReview');
+                    const prodQna = document.getElementById('prodQna');
+                    if (prodReview.style.display === "none") {
+                        prodReview.style.display = "block";
+                        prodQna.style.display = "none";
+                        button.classList.add('reviewOn');
+                        button.nextElementSibling.classList.remove('reviewOn');
+                    }
+                }else if (button.classList.value === "btnProdQna") {
+                    const prodReview = document.getElementById('prodReview');
+                    const prodQna = document.getElementById('prodQna');
+                    if (prodQna.style.display === "none") {
+                        prodQna.style.display = "block";
+                        prodReview.style.display = "none";
+                        button.classList.add('reviewOn');
+                        button.previousElementSibling.classList.remove('reviewOn');
+                    }
+                }
+            }
+
+            // 상품 문의 하기
+            function prodQnaWrite() {
+                const userForDirect = document.getElementById('userForDirect');
+                if (userForDirect) {
+                    const QnaModalBack = document.getElementsByClassName('prodQnaModalBack')[0];
+                    QnaModalBack.style.display = "block"
+                }else {
+                    alert("로그인 후 이용해주세요.");
+                }
+            }
+
+            // 상품 문의하기 모달창 닫기
+            function closeQnaModal() {
+                const QnaModalBack = document.getElementsByClassName('prodQnaModalBack')[0];
+                const closeBtn = document.getElementsByClassName('closeBtn')[0];
+                if (event.target === QnaModalBack || event.target === closeBtn) {
+                    QnaModalBack.style.display = "none"
+                }
+            }
+            // 리뷰 & 문의하기 화면 이동
+            function scrollToSection(sectionId) {
+                event.preventDefault();
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+            // url에 pg 있을 경우 화면 이동
+            function checkUrl() {
+                let currentUrl = window.location.href;
+                let splitUrl = currentUrl.split('&pg=');
+                let checkUrl = currentUrl.split('&type=prod');
+                if (checkUrl.length > 1) {
+                    const prodReview = document.getElementById('prodReview');
+                    const prodQna = document.getElementById('prodQna');
+                    const btnProdReview = document.getElementsByClassName('btnProdReview')[0];
+                    const btnProdQna = document.getElementsByClassName('btnProdQna')[0];
+                    prodQna.style.display = "block";
+                    prodReview.style.display = "none";
+                    btnProdReview.classList.remove('reviewOn');
+                    btnProdQna.classList.add('reviewOn');
+                }
+                if (splitUrl.length > 1) {
+                    scrollToSection('changTabBox');
+                }
+            }
+        </script>
+
+        <!-- 제목, 페이지 네비게이션 -->
+        <nav>
+            <script th:src="@{/js/util.js}"></script>
+            <h1>상품보기</h1>
+            <p>
+                HOME
+                <span th:if="${resultMap.cate01Name != null}" th:text="' > ' + ${resultMap.cate01Name}"></span>
+                <span th:if="${resultMap.cate01Name != null and resultMap.cate02Name != null}"> > </span>
+                <strong th:if="${resultMap.cate02Name != null}" th:text="${resultMap.cate02Name}"></strong>
+                <span th:if="${resultMap.cate02Name != null and resultMap.cate03Name != null}"> > </span>
+                <span th:if="${resultMap.cate03Name != null}" th:text="${resultMap.cate03Name}"></span>
+            </p>
+        </nav>
+
+        <!-- 상품 전체 정보 내용 -->
+        <article class="info">
+            <div class="image">
+                <img th:src="@{/uploads/__${product.thumb456}__}" alt="상품이미지"/>
+            </div>
+            <div class="summary">
+                <nav>
+                    <h1>(주)[[${product.prodCompany}]]</h1>
+                    <h2>상품번호&nbsp;:&nbsp;<span id="prodNo">[[${product.prodNo}]]</span></h2>
+                </nav>
+                <nav>
+                    <h3>[[${product.prodName}]]</h3>
+                    <p>[[${product.prodInfo}]]</p>
+                    <h5 th:if="${product.TReviewScore==5}" class="rating star5"><a href="#" onclick="scrollToSection('changTabBox')">상품평보기</a></h5>
+                    <h5 th:if="${product.TReviewScore>=4 and product.TReviewScore<5}" class="rating star4"><a href="#" onclick="scrollToSection('changTabBox')">상품평보기</a></h5>
+                    <h5 th:if="${product.TReviewScore>=3 and product.TReviewScore<4}" class="rating star3"><a href="#" onclick="scrollToSection('changTabBox')">상품평보기</a></h5>
+                    <h5 th:if="${product.TReviewScore>=2 and product.TReviewScore<3}" class="rating star2"><a href="#" onclick="scrollToSection('changTabBox')">상품평보기</a></h5>
+                    <h5 th:if="${product.TReviewScore>=1 and product.TReviewScore<2}" class="rating star1"><a href="#" onclick="scrollToSection('changTabBox')">상품평보기</a></h5>
+                    <h5 th:if="${product.TReviewScore>=0 and product.TReviewScore<1}" class="rating star0"><a href="#" onclick="scrollToSection('changTabBox')">상품평보기</a></h5>
+                </nav>
+                <nav>
+                    <div th:if="${product.prodDiscount!=0}" class="org_price" >
+                        <del th:text="${#numbers.formatInteger(product.prodPrice, 3, 'COMMA')}" id="prodPrice"></del>
+                        <span id="disCount">[[${product.prodDiscount}]]%</span>
+                    </div>
+                    <div class="dis_price">
+                        <ins id="disPrice" th:text="${#numbers.formatInteger((product.prodPrice * (100 - product.prodDiscount) * 0.01), 3, 'COMMA')}"></ins>
+                    </div>
+                </nav>
+                <nav>
+                    <span th:if="${product.prodDeliveryFee==0}" class="delivery">무료배송</span>
+                    <span th:if="${product.prodDeliveryFee!=0}" class="delivery" th:text="'배송비 : '+${#numbers.formatInteger(product.prodDeliveryFee, 3, 'COMMA')+'원'}"></span>
+                    <span class="arrival" id="arrivalDate"></span>
+                    <span class="desc">본 상품은 국내배송만 가능합니다.</span>
+                </nav>
+                <nav>
+                    <span class="card cardFree"><i>아이콘</i>무이자할부</span>&nbsp;&nbsp;
+                    <span class="card cardAdd"><i>아이콘</i>카드추가혜택</span>
+                </nav>
+                <nav>
+                    <span class="origin">원산지-상세설명 참조</span>
+                </nav>
+                <img th:src="@{/images/vip_plcc_banner.png}" alt="100원만 결제해도 1만원 적립!" class="banner" />
+
+                <!--
+                    옵션 선택 박스 (product.css 515줄)
+                    - 옵션이 없는 상품은 옵션 선택 태그 출력 x
+                    - 옵션이 있는 상품은 옵션을 선택하지 않으면 다음으로 넘어가지 않음
+                -->
+                <div class="prodOption" th:each="option : ${OptionDTOs.optionMap}">
+                    <input type="hidden"  class="selectOptionNo"/>
+                    <button class="btnSelectOption" onclick="dropOption()" th:text="${option.key}"></button>
+                    <ul class="SelectOption">
+                        <label th:each="value : ${option.value}">
+                            <li onclick="selectOption()" th:text="${value.optValue}"></li>
+                            <input type="hidden" class="optionNo" th:value="${value.optNo}">
+                        </label>
+                    </ul>
+                </div>
+
+                <div class="selectedOption">
+                    <div class="selectedValue" th:if="${OptionDTOs.optionMap.isEmpty()}">
+                        <h4 th:text="${product.prodName}">상품 이름</h4>
+                        <div class="count">
+                            <button class="decrease" onclick="changeNumNoOpt(-1)">-</button>
+                            <input type="text" name="num" id="numInput" value="1" oninput="changeNumNoOpt(0)"/>
+                            <button class="increase" onclick="changeNumNoOpt(1)">+</button>
+                        </div>
+                        <div class="optionPrice">
+                            <span>
+                                <span class="eachCost" id="selectProdPrice" th:text="${#numbers.formatInteger((product.prodPrice * (100 - product.prodDiscount) * 0.01), 3, 'COMMA')}" style="font-size: 20px"></span>원
+                                <input type="hidden" id="saveProdPrice" th:value="${(product.prodPrice * (100 - product.prodDiscount)*0.01)}"/>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="total">
+                    <span th:if="${OptionDTOs.getOptionMap().size()==0}" name="totalPrice" th:text="${#numbers.formatInteger((product.prodPrice * (100 - product.prodDiscount) * 0.01), 3, 'COMMA')}"></span>
+                    <span th:if="${OptionDTOs.getOptionMap().size()!=0}" name="totalPrice" th:text="0"></span>
+                    <em>총 상품금액</em>
+                </div>
+
+                <div class="button">
+                    <th:block th:if="${#authentication.principal != 'anonymousUser'}">
+                        <input type="hidden"  name="user" id="userForDirect" th:value="${#authentication.principal.user.userId}">
+                    </th:block>
+                    <input type="button" onclick="btnOrder()" class="order" value="구매하기"/>
+                    <input type="button" onclick="btnCart()" class="cart" value="장바구니"/>
+                    <input type="button" onclick="btnWish()" class="wish"  value="찜하기"/>
+                </div>
+            </div>
+        </article>
+
+        <!-- 상품 정보 내용 -->
+        <article class="detail">
+            <nav>
+                <h1>상품정보</h1>
+            </nav>
+            <!-- 상품상세페이지 이미지 -->
+            <img th:src="@{/uploads/__${product.thumb940}__}" alt="상세페이지1">
+        </article>
+
+        <!-- 상품 정보 제공 고시 내용 -->
+        <article class="notice">
+            <nav>
+                <h1>상품 정보 제공 고시</h1>
+                <p>[전자상거래에 관한 상품정보 제공에 관한 고시] 항목에 의거 등록된 정보입니다.</p>
+            </nav>
+            <table border="0">
+                <tr>
+                    <td>상품번호</td>
+                    <td>[[${product.prodNo}]]</td>
+                </tr>
+                <tr>
+                    <td>상품상태</td>
+                    <td>[[${product.prodStatus}]]</td>
+                </tr>
+                <tr>
+                    <td>부가세 면세여부</td>
+                    <td>[[${product.prodTax}]]</td>
+                </tr>
+                <tr>
+                    <td>영수증발행</td>
+                    <td>[[${product.prodReceipt}]]</td>
+                </tr>
+                <tr>
+                    <td>사업자구분</td>
+                    <td>[[${product.prodBusinessType}]]</td>
+                </tr>
+                <tr>
+                    <td>브랜드</td>
+                    <td>[[${product.prodCompany}]]</td>
+                </tr>
+                <tr>
+                    <td>원산지</td>
+                    <td>[[${product.prodOrg}]]</td>
+                </tr>
+            </table>
+            <table border="0">
+                <tr>
+                    <td>제품소재</td>
+                    <td>컨텐츠 참조</td>
+                </tr>
+                <tr>
+                    <td>색상</td>
+                    <td>컨텐츠 참조</td>
+                </tr>
+                <tr>
+                    <td>치수</td>
+                    <td>컨텐츠 참조</td>
+                </tr>
+                <tr>
+                    <td>제조자/수입국</td>
+                    <td>컨텐츠 참조 / 대한민국</td>
+                </tr>
+                <tr>
+                    <td>제조국</td>
+                    <td>컨텐츠 참조</td>
+                </tr>
+                <tr>
+                    <td>취급시 주의사항</td>
+                    <td>제품 사용 설명서 참조</td>
+                </tr>
+                <tr>
+                    <td>제조연월</td>
+                    <td>컨텐츠 참조</td>
+                </tr>
+                <tr>
+                    <td>품질보증기준</td>
+                    <td>제품 이상 시 공정거래위원회 고시 소비자분쟁해결기준에 의거 보상합니다.</td>
+                </tr>
+                <tr>
+                    <td>A/S 책임자와 전화번호</td>
+                    <td> 롯데ON 고객센터(1899-7000) </td>
+                </tr>
+                <tr>
+                    <td>주문후 예상 배송기간</td>
+                    <td>전국 평균 기준 배송 후 3일 이내 도착</td>
+                </tr>
+                <tr>
+                <td colspan="2">구매, 교환, 반품, 배송, 설치 등과 관련하여 추가비용, 제한조건 등의 특이사항이 있는 경우</td>
+                </tr>
+            </table>
+            <p class="notice">
+                소비자가 전자상거래등에서 소비자 보호에 관한 법률 제 17조 제1항 또는 제3항에 따라 청약철회를 하고
+                동법 제 18조 제1항 에 따라 청약철회한 물품을 판매자에게 반환하였음에도 불구 하고 결제 대금의
+                환급이 3영업일을 넘게 지연된 경우, 소비자 는 전자상거래등에서 소비자보호에 관한 법률 제18조
+                제2항 및 동법 시행령 제21조 2에 따라 지연일수에 대하여 전상법 시행령으로 정하는 이율을 곱하여
+                산정한 지연이자(“지연배상금”)를 신청할 수 있습니다. 아울러, 교환∙반품∙보증 및 결제대금의
+                환급신청은 [나의쇼핑정보]에서 하실 수 있으며, 자세한 문의는 개별 판매자에게 연락하여 주시기 바랍니다.
+            </p>
+        </article>
+
+        <!-- 상품 리뷰 내용 -->
+        <nav class="changTabBox" id="changTabBox" style="padding-bottom: 0">
+            <h1 class="btnProdReview reviewOn" onclick="changeTab()">상품 리뷰</h1>
+            <h1 class="btnProdQna" onclick="changeTab()">상품 문의</h1>
+        </nav>
+
+        <article class="review" id="prodReview" th:if="${prodReview.dtoList.size()!=0}">
+            <ul>
+                <li th:each="review : ${prodReview.dtoList}">
+                    <img th:src="@{/uploads/__${review.revThumb}__}">
+                    <div style="width: 780px;">
+                        <div>
+                            <h5 class="rating" th:text="${review.revScore}"></h5>
+                            <span th:text="${#temporals.format(review.revAddDate, 'yyyy-MM-dd')}"></span>
+                            <span th:text="${#strings.substring(review.userId, 0, 6)} + '****'"></span>
+                        </div>
+                        <h3 th:text="${product.prodName}" style="width: 300px"></h3>
+                        <p th:text="${review.revContent}" style="white-space: pre-line;"></p>
+                    </div>
+                </li>
+            </ul>
+            <div class="paging">
+                <span class="prev" th:if="${prodReview.prev}">
+                    <a th:href="@{/product/view(prodNo=${product.prodNo}, cateCode=${product.cateCode}, pg=${prodReview.start - 1})}"><&nbsp;이전</a>
+                </span>
+                <span class="num" th:each="num:${#numbers.sequence(prodReview.start, prodReview.end)}">
+                    <a th:if="${num != 0}" th:href="@{/product/view(prodNo=${product.prodNo}, cateCode=${product.cateCode}, pg=${num}, type='review')}" th:class="${num == prodReview.pg} ? 'on':''">[[${num}]]</a>
+                </span>
+                <span class="next" th:if="${prodReview.next}">
+                    <a th:href="@{/product/view(prodNo=${product.prodNo}, cateCode=${product.cateCode}, pg=${prodReview.start + 1})}">다음&nbsp;></a>
+                </span>
+            </div>
+        </article>
+        <article class="review" id="prodReview" th:if="${prodReview.dtoList.size()==0}">
+            <ul>
+                <li style="padding: 20px 0; margin-left: 350px; border: 0; font-size: 18px"> 작성된 리뷰가 없습니다. </li>
+
+            </ul>
+        </article>
+        <!-- 상품 리뷰 내용 끝 -->
+
+        <!-- 상품 문의 내용 -->
+        <article class="review" id="prodQna" style="display: none">
+            <p class="prodQnaNotice">
+                구매한 상품의 취소/반품은 마이페이지 구매내역에서 신청 가능합니다.<br>
+                상품문의 및 후기게시판을 통해 취소나 환불, 반품 등은 처리되지 않습니다.<br>
+                가격, 판매자, 교환/환불 및 배송 등 해당 상품 자체와 관련 없는 문의는 고객센터 내 1:1 문의하기를 이용해주세요.<br>
+                "해당 상품 자체"와 관계없는 글, 양도, 광고성, 욕설, 비방, 도배 등의 글은 예고 없이 이동, 노출제한, 삭제 등의 조치가 취해질 수 있습니다.<br>
+                공개 게시판이므로 전화번호, 메일 주소 등 고객님의 소중한 개인정보는 절대 남기지 말아주세요.
+            </p>
+
+            <div class="prodQnaQuestion" th:each="qna : ${prodQna.dtoList}">
+                <div class="questionHead">
+                    <p>문의</p>
+                    <span th:text="${product.prodName}" style="width: 670px"></span>
+                    <span th:text="${#strings.substring(qna.userId, 0, 6)} + '****'"></span>
+                    <span th:text="${#temporals.format(qna.prodQnaDate, 'yyyy-MM-dd')}"></span>
+                </div>
+                <div class="questionBody">
+                    <div th:text="${qna.prodQnaContent}" style="white-space: pre-line;"></div>
+                </div>
+                <!--답변-->
+                <div class="prodQnaAnswer" th:each="answer : ${qna.ProdQnaNoteList}">
+                    <div class="answerHead">
+                        <p>&#10551; 답변</p>
+                        <span th:text="${#temporals.format(answer.cQnaDate, 'yyyy-MM-dd')}"></span>
+                    </div>
+                    <div class="answerBody">
+                        <div th:text="${answer.content}" style="white-space: pre-line;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <span class="prodQnaWrite" onclick="prodQnaWrite()">상품문의하기</span>
+
+            <div class="paging">
+                <span class="prev" th:if="${prodQna.prev}">
+                    <a th:href="@{/product/view(prodNo=${product.prodNo}, cateCode=${product.cateCode}, pg=${prodQna.start - 1})}"><&nbsp;이전</a>
+                </span>
+                <span class="num" th:each="num:${#numbers.sequence(prodQna.start, prodQna.end)}">
+                    <a th:if="${num != 0}" th:href="@{/product/view(prodNo=${product.prodNo}, cateCode=${product.cateCode}, pg=${num}, type='prodQna')}" th:class="${num == prodQna.pg} ? 'on':''">[[${num}]]</a>
+                </span>
+                <span class="next" th:if="${prodQna.next}">
+                    <a th:href="@{/product/view(prodNo=${product.prodNo}, cateCode=${product.cateCode}, pg=${prodQna.start + 1})}">다음&nbsp;></a>
+                </span>
+            </div>
+        </article>
+        <!-- 상품 문의 내용 끝 -->
+
+        <!--상품 문의 모달창-->
+        <div class="prodQnaModalBack" onclick="closeQnaModal()">
+            <form th:action="@{/product/writeProdQna}" class="prodQnaModal" method="post">
+                <div>
+                    <span>상품 문의</span>
+                    <span class="closeBtn" onclick="closeQnaModal()" style="cursor: pointer">X</span>
+                </div>
+                <div>
+                    <span>문의 제목</span>
+                    <th:block th:if="${#authentication.principal != 'anonymousUser'}">
+                        <input type="hidden"  name="userId" th:value="${#authentication.principal.user.userId}">
+                    </th:block>
+                    <input type="hidden" name="prodNo" th:value="${product.prodNo}"/>
+                    <input type="hidden" name="cateCode" th:value="${product.cateCode}"/>
+                    <input type="text" name="prodQnaTitle" placeholder="문의 제목"/>
+                </div>
+                <div>
+                    <span>문의 내용</span>
+                    <textarea name="prodQnaContent" placeholder="문의 내용"></textarea>
+                </div>
+                <div>
+                    <p>비밀글 여부</p>
+                    <label>
+                        <input type="radio" name="prodQnaSecret" value="Y" checked>
+                        <span>전체공개</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="prodQnaSecret" value="N">
+                        <span>비공개</span>
+                    </label>
+                </div>
+                <input type="submit" value="문의 작성">
+            </form>
+        </div>
+
+    </section>
+    <!-- 상품 상세페이지 끝 -->
+<!--내용 끝-->
+</html>

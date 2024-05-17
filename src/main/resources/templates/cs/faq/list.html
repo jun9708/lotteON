@@ -1,0 +1,148 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/csLayout.html}">
+<!--내용 시작-->
+  <section id="cs" layout:fragment="content">
+
+<script>
+  window.onload = function (){
+    let userMap = new Map([
+      ['regi', '회원'], ['leave', '탈퇴'], ['info', '회원정보'], ['login', '로그인'],
+      ['cpregi', '등록방법'], ['cplimit', '유효기간'], ['event', '이벤트기간'], ['ejoin', '이벤트참여'],
+      ['list', '주문내역'], ['way', '결제방법'], ['payment', '결제수단'], ['oway', '주문방법'],
+      ['deldate', '배송일'], ['deldelay', '배송지연'], ['delchange', '배송지변경'], ['delcheck', '배송현황'],
+      ['return', '반품신청'], ['ocancel', '주문취소'], ['refund', '환불신청'], ['coption', '환불조건'],
+      ['tlist', '숙박시설'], ['treco', '여행지추천'], ['tway', '결제방법'], ['ttime', '비행시간'],
+      ['care', '주의사항'], ['sway', '결제방법'], ['sacc', '입금계좌'], ['sfee', '수수료']
+    ]);
+
+    // h3 태그 type 이름 영어에서 한글로 바꾸기
+    const listTypeAll = document.getElementsByClassName('listType');
+    Array.from(listTypeAll).forEach(function (listType) {
+      // userMap.get(listType.innerText); userMap의 key를 가져와서 반환 (regi를 가져와서 회원을 반환)
+      listType.innerText = userMap.get(listType.innerText);
+    })
+
+
+
+    const btnMores = document.querySelectorAll('.more > a');
+
+    const moreContentsAll = document.getElementsByClassName('moreContents');
+    Array.from(moreContentsAll).forEach(function (moreContents) {
+      moreContents.addEventListener('click', function (e){
+        e.preventDefault();
+        const button = e.target;
+        const ul = button.parentNode.parentNode; // ul태그
+        const faqListAll = ul.querySelectorAll('.faqList'); // ul태그 안에 있는 모든 faqList
+        if (button.innerText === "더보기") {
+          for (let i = 3; i < 10; i++) {
+            faqListAll[i].style.display = "block";
+            button.innerText = "접기";
+          }
+        }else {
+          for (let i = 3; i < 10; i++) {
+            faqListAll[i].style.display = "none";
+            button.innerText = "더보기";
+          }
+        }
+
+      })
+    })
+
+    function moreContents() {
+      const button = event.target; // 더보기 버튼
+      const ul = button.parentNode.parentNode; // ul태그
+      const faqListAll = ul.querySelectorAll('.faqList'); // ul태그 안에 있는 모든 faqList
+      // 현재 출력 내용
+      //const faqContents= document.getElementsByClassName('faqList');
+      // 더보기 버튼
+      //const moreBtn = document.getElementsByClassName('more');
+
+      for (let i = 3; i<10; i++) {
+        if (faqListAll[i].style.display === "none") {
+          faqListAll[i].style.display = "block";
+          button.innerText = "접기";
+        } else {
+          faqListAll[i].style.display = "none";
+          button.innerText = "더보기";
+        }
+      }
+
+
+  }// onload end
+
+
+
+
+  }
+
+
+</script>
+        <div class="faq">
+          <nav>
+            <div>
+              <p>홈<span>></span>자주묻는 질문</p>
+            </div>
+          </nav>
+          <section class="list">
+            <aside>
+              <h2>자주묻는 질문</h2>
+              <ul>
+                <li th:class="${faqCate == 'user' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='user')}">회원</a></li>
+                <li th:class="${faqCate == 'coupon' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='coupon')}">쿠폰/이벤트</a></li>
+                <li th:class="${faqCate == 'order' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='order')}">주문/결제</a></li>
+                <li th:class="${faqCate == 'delivery' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='delivery')}">배송</a></li>
+                <li th:class="${faqCate == 'cancel' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='cancel')}">취소/반품/교환</a></li>
+                <li th:class="${faqCate == 'travel' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='travel')}">여행/숙박/항공</a></li>
+                <li th:class="${faqCate == 'safe' ? 'on':''}"><a th:href="@{/cs/faq/list(faqCate='safe')}">안전거래</a></li>
+              </ul>
+            </aside>
+            <article>
+
+              <nav th:if="${faqCate == 'user'}">
+                <h1>회원</h1>
+                <h2>회원 관련 자주묻는 질문 입니다.</h2>
+              </nav>
+              <nav th:if="${faqCate == 'coupon'}">
+                <h1>쿠폰/이벤트</h1>
+                <h2>쿠폰/이벤트 관련 자주묻는 질문 입니다.</h2>
+              </nav>
+              <nav th:if="${faqCate == 'order'}">
+                <h1>주문/결제</h1>
+                <h2>주문/결제 관련 자주묻는 질문 입니다.</h2>
+              </nav>
+              <nav th:if="${faqCate == 'delivery'}">
+                <h1>배송</h1>
+                <h2>배송 관련 자주묻는 질문 입니다.</h2>
+              </nav>
+              <nav th:if="${faqCate == 'cancel'}">
+                <h1>취소/반품/교환</h1>
+                <h2>취소/반품/교환 관련 자주묻는 질문 입니다.</h2>
+              </nav>
+              <nav th:if="${faqCate == 'travel'}">
+                <h1>여행/숙박/항공</h1>
+                <h2>여행/숙박/항공 관련 자주묻는 질문 입니다.</h2>
+              </nav>
+              <nav th:if="${faqCate == 'safe'}">
+                <h1>안전거래</h1>
+                <h2>안전거래 관련 자주묻는 질문 입니다.</h2>
+              </nav>
+
+              <div th:each="map : ${list}">
+                <h3 class="listType" th:text="${map.key}"></h3>
+                <ul>
+                  <li class="faqList" th:each="value : ${map.value}">
+                    <a th:href="@{/cs/faq/view(faqNo=${value.faqNo}, faqCate=${value.faqCate})}"><span>Q.</span>[[${value.faqTitle}]]</a>
+                  </li>
+                  <li class="moreContents" style="display: block">
+                    <a href="#" style="text-align: center;">더보기</a>
+                  </li>
+                </ul>
+              </div>
+
+            </article>
+          </section>
+        </div>
+      </section>
+<!--내용 끝-->
+</html>

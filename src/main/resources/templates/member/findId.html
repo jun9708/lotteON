@@ -1,0 +1,182 @@
+<html xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{/layout/memberLayout.html}">
+<!--내용 시작-->
+	<main id="member" layout:fragment="content">
+
+		<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+		<script th:src="@{/js/util.js}"></script>
+		<script>
+			/*
+				아이디 찾기 섹션은 none으로 가려두기
+				이름과 이메일 인증 후 아이디 찾기 버튼을 클릭하면 회원의 아이디를 보여줌 (none 풀기)
+			 */
+			window.onload = function() {
+				const checkUserEmail = document.getElementById('checkUserEmail'); //인증코드 발송버튼
+				const inputEmailCode = document.getElementById('inputEmailCode'); //인증코드 입력
+				const checkCodeLabel = document.getElementById('checkCodeLabel'); //인증코드 확인필드
+				const checkEmailCode = document.getElementById('checkEmailCode'); //인증코드 확인버튼
+				const resultEmailCode = document.getElementById('resultEmailCode'); //인증코드 결과
+				const resultEmail = document.getElementById('resultEmail'); //인증코드 중복체크
+				const inputUserEmail = document.getElementById('userEmail'); //이메일 입력칸
+				const findId = document.getElementById('join'); // 아이디 찾기 버튼
+				const resultId = document.getElementById('resultId'); // 결과 아이디 영역
+				let isCheck = false;
+
+				//이메일 인증코드 발급
+				checkUserEmail.onclick = function (e) {
+					e.preventDefault();
+					resultEmail.innerText = "인증코드를 전송중입니다.";
+					resultEmail.style.color = "blue";
+
+					const value = inputUserEmail.value;
+					console.log(value);
+					//이메일 중복체크 요청
+					fetch(`/lotteon/member/findIdEmailCheck/${value}`)
+							.then(response => response.json())
+							.then(data => {
+								if (data.result === 0) {
+									// 이메일이 존재하는 경우
+									resultEmail.innerText = "인증코드가 전송되었습니다.";
+									resultEmail.style.color = "green";
+									inputUserEmail.style.border = "1px solid green";
+									checkCodeLabel.style.display = 'block';
+								} else {
+									// 이메일이 존재하지 않는 경우
+									resultEmail.innerText = "존재하지않는 이메일입니다.";
+									resultEmail.style.color = "red";
+									inputUserEmail.style.border = "1px solid red";
+								}
+							})
+							.catch(error => {
+								console.log('Error', error);
+							});
+				}
+
+				// 인증번호 인증
+				checkEmailCode.onclick = function (e) {
+					e.preventDefault();
+
+					const inputCode = inputEmailCode.value;
+					console.log(inputCode)
+
+					fetch(`/lotteon/member/checkEmailCode/${inputCode}`)
+							.then(response => response.json())
+							.then(data => {
+								console.log(data);
+								if (data.result > 0) {
+									resultEmailCode.innerText = "인증번호가 일치하지 않습니다.";
+									resultEmailCode.style.color = "red";
+									inputEmailCode.style.border = "1px solid red";
+								} else {
+									resultEmailCode.innerText = "인증번호가 인증되었습니다.";
+									resultEmailCode.style.color = "green";
+									inputEmailCode.style.border = "1px solid green";
+									isCheck = true;
+								}
+							})
+							.catch(err => console.log(err))
+				}
+
+				// 아이디 찾기
+				findId.onclick = function (e) {
+					if (!isCheck) {
+						alert("이메일 인증을 먼저 진행해주세요.");
+						return;
+					}
+					e.preventDefault();
+					const resultIdAll = document.querySelectorAll('.resultIdAll');
+					resultIdAll.forEach(all =>{
+						all.style.display = "block";
+					})
+
+					const userName = document.getElementById('userName').value;
+					const userEmail = document.getElementById('userEmail').value;
+					const code = document.getElementById('inputEmailCode').value;
+
+					fetch(`/lotteon/member/findId`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({
+							"userName": userName,
+							"userEmail": userEmail,
+							"code": code
+						})
+					})
+							.then(response => response.json())
+							.then(data => {
+								console.log(data);
+								if (data.userId) {
+									resultId.innerText = `아이디는 ${data.userId} 입니다.`;
+									resultId.style.color = "green";
+								} else {
+									resultId.innerText = `아이디 찾기에 실패했습니다.`;
+									resultId.style.color = "red";
+								}
+							})
+							.catch(err => console.log(err));
+				}
+
+			}
+
+		</script>
+
+		<div class="register">
+			<nav>
+				<h1>아이디 찾기</h1>
+			</nav>
+			<form action="#" name="registerUserForm" method="POST">
+				<section>
+					<table>
+						<caption>사용자 인증 <br><br>
+							<span>회원님의 이름과 이메일 인증을 통해 아이디를 찾을 수 있습니다.</span>
+						</caption>
+						<tr>
+							<th><span class="essential" style="width: 100px">*</span>이름</th>
+							<td>
+								<input type="text" id="userName" name="userName" placeholder="이름을 입력" required />
+								<span id="resultName" class="resultText"></span>
+								<p class="resultName"></p>
+							</td>
+						</tr>
+						<tr>
+							<th><span class="essential">*</span>EMAIL</th>
+							<td>
+								<!--이메일 입력 필드-->
+								<input type="email" id="userEmail" name="userEmail" placeholder="이메일 입력" required style="display: inline-block"/>
+								<button id="checkUserEmail">인증코드발송</button>
+								<span id="resultEmail" class="resultText"></span>
+
+								<!--이메일 인증코드 필드-->
+								<label id="checkCodeLabel" style="width: 100%; display: none;">
+									<input type="text" id="inputEmailCode" name="inputEmailCode" placeholder="인증코드 입력" required style="display: inline-block"/>
+									<button id="checkEmailCode">인증코드확인</button>
+									<span id="resultEmailCode" class="resultText"></span>
+								</label>
+							</td>
+						</tr>
+					</table>
+				</section>
+
+				<section class="resultIdAll" style="display: none;">
+					<table>
+						<caption>아이디 찾기</caption>
+						<tr>
+							<th><span class="essential">*</span>아이디</th>
+							<td>
+								<span id="resultId" class="resultId">회원님의 아이디는 ㅇㅇㅇ 입니다.</span>
+							</td>
+						</tr>
+					</table>
+				</section>
+				<div style="text-align: center">
+					<a type="submit" class="join findBtn" id="join">아이디찾기</a>
+					<a th:href="@{/member/findPw}" class="join2 findBtn" id="join2"> 비밀번호 찾기</a>
+				</div>
+			</form>
+		</div>
+	</main>
+<!--내용 끝-->
+</html>

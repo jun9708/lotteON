@@ -1,0 +1,50 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/companyLayout.html}">
+<!--내용 시작-->
+<div layout:fragment="content">
+    <div class="headContent" >
+        <div class="logoBox">
+            <a th:href="@{/}"><img th:src="@{/images/header_logo.png}" alt="로고" style="width: 185px;"/></a>
+        </div>
+
+        <div>
+            <a th:href="@{/company/index}">HOME</a>
+            <a th:href="@{/company/culture}">기업문화</a>
+            <a th:href="@{/company/story}">소식과 이야기</a>
+            <a th:href="@{/company/recruit}">채용</a>
+            <a class="tabOn" th:href="@{/company/media}">미디어</a>
+        </div>
+    </div>
+    </header>
+
+        <main>
+
+            <div class="contentHead" style="margin-top: 20px; margin-bottom: 0">미디어 세상 속 롯데ON 을 소개합니다!</div>
+
+            <div style="font-size: 18px; padding-left: 60px;">더 다양한 LotteON 영상을 소개합니다.</div>
+
+            <div class="mediaVideo">
+                <iframe width="450" height="253" src="https://www.youtube.com/embed/Q4_2Vkj32X4?si=qdhjk1yzPPdowfWN" title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                <div>
+                    <p>#[롯데ON] 24년 첫 번째 롯데ON세상</p>
+                    <span>#롯데월드타워에 빨간 불이 켜지면 선착순 무적쿠폰이 찾아온다!</span>
+                </div>
+            </div>
+
+            <div class="mediaVideo">
+                <iframe width="450" height="253" src="https://www.youtube.com/embed/HLlLVVYkTMg?si=23lcHATXZDeunRor" title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                <div>
+                    <p>#[롯데ON] Shopping Fantasy ON Making Film (Part.2)</p>
+                    <span>#롯데ON의 뮤즈, ✨이효리✨와 함께한 광고 촬영 현장 전격 대공개!</span>
+                </div>
+            </div>
+
+
+        </main>
+    </div>
+</html>

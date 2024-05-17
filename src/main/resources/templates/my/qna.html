@@ -1,0 +1,277 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/myLayout.html}">
+<!--내용 시작-->
+    <div id="my" layout:fragment="content">
+
+        <script th:inline="javascript">
+            // 문의 유형 Map
+            const qnaCateType = {
+                "user" : "회원", "coupon" : "쿠폰/이벤트", "order" : "주문/결제", "delivery" : "배송", "cancel" : "취소/반품/환불", "travel" : "여행/숙박/항공", "safe" : "안전결제",
+                "regi" : "가입", "leave" : "탈퇴", "info" : "회원정보", "login" : "로그인",
+                "cpregi" : "등록방법", "cplimit" : "유효기간", "event" : "이벤트기간", "ejoin" : "이벤트참여",
+                "list" : "주문내역", "way" : "결제방법", "payment" : "결제수단", "oway" : "주문방법",
+                "deldate" : "배송일", "deldelay" : "배송지연", "delchange" : "배송지변경", "delcheck" : "배송현황",
+                "return" : "반품신청", "ocancel" : "주문취소", "refund" : "환불신청", "coption" : "환불조건",
+                "tlist" : "숙박시설", "treco" : "여행지추천", "tway" : "결제방법", "ttime" : "비행시간",
+                "care" : "주의사항", "sway" : "결제방법", "sacc" : "입금계좌", "sfee" : "수수료"
+            }
+            window.onload = function () {
+                qnaCateTypeMatch();
+                highlight();
+            }
+            // 문의 유형 영어 -> 한글
+            function qnaCateTypeMatch() {
+                const cateQnaRow = document.getElementsByClassName('cateQnaRow');
+                Array.from(cateQnaRow).forEach(function (eachRow) {
+                    let cateType = eachRow.querySelectorAll('div')[1];
+                    if(cateType.innerText !== "문의유형") {
+                        let type = cateType.className;
+                        let cate = cateType.innerText;
+                        let qnaCate = qnaCateType[type];
+                        let qnaType = qnaCateType[cate];
+                        cateType.innerText = qnaCate + " - " + qnaType;
+                    }
+                })
+            }
+
+            function selectProdQna(event){
+                const content = event.target;
+                const contentBox = content.parentNode;
+                const qnAHtml = contentBox.querySelector(".qnaNo");
+                const prodHtml = contentBox.querySelector(".prodNo");
+                const qnAValue = qnAHtml.value;
+                const prodValue = prodHtml.value;
+                console.log("qnAValue"+qnAValue);
+
+                if (qnAValue!=null){
+                    const jsonData = {
+                        prodQnaNo : qnAValue,
+                        prodNo : prodValue
+                    };
+                    fetchPost(`/lotteon/my/selectProdQna`, jsonData)
+                        .then(data=>{
+                            if (data!=null){
+                                console.log(data);
+
+                                const prodName = document.getElementById('prodName');
+                                const prodImg = document.getElementById('prodImg');
+                                const prodQnaNote = document.getElementById('prodQnaNote');
+
+                                prodName.innerText = data.prodName;
+                                prodImg.src = "/lotteon/uploads/"+data.thumb190;
+                                prodQnaNote.innerText = data.content;
+
+                                prodQnaModalControl();
+                            }else {
+                                alert("답변 대기중 입니다.");
+                            }
+
+
+                        })
+                        .catch();
+                }
+
+            }
+
+            function prodQnaModalControl() {
+                const deliveryPopup = document.getElementsByClassName('deliveryPopup')[0];
+                const prodQnaModalPopup = document.getElementsByClassName('prodQnaModal')[0];
+                if (prodQnaModalPopup.style.display === "flex"){
+                    prodQnaModalPopup.style.display = "none";
+                }else {
+                    prodQnaModalPopup.style.display = "flex";
+                }
+                deliveryPopup.style.display = "none";
+            }
+
+            function closeControlModal() {
+                const prodQnaModalPopup = document.getElementsByClassName('prodQnaModal')[0];
+                prodQnaModalPopup.style.display = "none";
+                let prodName = document.getElementById('prodName');
+                let prodImg = document.getElementById('prodImg');
+                let prodQnaNote = document.getElementById('prodQnaNote');
+                prodName = "";
+                prodImg = "";
+                prodQnaNote = "";
+            }
+
+
+        </script>
+
+        <!--마이페이지 상단 회원 정보-->
+        <nav>
+            <div>
+                <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}"><img th:src="@{/images/my/my_logo.jpg}" alt="나의쇼핑정보"></a>
+
+                <div class="UserInfo">
+                    <p th:text="${#authentication.principal.user.userName}"></p>
+                    <p th:text="${#authentication.principal.user.userGrade}"></p>
+                </div>
+                <ol>
+                    <li><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">주문·배송<span class="delivery" th:text="${session.countOrder}"></span></a></li>
+                    <li><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">할인쿠폰<span class="coupon" th:text="${session.couponCount}"></span></a></li>
+                    <li><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트<span class="point" th:text="${#numbers.formatInteger(session.pointBalance,3,'COMMA')}"></span></a></li>
+                    <li><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의내역<span class="qna" th:text="${session.myQnaCount}"></span></a></li>
+                </ol>
+            </div>
+        </nav>
+
+        <div class="qna">
+            <!--마이페이지 사이드바-->
+            <ul class="myCate">
+                <span class="menu_else"></span>
+                <li class=""><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">전체주문내역</a></li>
+                <li class=""><a th:href="@{/my/wish(userId=${#authentication.principal.user.userId})}">관심상품</a></li>
+                <li class=""><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트내역</a></li>
+                <li class=""><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">쿠폰</a></li>
+                <li class=""><a th:href="@{/my/review(userId=${#authentication.principal.user.userId})}">나의리뷰</a></li>
+                <li class=""><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의하기</a></li>
+                <li class=""><a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}">나의설정</a></li>
+            </ul>
+
+            <section>
+                <th:block th:each="banner : ${banMyOrderList}">
+                    <a th:href="@{http://__${banner.banLink}__}"><img th:src="@{/uploads/__${banner.banImgName}__}"
+                                                                      alt="패션, 타운 하나로 끝" class="banner"></a>
+                </th:block>
+                <article>
+                    <!--문의 카테고리바-->
+                    <div class="myQnaNav">
+                        <a th:class="${selectMyQna} ? 'navOn' : ''" th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">고객문의</a>
+                        <a th:class="${selectMyProdQna} ? 'navOn' : ''" th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='prodqna')}">상품문의</a>
+                    </div>
+
+                    <!--고객문의 테이블-->
+                    <!--고객문의 없을때-->
+                    <th:block th:if="${selectMyQna} != null">
+                    <div class="myTableStyle" th:if="${selectMyQna.dtoList.size() == 0}">
+                        <div class="myTableHead myQnaRow">
+                            <div>번호</div>
+                            <div>문의유형</div>
+                            <div>제목</div>
+                            <div>작성일</div>
+                            <div>상태</div>
+                        </div>
+                        <div class="myTableBody myQnaRow">
+                            <div style="border: 0; width: 100%; text-align: -webkit-center;">
+                                <p style="font-size : 18px;" >문의내역이 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                    </th:block>
+
+                    <!--고객문의 있을때-->
+                    <th:block th:if="${selectMyQna} != null">
+                    <div class="myTableStyle" th:if="${selectMyQna.dtoList.size()} > 0">
+                        <div class="myTableHead myQnaRow">
+                            <div>번호</div>
+                            <div>문의유형</div>
+                            <div>제목</div>
+                            <div>작성일</div>
+                            <div>상태</div>
+                        </div>
+                        <div class="myTableBody myQnaRow cateQnaRow" th:each="qna, index : ${selectMyQna.dtoList}">
+                            <div th:text="${selectMyQna.startNo - index.index}"></div>
+                            <div th:class="${qna.qnaType}">[[${qna.qnaCate}]]</div>
+                            <div><a th:href="@{/cs/qna/view(qnaNo=${qna.qnaNo})}" th:text="${qna.qnaContent}"></a></div>
+                            <div th:text="${#temporals.format(qna.qnaDate, 'yyyy-MM-dd')}"></div>
+                            <div th:text="${qna.qnaStatus}"></div>
+                        </div>
+
+                        <p class="page">
+                            <a th:if="${selectMyQna.prev && selectMyQna.cate == null}"
+                               th:href="@{/my/qna(pg=${selectMyQna.start -1}, userId=${#authentication.principal.user.userId})}">이전</a>
+                            <a th:if="${selectMyQna.prev && selectMyQna.cate != null}"
+                               th:href="@{/my/qna(pg=${selectMyQna.start -1}, type=${selectMyQna.type}, keyword=${selectMyQna.keyword}, userId=${#authentication.principal.user.userId})}">이전</a>
+
+                            <th:block th:each="num:${#numbers.sequence(selectMyQna.start, selectMyQna.end)}">
+                                <a class="pageNum" th:if="${selectMyQna.cate == null}" th:href="@{/my/qna(pg=${num}, userId=${#authentication.principal.user.userId})}" th:class="${num == selectMyQna} ? 'on' : ''">[[${num}]]</a>
+                                <a class="pageNum" th:if="${selectMyQna.cate != null}" th:href="@{/my/qna(pg=${num}, type=${selectMyQna.type}, cate=${selectMyQna.cate}, keyword=${selectMyQna.keyword}, userId=${#authentication.principal.user.userId})}" th:class="${num == selectMyQna.pg} ? 'on' : ''">[[${num}]]</a>
+                            </th:block>
+
+                            <a th:if="${selectMyQna.next && selectMyQna.cate == null}" th:href="@{/my/qna(pg=${selectMyQna.end + 1}, userId=${#authentication.principal.user.userId})}">다음</a>
+                            <a th:if="${selectMyQna.next && selectMyQna.cate != null}" th:href="@{/my/qna(pg=${selectMyQna.end + 1}, type=${selectMyQna.type}, keyword=${selectMyQna.keyword}, userId=${#authentication.principal.user.userId})}">다음</a>
+                        </p>
+                    </div>
+                    </th:block>
+
+                    <!--상품문의 테이블-->
+                    <!--상품문의 없을때-->
+                    <th:block th:if="${selectMyProdQna} != null">
+                        <div class="myTableStyle" th:if="${selectMyProdQna.dtoList.size()} == 0">
+                            <div class="myTableHead myQnaRow">
+                                <div>번호</div>
+                                <div>문의유형</div>
+                                <div>제목</div>
+                                <div>작성일</div>
+                                <div>상태</div>
+                            </div>
+                            <div class="myTableBody myQnaRow">
+                                <div style="border: 0; width: 100%; text-align: -webkit-center;">
+                                    <p style="font-size : 18px;" >상품문의내역이 없습니다.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+
+                    <!--상품문의 있을때-->
+                    <th:block th:if="${selectMyProdQna} != null">
+                    <div class="myTableStyle" th:if="${selectMyProdQna.dtoList.size()} > 0">
+                        <div class="myTableHead myQnaRow">
+                            <div>번호</div>
+                            <div>문의유형</div>
+                            <div>제목</div>
+                            <div>작성일</div>
+                            <div>상태</div>
+                        </div>
+                        <div class="myTableBody myQnaRow" th:each="prodqna, index : ${selectMyProdQna.dtoList}">
+                            <div th:text="${selectMyProdQna.startNo - index.index}"></div>
+                            <div>제품문의</div>
+                            <div><a href="#" onclick="selectProdQna(event)" class="qna-link" th:text="${prodqna.prodQnaContent}"></a>
+                                <input class="qnaNo" type="hidden" th:value="${prodqna.prodQnaNo}">
+                                <input class="prodNo" type="hidden" th:value="${prodqna.prodNo}">
+                            </div>
+                            <div th:text="${#temporals.format(prodqna.prodQnaDate, 'yyyy-MM-dd')}"></div>
+                            <div th:text="${prodqna.prodQnaStatus}"></div>
+
+                        </div>
+
+                        <p class="page">
+                            <a th:if="${selectMyProdQna.prev && selectMyProdQna.cate == null}" th:href="@{/my/qna(pg=${selectMyProdQna.start -1}, userId=${#authentication.principal.user.userId})}">이전</a>
+                            <a th:if="${selectMyProdQna.prev && selectMyProdQna.cate != null}" th:href="@{/my/qna(pg=${selectMyProdQna.start -1}, type=${selectMyProdQna.type}, keyword=${selectMyProdQna.keyword}, userId=${#authentication.principal.user.userId})}">이전</a>
+
+                            <th:block th:each="num:${#numbers.sequence(selectMyProdQna.start, selectMyProdQna.end)}">
+                                <a class="pageNum" th:if="${selectMyProdQna.cate == null}" th:href="@{/my/qna(pg=${num}, userId=${#authentication.principal.user.userId})}" th:class="${num == selectMyProdQna} ? 'on' : ''">[[${num}]]</a>
+                                <a class="pageNum" th:if="${selectMyProdQna.cate != null}" th:href="@{/my/qna(pg=${num}, type=${selectMyProdQna.type}, cate=${selectMyProdQna.cate}, keyword=${selectMyProdQna.keyword}, userId=${#authentication.principal.user.userId})}" th:class="${num == selectMyProdQna.pg} ? 'on' : ''">[[${num}]]</a>
+                            </th:block>
+
+                            <a th:if="${selectMyProdQna.next && selectMyProdQna.cate == null}" th:href="@{/my/qna(pg=${selectMyProdQna.end + 1}, userId=${#authentication.principal.user.userId})}">다음</a>
+                            <a th:if="${selectMyProdQna.next && selectMyProdQna.cate != null}" th:href="@{/my/qna(pg=${selectMyProdQna.end + 1}, type=${selectMyProdQna.type}, keyword=${selectMyProdQna.keyword}, userId=${#authentication.principal.user.userId})}">다음</a>
+                        </p>
+                    </div>
+                    </th:block>
+                </article>
+
+                <div class="popupStyle prodQnaModal" id="userGrade" style="flex-direction: column">
+                    <div style="display:flex; justify-content: space-between">
+                        <p class="qnaTitle">상품 문의</p>
+                        <p style="width: 40px; cursor: pointer" onclick="closeControlModal()">닫기</p>
+                    </div>
+                    <div style="display:flex;">
+                        <p style="padding-right: 10px; border-right: solid 1px #c4c4c4" class="qnaTitle">상품</p><br>
+                        <img style="padding-left: 10px" id="prodImg" src="">
+                        <div id="prodName">이름</div>
+                    </div>
+                    <div style="display:flex;">
+                        <p style="padding-right: 10px; border-right: solid 1px #c4c4c4" class="qnaTitle">문의 <br> 답변</p>
+                        <p style="padding-left: 10px" id="prodQnaNote">내용입니다.</p>
+                    </div>
+                </div>
+
+            </section>
+
+        </div>
+    </div>
+<!--내용 끝-->
+</html>

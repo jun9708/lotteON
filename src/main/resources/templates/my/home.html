@@ -1,0 +1,498 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/myLayout.html}">
+<!--내용 시작-->
+    <div id="my" layout:fragment="content">
+
+        <script th:inline="javascript">
+            // 문의 유형 Map
+            const qnaCateType = {
+                "user" : "회원", "coupon" : "쿠폰/이벤트", "order" : "주문/결제", "delivery" : "배송", "cancel" : "취소/반품/환불", "travel" : "여행/숙박/항공", "safe" : "안전결제",
+                "regi" : "가입", "leave" : "탈퇴", "info" : "회원정보", "login" : "로그인",
+                "cpregi" : "등록방법", "cplimit" : "유효기간", "event" : "이벤트기간", "ejoin" : "이벤트참여",
+                "list" : "주문내역", "way" : "결제방법", "payment" : "결제수단", "oway" : "주문방법",
+                "deldate" : "배송일", "deldelay" : "배송지연", "delchange" : "배송지변경", "delcheck" : "배송현황",
+                "return" : "반품신청", "ocancel" : "주문취소", "refund" : "환불신청", "coption" : "환불조건",
+                "tlist" : "숙박시설", "treco" : "여행지추천", "tway" : "결제방법", "ttime" : "비행시간",
+                "care" : "주의사항", "sway" : "결제방법", "sacc" : "입금계좌", "sfee" : "수수료"
+            }
+            // 문의 유형 영어 -> 한글
+            function qnaCateTypeMatch() {
+                const myQnaRow = document.getElementsByClassName('myQnaRow');
+                Array.from(myQnaRow).forEach(function (eachRow) {
+                    let cateType = eachRow.querySelectorAll('div')[1];
+                    if(cateType.innerText !== "문의유형") {
+                        let type = cateType.className;
+                        let cate = cateType.innerText;
+                        let qnaCate = qnaCateType[type];
+                        let qnaType = qnaCateType[cate];
+                        cateType.innerText = qnaCate + " - " + qnaType;
+                    }
+                })
+            }
+
+            // 상품평 쓰기 박스로 이름과 번호 전달하기
+            function moveProdData() {
+                const button = event.target; // 클릭한 버튼
+                const confirm = button.parentNode; // 버튼의 부모
+                const myOrderRow = confirm.parentNode // 버튼의 부모의 부모
+                const myOrderInfo = myOrderRow.querySelector('.myOrderInfo'); // 할아버지의 둘째
+                const prodName = myOrderInfo.querySelector('.InfoProdName'); // 상품 이름
+                const detailNo = button.getAttribute('data-detailNo'); // 상품 번호
+                const prodNo = button.id; // 상품 번호
+                const popReview = document.getElementById('popReview'); // 상품평쓰기 창
+                const productName = popReview.querySelector('.productName');
+                const productNo = popReview.querySelector('.productNo');
+                const prodDetailNo = popReview.querySelector('.detailNo');
+
+                productName.innerText = prodName.innerText;
+                productNo.value = prodNo;
+                prodDetailNo.value = detailNo;
+            }
+
+
+            // 리뷰 제출 버튼
+            function btnReviewSubmit() {
+                const reviewForm = document.getElementsByClassName('reviewForm')[0]; // 상품평쓰기 창
+                const popReview = document.getElementById('popReview'); // 상품평쓰기 창
+                const revScore = popReview.querySelector('.revScore').value;
+                const revContent = popReview.querySelector('#revContent').value;
+                const revThumb = popReview.querySelector('#revThumb').value;
+                console.log(revScore)
+                console.log(revContent)
+                console.log(revThumb)
+                if (revScore != "" && revContent != "" && revThumb != "") {
+                    reviewForm.submit();
+                }else{
+                    alert("항목을 빠짐없이 입력해주세요.");
+                }
+            }
+
+           window.onload = function () {
+               highlight();
+               qnaCateTypeMatch();
+               /* 리뷰 작성 별 */
+               const stars = document.querySelectorAll('.star');
+               stars.forEach(star => {
+                   star.addEventListener('mouseover', function() {
+                       const value = this.getAttribute('data-value');
+                       highlightStars(value);
+                   });
+
+                   star.addEventListener('mouseleave', function() {
+                       const ratedValue = document.querySelector('.ratingValue').getAttribute('data-rated');
+                       highlightStars(ratedValue);
+                   });
+
+                   star.addEventListener('click', function() {
+                       const value = this.getAttribute('data-value');
+                       document.querySelector('.ratingValue').setAttribute('data-rated', value);
+                       document.querySelector('.revScore').value = value;
+                       highlightStars(value);
+                   });
+               });
+
+               function highlightStars(value) {
+                   stars.forEach(star => {
+                       if (star.getAttribute('data-value') <= value) {
+                           star.classList.add('clicked');
+                       } else {
+                           star.classList.remove('clicked');
+                       }
+                   });
+               }
+
+               // Review - 별점
+               let rating = document.getElementsByClassName("rating");
+               Array.from(rating).forEach(function (element) {
+                   const revScore = parseInt(element.innerText);
+                   switch (revScore){
+                       case 1:
+                           element.classList.add('star1');
+                           break;
+                       case 2:
+                           element.classList.add('star2');
+                           break;
+                       case 3:
+                           element.classList.add('star3');
+                           break;
+                       case 4:
+                           element.classList.add('star4');
+                           break;
+                       case 5:
+                           element.classList.add('star5');
+                           break;
+                   }
+               });
+           }
+
+           //changePoint 사용일때 - 출력
+            const changePoint = document.getElementById("changePoint");
+
+            // 제품 상세 모달 정보 조회
+            function orderDetailModal() {
+                const button = event.target;
+                const orderNo = button.innerText;
+
+                fetch(`/lotteon/my/home/orderDetailCheck/${orderNo}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const orderDTOs = data.orderDetailDTOList;
+                        const orderInfo = data.orderNoInfo[0];
+                        const popOrder = document.getElementById('popOrder');
+                        const orderUserName = document.getElementById('orderUserName')
+                        const orderUserHp = document.getElementById('orderUserHp')
+                        const orderUserDel = document.getElementById('orderUserDel')
+                        const orderUserMemo = document.getElementById('orderUserMemo')
+
+                        orderUserName.innerText = orderInfo.orderReceiver;
+                        orderUserHp.innerText = orderInfo.orderHp;
+                        orderUserDel.innerText = orderInfo.orderAddr;
+                        if (orderInfo.orderMemo === "") {
+                            orderUserMemo.innerText = "배송 메모가 없습니다."
+                        }else {
+                            orderUserMemo.innerText = orderInfo.orderMemo;
+                        }
+                    })
+                    .catch(err => console.log(err))
+            }
+
+
+
+            //수취인확인 버튼 클릭
+            function checkComplete(){
+                const button = event.target; // 클릭한 버튼
+                const popReceive = document.getElementById('popReceive'); // 상품평쓰기 창
+                const prodDetailNo = popReceive.querySelector('.detailNo');
+                prodDetailNo.value = button.id;
+            }
+
+            // 수취확인
+            function orderReceiveUpdate() {
+                const popReceive = document.getElementById('popReceive');
+                const detailNo = popReceive.querySelector('.detailNo').value;
+                const userId = document.getElementsByClassName('userId')[0].value;
+
+                fetch(`/lotteon/my/orderReceive/${detailNo}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        if (data.result > 0) {
+                            window.location.href = "/lotteon/my/home?userId="+userId;
+                        }else {
+                            alert("실패했습니다.");
+                        }
+                    })
+                    .catch(err => console.log(err))
+            }
+
+            // 상품 문의 작성 버튼
+            function writeProdQna() {
+                const button = event.target; // 클릭한 버튼
+                const popQuestion = document.getElementById('popQuestion'); // 상품평쓰기 창
+                const userId = document.getElementsByClassName('userId')[0].value;
+                const prodNoTag = popQuestion.querySelector('.prodNo');
+                const userIdTag = popQuestion.querySelector('.userId');
+                prodNoTag.value = button.id;
+                userIdTag.value = userId;
+            }
+
+            //seller 정보 보내기
+            function myHomeSellerSelect(){
+                const prodSeller = document.getElementById('prodSeller').value;
+
+                fetch(`/lotteon/my/sellerCheck/${prodSeller}`)
+                    .then(response => {
+                        console.log(response);
+
+                        if (response.ok) {
+                            // 성공
+                        } else {
+                            // 실패
+                        }
+
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log(data);
+
+                        if (data.result != null) {
+                            // 성공
+                            const sellerGrade = document.getElementById('sellerGrade');
+                            sellerGrade.innerText = data.result.sellerGrade;
+
+                            const sellerCompany = document.getElementById('sellerCompany');
+                            sellerCompany.innerText = data.result.company;
+
+                            const sellerName = document.getElementById('sellerName');
+                            sellerName.innerText = data.result.sellerName;
+
+                            const sellerHp = document.getElementById('sellerHp');
+                            sellerHp.innerText = data.result.sellerHp;
+
+                            const sellerFax = document.getElementById('sellerFax');
+                            sellerFax.innerText = data.result.fax;
+
+                            const sellerBusiness = document.getElementById('sellerBusiness')
+                            sellerBusiness.innerText = data.result.businessNum;
+
+
+                        }else {
+                            // 실패
+                        }
+
+                    })
+                    .catch(err => console.log(err));
+            }
+
+        </script>
+        <!--마이페이지 상단 회원 정보-->
+        <nav>
+            <div>
+                <a th:href="@{/my/home(userId=${#authentication.principal.user.userId})}"><img th:src="@{/images/my/my_logo.jpg}" alt="나의쇼핑정보"></a>
+
+                <div class="UserInfo">
+                    <p th:text="${#authentication.principal.user.userName}"></p>
+                    <p th:text="${#authentication.principal.user.userGrade}"></p>
+                    <input type="hidden" class="userId" th:value="${#authentication.principal.user.userId}">
+                </div>
+                <ol>
+                    <li><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">주문·배송<span class="delivery" th:text="${session.countOrder}"></span></a></li>
+                    <li><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">할인쿠폰<span class="coupon" th:text="${session.couponCount}"></span></a></li>
+                    <li><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트<span class="point" th:text="${#numbers.formatInteger(session.pointBalance,3,'COMMA')}"></span></a></li>
+                    <li><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의내역<span class="qna" th:text="${session.myQnaCount}"></span></a></li>
+                </ol>
+            </div>
+        </nav>
+        <div class="home">
+            <!--마이페이지 사이드바-->
+            <ul class="myCate">
+                <span class="menu_else"></span>
+                <li class=""><a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}">전체주문내역</a></li>
+                <li class=""><a th:href="@{/my/wish(userId=${#authentication.principal.user.userId})}">관심상품</a></li>
+                <li class=""><a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}">포인트내역</a></li>
+                <li class=""><a th:href="@{/my/coupon(userId=${#authentication.principal.user.userId})}">쿠폰</a></li>
+                <li class=""><a th:href="@{/my/review(userId=${#authentication.principal.user.userId})}">나의리뷰</a></li>
+                <li class=""><a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}">문의하기</a></li>
+                <li class=""><a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}">나의설정</a></li>
+            </ul>
+
+            <section>
+                <th:block th:each="banner : ${banMyOrderList}" >
+                    <a th:href="@{http://__${banner.banLink}__}"><img th:src="@{/uploads/__${banner.banImgName}__}" alt="패션, 타운 하나로 끝" class="banner"></a>
+                </th:block>
+
+                <!--최근주문내역-->
+                <article class="latest" >
+                    <h3>최근주문내역</h3>
+                    <a th:href="@{/my/order(userId=${#authentication.principal.user.userId})}" class="more">더보기</a>
+                    <!--내역이 없을때-->
+                    <div th:if="${myOrder.size()} == 0" class="myOrderList">
+                        <div class="orderByCompany latest">
+                            <div class="myOrderRow" style="border: 1px solid #aaa">
+                                <p style="font-size : 18px">🛒주문내역이 없습니다.🛒</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!--내역이 있을때-->
+                    <div class="myOrderList" th:if="${myOrder.size()} > 0">
+                        <div class="orderByCompany latest" th:each="linkedMap : ${myOrder}">
+                            <div class="myOrderTitle">
+                                <p th:text="${linkedMap.value.get(0).detailDate}"></p>
+                                <p class="orderNo">주문번호<span th:text="${linkedMap.key}" onclick="orderDetailModal()" style="cursor: pointer"></span></p>
+                                <p>
+                                    <img th:src="@{/images/icon-arrow-top.png}" onclick="accordionBtn()"/>
+                                </p>
+                            </div>
+                            <div class="myOrderRow" th:each="orderList : ${linkedMap.value}">
+                                <div><img th:src="@{/uploads/__${orderList.thumb190}__}"></div>
+                                <div class="myOrderInfo">
+                                    <p class="company" th:text="${orderList.prodCompany}" onclick="myHomeSellerSelect()" style="cursor: pointer"></p>
+                                    <p class="InfoProdName" th:text="${orderList.prodName}"></p>
+                                    <p th:text="${orderList.count}"></p>
+                                    <p th:text="${#numbers.formatInteger(orderList.detailPrice,3,'COMMA')}"></p>
+                                    <input id="prodSeller" type="hidden" th:value="${orderList.prodSeller}"/>
+                                </div>
+                                <div th:text="${orderList.detailStatus}"></div>
+                                <div class="confirm">
+                                    <span class="receive" onclick="checkComplete()" th:id="${orderList.detailNo}">수취확인</span>
+                                    <span class="review" onclick="moveProdData()" th:id="${orderList.prodNo}" th:data-detailNo="${orderList.detailNo}">상품평쓰기</span>
+                                    <span>반품신청</span>
+                                    <span class="btnQuestion" onclick="writeProdQna()" th:id="${orderList.prodNo}">문의하기</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!--포인트적립내역-->
+                <article class="point">
+                    <h3>포인트적립내역</h3>
+                    <a th:href="@{/my/point(userId=${#authentication.principal.user.userId})}" class="more">더보기</a>
+
+                    <!--내역이 없을떄-->
+                    <div class="PointList" th:if="${myPoint.size()} == 0" >
+                        <div>
+                            <div>날짜</div>
+                            <div>구분</div>
+                            <div>적립금액</div>
+                            <div>비고</div>
+                        </div>
+                        <div style="justify-content: center;">
+                            <div style="border: 0;">
+                                <p style="font-size : 18px;" >포인트내역이 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!--내역이 있을떄-->
+                    <div class="PointList" th:if="${myPoint.size()} > 0">
+                        <div>
+                            <div>날짜</div>
+                            <div>구분</div>
+                            <div>적립금액</div>
+                            <div>비고</div>
+                        </div>
+                        <div th:each="point : ${myPoint}">
+                            <div th:text="${#strings.substring(point.changeDate, 0, 10)}"></div>
+                            <div id="changeType" th:text="${point.changeType}"></div>
+                            <div id="changePoint" class="pointAfter">
+                                <span th:if="${point.changeType == '사용'}"></span>
+                                <span th:text="${#numbers.formatInteger(point.changePoint, 3, 'COMMA')}" style="font-size: 16px"></span>
+                            </div>
+                            <div th:text="${point.changeCode}"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <!--상품평-->
+                <article class="review">
+                    <h3>상품평</h3>
+                    <a th:href="@{/my/review(userId=${#authentication.principal.user.userId})}" class="more">더보기</a>
+                    <!--상품평 없을때-->
+                    <div class="myTableStyle" th:if="${myReviewPage.dtoList.size()} == 0">
+                        <div class="myTableHead myReviewRow">
+                            <div>번호</div>
+                            <div>이미지</div>
+                            <div>상품명</div>
+                            <div>내용</div>
+                            <div>평점</div>
+                            <div>작성일</div>
+                        </div>
+                        <div class="myTableBody myReviewRow">
+                                <div style="border: 0; width: 100%; text-align: -webkit-center;">
+                                    <p style="font-size : 18px;" >작성한 리뷰가 없습니다.</p>
+                                </div>
+                        </div>
+                    </div>
+
+
+                    <!--상품평 있을때-->
+                    <div class="myTableStyle">
+                        <div class="myTableHead myReviewRow" th:if="${myReviewPage.dtoList.size()} > 0">
+                            <div>번호</div>
+                            <div>이미지</div>
+                            <div>상품명</div>
+                            <div>내용</div>
+                            <div>평점</div>
+                            <div>작성일</div>
+                        </div>
+                        <div class="myTableBody myReviewRow" th:each="eachReviewPage : ${myReviewPage.dtoList}">
+                            <div class="no" th:text="${eachReviewPage.revNo}"></div>
+                            <div>
+                                <img th:src="@{/uploads/__${eachReviewPage.revThumb}__}" style="width: 90px;">
+                            </div>
+                            <div class="prodName">
+                                <a th:href="@{'/product/view?prodNo='+${eachReviewPage.prodNo}+'&cateCode='+${eachReviewPage.cateCode}}" th:text="${eachReviewPage.prodName}"></a>
+                            </div>
+                            <div class="content"  th:text="${eachReviewPage.revContent}"></div>
+                            <div class="score">
+                                <span class="rating" th:text="${eachReviewPage.revScore}"></span>
+                            </div>
+                            <div class="date" th:text="${#temporals.format(eachReviewPage.revAddDate, 'yyyy-MM-dd')}"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <!--문의내역-->
+                <article class="qna">
+                    <h3>문의내역</h3>
+                    <a th:href="@{/my/qna(userId=${#authentication.principal.user.userId}, cate='qna')}" class="more">더보기</a>
+
+                    <!--문의내역 없을때-->
+                    <th:block th:if="${selectMyQna} != null">
+                        <div class="myTableStyle" th:if="${selectMyQna.dtoList.size() == 0}">
+                            <div class="myTableHead myQnaRow">
+                                <div>번호</div>
+                                <div>문의유형</div>
+                                <div>제목</div>
+                                <div>작성일</div>
+                                <div>상태</div>
+                            </div>
+                            <div class="myTableBody myQnaRow">
+                                <div style="border: 0; width: 100%; text-align: -webkit-center;">
+                                    <p style="font-size : 18px;" >문의내역이 없습니다.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+
+                    <!--문의내역 있을때-->
+                    <th:block th:if="${selectMyQna} != null">
+                        <div class="myTableStyle" th:if="${selectMyQna.dtoList.size()} > 0">
+                        <div class="myTableHead myQnaRow">
+                            <div>번호</div>
+                            <div>문의유형</div>
+                            <div>제목</div>
+                            <div>작성일</div>
+                            <div>상태</div>
+                        </div>
+                        <div class="myTableBody myQnaRow" th:each="qna, index : ${selectMyQna.dtoList}">
+                            <div th:text="${selectMyQna.startNo - index.index}"></div>
+                            <div th:class="${qna.qnaType}">[[${qna.qnaCate}]]</div>
+                            <div><a th:href="@{/cs/qna/view(qnaNo=${qna.qnaNo})}" th:text="${qna.qnaContent}"></a></div>
+
+                            <div th:text="${#temporals.format(qna.qnaDate, 'yyyy-MM-dd')}"></div>
+                            <div th:text="${qna.qnaStatus}"></div>
+                        </div>
+                    </div>
+                    </th:block>
+                </article>
+
+                <!--확인해주세요-->
+                <article class="myinfo">
+                    <h3>확인해주세요!</h3>
+                    <div>
+                        <div class="address">
+                            <span>기본 배송지설정</span>
+                            <a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}" class="setting">변경</a>
+                            <p>
+                                <span th:text="${resultUserId.getUserAddr1()}"></span><br/>
+                                <span th:text="${resultUserId.getUserAddr2()}"></span><br/>
+                                (최종수정일 <span th:text="${#temporals.format(resultUserId.getUserUpdate(), 'yy-MM-dd')}"></span>)
+                            </p>
+                        </div>
+                        <div class="email">
+                            <span>email 설정</span>
+                            <a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}" class="setting">변경</a>
+                            <p>
+                                <span th:text="${resultUserId.getUserEmail()}"></span><br/>
+                                (최종수정일 <span th:text="${#temporals.format(resultUserId.getUserUpdate(), 'yy-MM-dd')}"></span>)
+                            </p>
+                        </div>
+                        <div class="hp">
+                            <span>휴대폰 설정</span>
+                            <a th:href="@{/my/info(userId=${#authentication.principal.user.userId})}" class="setting">변경</a>
+                            <p>
+                                <span th:text="${resultUserId.getUserHp()}"></span><br/>
+                                (최종수정일 <span th:text="${#temporals.format(resultUserId.getUserUpdate(), 'yy-MM-dd')}"></span>)
+                            </p>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </div>
+<!--내용 끝-->
+</html>

@@ -1,0 +1,205 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/adminLayout.html}">
+<!--내용 시작-->
+    <section id="admin-product-list" layout:fragment="content">
+        <script>
+            let globalUserId = "";
+            let globalBalance = "";
+
+            // 회원 정보 상세 아코디언
+            function accordion() {
+                const button = event.target;
+                const userListTable = button.parentNode;
+                const TableDetail = userListTable.nextElementSibling;
+
+                if (TableDetail.style.display === "none") {
+                    TableDetail.style.display = "flex";
+                    userListTable.style.backgroundColor = "#e6e6e6";
+                }else {
+                    TableDetail.style.display = "none";
+                    userListTable.style.backgroundColor = "transparent";
+                }
+            }
+
+            // 모달창 닫기
+            function closeControlModal() {
+                const button = event.target;
+                const controlModal = button.parentNode;
+                controlModal.style.display = "none";
+                globalUserId = "";
+                globalBalance = "";
+            }
+
+            // 포인트 지급 모달창
+            function plusPointModal() {
+                const button = event.target;
+                const plusPoint = document.getElementById('plusPoint');
+                const userId = button.parentNode.querySelector('.userId');
+                const pointAfter = button.parentNode.querySelector('.pointAfter');
+                plusPoint.style.display = "flex";
+                globalUserId = userId;
+                globalBalance = pointAfter;
+            }
+
+            // 포인트 회수 모달창
+            function minusPointModal() {
+                const button = event.target;
+                const plusPoint = document.getElementById('minusPoint');
+                const userId = button.parentNode.querySelector('.userId');
+                const pointAfter = button.parentNode.querySelector('.pointAfter');
+                plusPoint.style.display = "flex";
+                globalUserId = userId;
+                globalBalance = pointAfter;
+            }
+
+            // 포인트 지금 & 회수 서버 통신
+            function btnChangePoint() {
+                const button = event.target;
+                const popupStyle = button.parentNode;
+                const changePoint = popupStyle.querySelector('.changePoint').value;
+                const changeCode = popupStyle.querySelector('.changeCode').value;
+                const type = popupStyle.querySelector('.type').value;
+                const userId = globalUserId.innerText;
+
+                const jsonData = {
+                    "type" : type,
+                    "userId" : userId,
+                    "changePoint" : changePoint,
+                    "changeCode" : changeCode
+                }
+                fetch("/lotteon/admin/user/point/control", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(jsonData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        if (data.result !== null) {
+                            alert("성공");
+                            globalBalance.innerText = data.result.pointBalance.toLocaleString();
+                        } else {
+                            alert("실패");
+                        }
+                        popupStyle.style.display = "none";
+                        globalUserId = "";
+                        globalBalance = "";
+                    })
+                    .catch(err => console.log(err))
+            }
+
+        </script>
+        <nav>
+            <h3>포인트 관리</h3>
+            <p>
+                HOME > 회원관리 > <strong>포인트 관리</strong>
+            </p>
+        </nav>
+        <!-- 판매자 현황 시작 -->
+        <section class="sectionBox">
+            <div>
+                <form th:action="@{/admin/user/list}">
+                    <select name="type">
+                        <option value="userName">회원이름</option>
+                        <option value="userRole">회원권한</option>
+                        <option value="userGrade">회원등급</option>
+                        <option value="userStatus">회원상태</option>
+                    </select>
+                    <input class="searchInput" type="text" name="keyword">
+                    <input class="searchBtn" type="submit" value="검색">
+                </form>
+            </div>
+            <div class="userListTableTitle" style="text-align: center">
+                <div style="width: 50px;">구분</div>
+                <div style="width: 220px;">아이디</div>
+                <div style="width: 200px;">이름</div>
+                <div style="width: 150px;">포인트잔액</div>
+                <div style="width: 150px;">포인트 지급</div>
+                <div style="width: 150px;">포인트 회수</div>
+                <div style="width: 150px;"></div>
+            </div>
+            <div class="userListTableContent" th:each="point, index : ${ResponseDTO.dtoList}" style="text-align: center">
+                <div class="userListTableRow">
+                    <div th:text="${ResponseDTO.startNo - index.index}" style="width: 50px;"></div>
+                    <div class="userId" th:text="${point.userId}" style="width: 220px;"></div>
+                    <div th:text="${point.userName}" style="width: 200px;"></div>
+                    <div class="pointAfter" th:if="${point.pointBalance == 0}" style="width: 120px; text-align: right; padding-right: 30px">0</div>
+                    <div class="pointAfter" th:if="${point.pointBalance != 0}" th:text="${#numbers.formatInteger(point.pointBalance, 3, 'COMMA')}" style="width: 120px; text-align: right; padding-right: 30px"></div>
+                    <div onclick="plusPointModal()" style="width: 150px; cursor: pointer;">지급하기</div>
+                    <div onclick="minusPointModal()" style="width: 150px; cursor: pointer;">회수하기</div>
+                    <div onclick="accordion()" style="width: 150px; cursor: pointer">변동내역</div>
+                </div>
+                <div class="userListTableDetail" style="display: none">
+                    <div class="userPointTableDetailRow">
+                        <div>포인트 변동일자</div>
+                        <div>변동 포인트</div>
+                        <div>포인트 변동사유</div>
+                        <div>구분</div>
+                    </div>
+                    <div class="userPointTableDetailRow" th:if="${point.historyDTOList != null}" th:each="history : ${point.historyDTOList}">
+                        <div th:text="${#temporals.format(history.changeDate,'yyyy-MM-dd HH:mm')}"></div>
+                        <div class="pointAfter" th:text="${#numbers.formatInteger(history.changePoint, 3, 'COMMA')}"></div>
+                        <div th:text="${history.changeCode}"></div>
+                        <div th:text="${history.changeType}"></div>
+                    </div>
+                    <div class="userPointTableDetailRow" th:if="${point.historyDTOList.size == 0}">
+                        <div style="width: 100%; font-size: 16px">포인트 변동내역이 없습니다.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pagingBox">
+                <div class="pagingList">
+                    <a th:if="${ResponseDTO.prev && ResponseDTO.keyword == null}" th:href="@{/admin/user/point(pg=${ResponseDTO.start - 1})}">이전</a>
+                    <a th:if="${ResponseDTO.prev && ResponseDTO.keyword != null}" th:href="@{/admin/user/point(pg=${ResponseDTO.start - 1}, keyword=${ResponseDTO.keyword})}">이전</a>
+
+                    <th:block th:each="num:${#numbers.sequence(ResponseDTO.start, ResponseDTO.end)}">
+                        <a class="pageNum" th:if="${ResponseDTO.keyword == null}" th:href="@{/admin/user/point(pg=${num})}" th:class="${num == ResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                        <a class="pageNum" th:if="${ResponseDTO.keyword != null}" th:href="@{/admin/user/point(pg=${num}, keyword=${ResponseDTO.keyword})}" th:class="${num == ResponseDTO.pg} ? 'on' : ''">[[${num}]]</a>
+                    </th:block>
+
+                    <a th:if="${ResponseDTO.next && ResponseDTO.keyword == null}" th:href="@{/admin/user/point(pg=${ResponseDTO.start + 1})}">다음</a>
+                    <a th:if="${ResponseDTO.next && ResponseDTO.keyword != null}" th:href="@{/admin/user/point(pg=${ResponseDTO.start + 1}, keyword=${ResponseDTO.keyword})}">다음</a>
+                </div>
+            </div>
+
+            <!-- 포인트 지급 & 회수 모달창 -->
+            <div class="popupStyle changePoint" id="plusPoint">
+                <p>포인트 지급</p>
+                <p style="width: 40px; cursor: pointer" onclick="closeControlModal()">닫기</p>
+
+                <div>
+                    <span>지급 포인트</span>
+                    <input type="text" class="changePoint">
+                    <input type="hidden" class="type" value="plus">
+                </div>
+                <div>
+                    <span>지급 사유</span>
+                    <input type="text" class="changeCode">
+                </div>
+                <span onclick="btnChangePoint()">지급하기</span>
+            </div>
+
+            <div class="popupStyle changePoint" id="minusPoint">
+                <p>포인트 회수</p>
+                <p style="width: 40px; cursor: pointer" onclick="closeControlModal()">닫기</p>
+
+                <div>
+                    <span>회수 포인트</span>
+                    <input type="text" class="changePoint">
+                    <input type="hidden" class="type" value="minus">
+                </div>
+                <div>
+                    <span>회수 사유</span>
+                    <input type="text" class="changeCode">
+                </div>
+                <span onclick="btnChangePoint()">회수하기</span>
+            </div>
+
+
+        </section>
+        <!-- 판매자 현황 끝 -->
+    </section>
+<!--내용 끝-->
+</html>

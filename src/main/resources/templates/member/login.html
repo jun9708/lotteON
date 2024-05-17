@@ -1,0 +1,122 @@
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{/layout/memberLayout.html}">
+<!--내용 시작-->
+    <main id="member" layout:fragment="content">
+        <script>
+            document.addEventListener("DOMContentLoaded", function (){
+                // key 가져온 cookieName 을 넣어줌
+                const key = getCookie("key");
+                const inputId = document.getElementsByName("userId")[0];
+                console.log(inputId);
+
+                if(inputId && key){
+                    inputId.value = key;
+                }
+
+                const savedId = document.getElementById("checkedId");
+                if(savedId && inputId && inputId.value !== ""){
+
+                    savedId.checked = true; // ID 저장하기를 체크 상태로 유지
+                }
+                if(savedId && inputId){
+                    savedId.addEventListener("change", function (){
+                        if(savedId.checked){
+                            setCookie("key",inputId.value, 7); // 7일동안 쿠키 보관
+                        } else{
+                            deleteCookie("key");
+                        }
+                    });
+                    // ID 저장하기 체크상태에서 ID를 입력하는경우 쿠키 저장
+                    inputId.addEventListener("keyup", function (){
+                        if(savedId.checked){
+                            setCookie("key", inputId.value, 7);
+                        }
+                    })
+                }
+            });
+            //쿠키 저장
+            function  setCookie(cookieName, value, exdays){
+                const exdate = new Date();
+                exdate.setDate(exdate.getDate() + exdays);
+                const cookieValue = encodeURIComponent(value) + ((exdays == null) ? "" : "; expires=" + exdate.toUTCString());
+                document.cookie = cookieName + "=" + cookieValue;
+            }
+            //쿠키 삭제
+            function deleteCookie(cookieName){
+                const expireDate = new Date();
+                expireDate.setDate(expireDate.getDate() - 1);
+                document.cookie = cookieName + "= " + "; expires=" + expireDate.toUTCString();
+            }
+
+            //쿠기 가져오기
+            function getCookie(cookieName){
+                cookieName = cookieName + '=';
+                const cookieData = document.cookie; //현재 페이지에서 사용가능한 쿠키 가져오기
+                let start = cookieData.indexOf(cookieName); //cookieName 의 시작위치 찾기, 찾지못하면 -1 반환
+                let cookieValue = '';
+                if(start != -1){
+                    start += cookieName.length; //start 는 쿠키 값 시작 위치 가르키기
+                    let end = cookieData.indexOf(';', start); //start 위치부터 ;까지의 문자열을 쿠키값으로 추출
+                    if(end == -1)
+                        end = cookieData.length; // 세미콜론이 없으면 문자열의 끝까지가 쿠키 값
+                        cookieValue = cookieData.substring(start, end);
+                }
+                return decodeURIComponent(cookieValue);
+                // 추출된 쿠키 값을 디코딩해서
+                // 반환. 디코딩은 URL 인코딩된 문자열을 해독하여 원래의 문자열로 되돌리는 작업
+            }
+
+            window.onload = function () {
+                let currentURL = window.location.href;
+                const success = currentURL.split('?');
+                if (success.length > 1) {
+                    if (success[1] === "success=100") {
+                        alert("아이디와 비밀번호를 확인해주세요.");
+                    }
+                }
+            }
+        </script>
+        <div class="login">
+            <nav>
+                <h1>로그인</h1>
+            </nav>
+            <form method="POST">
+                <div class="inputSet login" >
+
+                    <div class="inputSet login validation">
+                        <div>
+                            <input name="userId" type="text" placeholder="아이디 또는 이메일 아이디" id="inId" title="아이디 또는 이메일 입력">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="inputSet login">
+                    <div class="passwordWrap" >
+                        <div>
+                            <input id="Password" type="password" placeholder="8~15자리 영문+숫자+특수문자 조합" name="userPw" autocomplete="new-password" title="비밀번호 입력 (8~15자리 영문+숫자+특수문자 조합)">
+                        </div>
+                    </div>
+                </div>
+
+                <input type="submit" class="loginBtn" value="로그인">
+
+                <label class="save_id">
+                    <input type="checkbox" id="checkedId">
+                    <span>아이디 저장</span>
+                    <input type="checkbox" id="remember" name="rememberMe"/>
+                    <span>자동 로그인</span>
+                </label>
+
+                <a th:href="@{/member/join}">회원가입 | </a>
+                <a th:href="@{/member/findId}">아이디 찾기 | </a>
+                <a th:href="@{/member/findPw}">비밀번호 찾기</a>
+
+            </form>
+            <div th:each="banner : ${bannerMember1}">
+                <a th:href="@{http://__${banner.banLink}__}"><img th:src="@{/uploads/__${banner.banImgName}__}" alt="패션, 타운 하나로 끝" class="banner" style="width: 500px;"></a>
+            </div>
+        </div>
+    </main>
+<!--내용 끝-->
+</html>
