@@ -1,4 +1,16 @@
-# 1조 LotteON 쇼핑몰 프로젝트
+## LotteON 쇼핑몰 프로젝트
+
+![슬라이드5](https://github.com/jun9708/lotteON/assets/102947577/6fa6425f-2392-4a61-bf54-1fc83b7b162e)
+![슬라이드7](https://github.com/jun9708/lotteON/assets/102947577/038f9596-1862-45c2-91dd-733d2390db60)
+![슬라이드8](https://github.com/jun9708/lotteON/assets/102947577/934a7132-3eb3-4199-b187-4121cf9880e9)
+![슬라이드9](https://github.com/jun9708/lotteON/assets/102947577/f3583a69-d994-4b87-a8de-28c9bb90dcd8)
+![슬라이드10](https://github.com/jun9708/lotteON/assets/102947577/73010f2a-fbdb-4662-8cb2-4c0e5d0ccc12)
+![슬라이드11](https://github.com/jun9708/lotteON/assets/102947577/de94d3b2-54f5-4913-9e3f-9339c7ac71e7)
+![슬라이드12](https://github.com/jun9708/lotteON/assets/102947577/aad39af9-9305-4f3f-899d-9ee5b0f997d3)
+![슬라이드14](https://github.com/jun9708/lotteON/assets/102947577/1d9cc22c-6f14-455b-8485-d07d5f92f51f)
+![슬라이드15](https://github.com/jun9708/lotteON/assets/102947577/3d611621-79e3-42c4-8ac5-1cef2b19132e)
+![슬라이드16](https://github.com/jun9708/lotteON/assets/102947577/7d3654ec-2cf5-49e4-be33-1ca88cbfb7bd)
+
 
 ### 프로젝트 개요
  1) 프로젝트 주제
